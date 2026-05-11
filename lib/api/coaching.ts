@@ -8,6 +8,7 @@
  */
 
 import type { GetCoachingRequest, CoachingResult, CoachingProvider } from './types';
+import { withNimRateLimit } from './rateLimiter';
 
 const GPT4O_MINI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
@@ -24,22 +25,27 @@ class GPT4oMiniCoachingProvider implements CoachingProvider {
     // Build prompt for GPT-4o mini
     const prompt = this.buildCoachingPrompt(diagnosis);
 
-    // TODO: Implement actual GPT-4o mini API call
-    // Example:
-    // const response = await fetch(GPT4O_MINI_ENDPOINT, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${this.apiKey}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     model: 'gpt-4o-mini',
-    //     messages: [{ role: 'user', content: prompt }],
-    //     max_tokens: 500,
-    //   }),
-    // });
-    // const data = await response.json();
-    // return this.parseCoachingResponse(data);
+    // TODO: Implement actual GPT-4o mini API call with rate limiting
+    if (this.apiKey) {
+      const callApi = withNimRateLimit(async () => {
+        const response = await fetch(GPT4O_MINI_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 500,
+          }),
+        });
+        if (!response.ok) throw { status: response.status, headers: response.headers };
+        const data = await response.json();
+        return this.parseCoachingResponse(data);
+      });
+      return callApi();
+    }
 
     // Placeholder response
     return this.getPlaceholderCoaching(diagnosis);

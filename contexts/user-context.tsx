@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from './AuthContext';
+import { createClient } from '@/lib/supabase';
 
 export interface UserProfile {
   name: string;
@@ -35,6 +36,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const supabase = createClient();
+    await supabase.auth.signOut();
     await AsyncStorage.removeItem('@remake_onboarding_complete');
     router.replace('/(onboarding)');
   }, []);

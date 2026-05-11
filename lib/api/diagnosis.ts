@@ -1,43 +1,49 @@
 /**
- * Diagnosis API - iCam placeholder
+ * Diagnosis API - YouCam placeholder
  *
  * Supports any vision API for makeup/face analysis:
  * - OpenAI Vision (GPT-4o with vision)
  * - Google Cloud Vision
  * - Azure Computer Vision
  * - Replicate (various models)
- * - Or your existing iCam service
+ * - YouCam Perfect API (youcam.com/developers)
  *
- * TODO: Replace with your actual iCam API credentials and endpoint
+ * TODO: Replace with your actual YouCam API credentials and endpoint
  */
 
 import type { AnalyzeImageRequest, DiagnosisResult, DiagnosisProvider } from './types';
+import { withNimRateLimit } from './rateLimiter';
 
-// Mock implementation - replace with actual iCam API calls
-class ICamDiagnosisProvider implements DiagnosisProvider {
+// Mock implementation - replace with actual YouCam API calls
+class YouCamDiagnosisProvider implements DiagnosisProvider {
   private apiKey: string | undefined;
   private endpoint: string | undefined;
 
   constructor() {
-    this.apiKey = process.env.EXPO_PUBLIC_ICAM_API_KEY;
-    this.endpoint = process.env.EXPO_PUBLIC_ICAM_API_ENDPOINT;
+    this.apiKey = process.env.EXPO_PUBLIC_YOUCAM_API_KEY;
+    this.endpoint = process.env.EXPO_PUBLIC_YOUCAM_API_ENDPOINT;
   }
 
   async analyze(request: AnalyzeImageRequest): Promise<DiagnosisResult> {
-    // TODO: Implement actual iCam API call
-    // Example placeholder implementation:
-    //
-    // const response = await fetch(this.endpoint!, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${this.apiKey}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({ image_url: request.imageUri }),
-    // });
-    // return response.json();
-
     // Placeholder response matching the expected format
+    // TODO: Implement actual YouCam API call with rate limiting
+    // Example with rate limiting:
+    if (this.apiKey && this.endpoint) {
+      const callApi = withNimRateLimit(async () => {
+        const response = await fetch(this.endpoint!, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ image_url: request.imageUri }),
+        });
+        if (!response.ok) throw { status: response.status, headers: response.headers };
+        return response.json();
+      });
+      return callApi();
+    }
+
     return {
       overallScore: 85,
       categories: [
@@ -66,7 +72,7 @@ let diagnosisProvider: DiagnosisProvider | null = null;
 
 export function getDiagnosisProvider(): DiagnosisProvider {
   if (!diagnosisProvider) {
-    diagnosisProvider = new ICamDiagnosisProvider();
+    diagnosisProvider = new YouCamDiagnosisProvider();
   }
   return diagnosisProvider;
 }

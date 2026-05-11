@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import { ScoreRing } from '@/components/score-ring';
@@ -11,6 +11,37 @@ import * as Haptics from 'expo-haptics';
 import { analyzeImage, getCoaching } from '@/lib/api';
 import type { DiagnosisResult, CoachingResult } from '@/lib/api/types';
 
+/**
+ * Validates that the URI comes from the local ImagePicker (file:// protocol).
+ * Prevents SSRF attacks where an attacker could pass a malicious external URL.
+ */
+function validateImageUri(uri: string | undefined): string | null {
+  if (!uri) {
+    Alert.alert('Error', 'No image provided');
+    return null;
+  }
+
+  // Only allow file:// URIs from ImagePicker
+  // This prevents SSRF via http://, https://, or other dangerous schemes
+  const allowedSchemes = ['file://', 'content://'];
+  const isAllowed = allowedSchemes.some(scheme => uri.startsWith(scheme));
+
+  if (!isAllowed) {
+    console.error('[Security] Invalid image URI scheme rejected:', uri.substring(0, 50));
+    Alert.alert('Error', 'Invalid image source');
+    return null;
+  }
+
+  // Basic path traversal check
+  if (uri.includes('..') || uri.includes('%2e%2e')) {
+    console.error('[Security] Path traversal attempt detected');
+    Alert.alert('Error', 'Invalid image path');
+    return null;
+  }
+
+  return uri;
+}
+
 export default function ResultsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ uri?: string }>();
@@ -20,15 +51,16 @@ export default function ResultsScreen() {
 
   useEffect(() => {
     const runAnalysis = async () => {
-      const uri = params.uri;
-      if (!uri) {
+      // Validate URI - security critical
+      const validUri = validateImageUri(params.uri);
+      if (!validUri) {
         setLoading(false);
         return;
       }
 
       try {
-        // Step 1: Run iCam diagnosis
-        const diagnosisResult = await analyzeImage({ imageUri: uri });
+        // Step 1: Run YouCam diagnosis
+        const diagnosisResult = await analyzeImage({ imageUri: validUri });
         setDiagnosis(diagnosisResult);
 
         // Step 2: Get coaching from GPT-4o mini
