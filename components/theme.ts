@@ -7,6 +7,7 @@ export const tokens = {
     beige: '#FBE8E3',
     blush: '#FCE4EC',
     pink: '#F8D7DA',
+    pinkLight: '#FFF0F3',
     pinkMid: '#F0B8C0',
     pinkDeep: '#E8A0AA',
     pinkRich: '#D98A96',
