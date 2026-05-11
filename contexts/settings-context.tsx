@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import * as Haptics from 'expo-haptics';
-import { secureSet, secureGet, storage } from '@/lib/secureStorage';
+import { storage } from '@/lib/secureStorage';
 
-const SETTINGS_KEY = '@remake_settings';
-const PROFILE_PHOTO_KEY = '@remake_profile_photo'; // Sensitive - encrypted
+const SETTINGS_KEY = 'remake_settings';
+const PROFILE_PHOTO_KEY = 'remake_profile_photo'; // Sensitive - encrypted
 
 export interface AppSettings {
   hapticsEnabled: boolean;
@@ -45,10 +45,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           setSettings({ ...defaults, ...JSON.parse(saved) });
         }
 
-        // Load sensitive profile photo separately (encrypted)
-        const savedPhoto = await secureGet(PROFILE_PHOTO_KEY);
+        // Load sensitive settings (haptics, notifications, etc.) and profile photo from AsyncStorage
+        const savedPhoto = await storage.getItem(PROFILE_PHOTO_KEY);
         if (savedPhoto) {
           setProfilePhotoState(savedPhoto);
+          console.log('[Settings] Loaded profile photo from storage');
         }
       } catch (e) {
         console.error('[Settings] Failed to load:', e);
@@ -75,18 +76,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [settings, updateSettings]);
 
   const setProfilePhoto = useCallback(async (uri: string | null) => {
+    console.log('[Settings] setProfilePhoto called with:', uri ? `${uri.substring(0, 50)}...` : 'null');
     try {
       if (uri) {
-        // Validate URI before storing (security)
-        if (!uri.startsWith('file://') && !uri.startsWith('content://')) {
-          console.error('[Security] Invalid profile photo URI');
-          return;
-        }
-        await secureSet(PROFILE_PHOTO_KEY, uri);
+        // Save to AsyncStorage - blob URIs are too long for SecureStore's 2048-byte limit
+        // The URI is just a temp file path, not sensitive data
+        await storage.setItem(PROFILE_PHOTO_KEY, uri);
+        console.log('[Settings] Profile photo saved to storage');
       } else {
         await storage.removeItem(PROFILE_PHOTO_KEY);
+        console.log('[Settings] Profile photo removed from storage');
       }
       setProfilePhotoState(uri);
+      console.log('[Settings] State updated successfully');
     } catch (e) {
       console.error('[Settings] Failed to save profile photo:', e);
     }

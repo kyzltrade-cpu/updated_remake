@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Image } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { tokens } from '@/components/theme';
 import { useSettings } from '@/contexts/settings-context';
 import { useUser } from '@/contexts/user-context';
+import { useSubscription } from '@/contexts/subscription-context';
 
 function SettingRow({ label, sublabel, children }: { label: string; sublabel?: string; children: React.ReactNode }) {
   return (
@@ -41,8 +43,12 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings, profilePhoto, updateSettings, toggleSetting, setProfilePhoto } = useSettings();
   const { user, logout, isLoggedIn } = useUser();
+  const { subscription } = useSubscription();
   const [pickingRef, setPickingRef] = useState(false);
   const [pickingPfp, setPickingPfp] = useState(false);
+  // Ref to avoid stale closure in alert callbacks
+  const profilePhotoRef = useRef(profilePhoto);
+  useEffect(() => { profilePhotoRef.current = profilePhoto; }, [profilePhoto]);
 
   const pickProfilePhoto = async () => {
     if (pickingPfp) return;
@@ -61,6 +67,15 @@ export default function SettingsScreen() {
     } finally {
       setPickingPfp(false);
     }
+  };
+
+  const showPfpOptions = () => {
+    const hasPhoto = !!profilePhotoRef.current;
+    const options: { text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }[] = [];
+    if (hasPhoto) options.push({ text: 'Remove Photo', style: 'destructive', onPress: () => { if (settings.hapticsEnabled) Haptics.selectionAsync(); setProfilePhoto(null); } });
+    options.push({ text: 'Choose Photo', onPress: pickProfilePhoto });
+    options.push({ text: 'Cancel', style: 'cancel' });
+    Alert.alert('Profile Photo', undefined, options);
   };
 
   const handleSignOut = () => {
@@ -115,33 +130,34 @@ export default function SettingsScreen() {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* User section */}
-        {isLoggedIn && (
-          <Animated.View entering={FadeInUp.delay(50).duration(400)}>
-            <View style={styles.section}>
-              <Text style={styles.sectionHeader}>Account</Text>
-              <View style={styles.card}>
-                <View style={styles.userRow}>
-                  <Pressable onPress={pickProfilePhoto} style={styles.avatarWrap}>
-                    {profilePhoto ? (
-                      <Image source={{ uri: profilePhoto }} style={styles.avatarPhoto} />
-                    ) : (
-                      <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{user?.initials || '?'}</Text>
-                      </View>
-                    )}
-                    <View style={styles.pfpEditBadge}>
-                      <Text style={styles.pfpEditIcon}>✎</Text>
+        <Animated.View entering={FadeInUp.delay(50).duration(400)}>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Account</Text>
+            <View style={styles.card}>
+              <View style={styles.pfpCentered}>
+                <Pressable onPress={showPfpOptions} style={styles.avatarWrapLarge}>
+                  {profilePhoto ? (
+                    <Image source={{ uri: profilePhoto }} style={styles.avatarPhotoLarge} />
+                  ) : (
+                    <View style={styles.avatarLarge}>
+                      <MaterialIcons name="person" size={48} color={tokens.colors.grayLight} />
                     </View>
-                  </Pressable>
-                  <View>
-                    <Text style={styles.userName}>{user?.name || 'Your Name'}</Text>
-                    <Text style={styles.userEmail}>{user?.email || 'your@email.com'}</Text>
+                  )}
+                  <View style={styles.pfpEditBadgeLarge}>
+                    <Text style={styles.pfpEditIcon}>✎</Text>
                   </View>
-                </View>
+                </Pressable>
+                {isLoggedIn ? (
+                  <Text style={styles.userEmail}>{user?.email || 'your@email.com'}</Text>
+                ) : (
+                  <Pressable onPress={() => router.push('/(onboarding)/create-account')}>
+                    <Text style={styles.signInLink}>Sign in to save your data</Text>
+                  </Pressable>
+                )}
               </View>
             </View>
-          </Animated.View>
-        )}
+          </View>
+        </Animated.View>
 
         {/* Preferences */}
         <Animated.View entering={FadeInUp.delay(120).duration(400)}>
@@ -207,15 +223,38 @@ export default function SettingsScreen() {
           </View>
         </Animated.View>
 
-        {/* About */}
+        {/* Subscription */}
         <Animated.View entering={FadeInUp.delay(330).duration(400)}>
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>About</Text>
+            <Text style={styles.sectionHeader}>Subscription</Text>
             <View style={styles.card}>
-              <SettingRow label="Version" sublabel="1.0.0">
-                <Text style={styles.rowValue}>1.0.0</Text>
+              <SettingRow
+                label="Plan"
+                sublabel={subscription?.plan === 'pro' ? 'Pro plan' : 'Free plan'}
+              >
+                <Text style={[styles.rowValue, subscription?.plan === 'pro' && styles.proText]}>
+                  {subscription?.plan === 'pro' ? '✦ Pro' : 'Free'}
+                </Text>
               </SettingRow>
             </View>
+
+            {subscription?.plan !== 'pro' && (
+              <Pressable
+                style={styles.upgradePill}
+                onPress={() => {
+                  if (settings.hapticsEnabled) Haptics.selectionAsync();
+                  router.push('/(onboarding)/pricing');
+                }}
+              >
+                <Text style={styles.upgradePillText}>Upgrade to Pro</Text>
+              </Pressable>
+            )}
+
+            <View style={styles.divider} />
+
+            <SettingRow label="Version">
+              <Text style={styles.rowValue}>1.0.0</Text>
+            </SettingRow>
           </View>
         </Animated.View>
 
@@ -359,22 +398,88 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: tokens.colors.white,
   },
+  // User - stacked
+  pfpCentered: {
+    alignItems: 'center',
+    padding: 24,
+    gap: 12,
+  },
+  avatarWrapLarge: { position: 'relative' },
+  avatarLarge: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: tokens.colors.text,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarTextLarge: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 28,
+    fontWeight: '600',
+    color: tokens.colors.white,
+  },
+  avatarPhotoLarge: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+  pfpEditBadgeLarge: {
+    position: 'absolute',
+    bottom: 0,
+    right: -4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: tokens.colors.pink,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: tokens.colors.white,
+  },
   pfpEditIcon: {
-    fontSize: 10,
+    fontSize: 13,
     color: tokens.colors.white,
     fontWeight: '700',
   },
-  userName: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 15,
-    fontWeight: '600',
-    color: tokens.colors.text,
-  },
   userEmail: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 13,
+    fontSize: 14,
     color: tokens.colors.gray,
-    marginTop: 2,
+  },
+  proText: {
+    color: tokens.colors.pink,
+    fontWeight: '600',
+  },
+  signInLink: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    color: tokens.colors.pink,
+    textDecorationLine: 'underline',
+  },
+
+  // Upgrade
+  upgradePill: {
+    marginTop: 16,
+    marginHorizontal: 1,
+    paddingVertical: 14,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: tokens.colors.goldSoft,
+    alignItems: 'center',
+    backgroundColor: tokens.colors.white,
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+  },
+  upgradePillText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '500',
+    letterSpacing: 0.1,
+    textTransform: 'uppercase',
+    color: tokens.colors.gold,
   },
 
   // Reference photo

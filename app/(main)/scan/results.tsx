@@ -1,80 +1,37 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import { ScoreRing } from '@/components/score-ring';
 import { CategoryItem } from '@/components/category-item';
 import { SuggestionItem } from '@/components/suggestion-item';
-import { LoadingScreen } from '@/components/loading-screen';
 import * as Haptics from 'expo-haptics';
-import { analyzeImage, getCoaching } from '@/lib/api';
 import type { DiagnosisResult, CoachingResult } from '@/lib/api/types';
-
-/**
- * Validates that the URI comes from the local ImagePicker (file:// protocol).
- * Prevents SSRF attacks where an attacker could pass a malicious external URL.
- */
-function validateImageUri(uri: string | undefined): string | null {
-  if (!uri) {
-    Alert.alert('Error', 'No image provided');
-    return null;
-  }
-
-  // Only allow file:// URIs from ImagePicker
-  // This prevents SSRF via http://, https://, or other dangerous schemes
-  const allowedSchemes = ['file://', 'content://'];
-  const isAllowed = allowedSchemes.some(scheme => uri.startsWith(scheme));
-
-  if (!isAllowed) {
-    console.error('[Security] Invalid image URI scheme rejected:', uri.substring(0, 50));
-    Alert.alert('Error', 'Invalid image source');
-    return null;
-  }
-
-  // Basic path traversal check
-  if (uri.includes('..') || uri.includes('%2e%2e')) {
-    console.error('[Security] Path traversal attempt detected');
-    Alert.alert('Error', 'Invalid image path');
-    return null;
-  }
-
-  return uri;
-}
 
 export default function ResultsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ uri?: string }>();
-  const [loading, setLoading] = useState(true);
+  const params = useLocalSearchParams<{ uri?: string; diagnosis?: string; coaching?: string }>();
   const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [coaching, setCoaching] = useState<CoachingResult | null>(null);
 
   useEffect(() => {
-    const runAnalysis = async () => {
-      // Validate URI - security critical
-      const validUri = validateImageUri(params.uri);
-      if (!validUri) {
-        setLoading(false);
-        return;
-      }
-
+    // Parse data passed from loading page
+    if (params.diagnosis) {
       try {
-        // Step 1: Run YouCam diagnosis
-        const diagnosisResult = await analyzeImage({ imageUri: validUri });
-        setDiagnosis(diagnosisResult);
-
-        // Step 2: Get coaching from GPT-4o mini
-        const coachingResult = await getCoaching({ diagnosis: diagnosisResult });
-        setCoaching(coachingResult);
-      } catch (error) {
-        console.error('Analysis failed:', error);
-      } finally {
-        setLoading(false);
+        setDiagnosis(JSON.parse(params.diagnosis) as DiagnosisResult);
+      } catch (e) {
+        console.error('Failed to parse diagnosis:', e);
       }
-    };
-
-    runAnalysis();
-  }, [params.uri]);
+    }
+    if (params.coaching) {
+      try {
+        setCoaching(JSON.parse(params.coaching) as CoachingResult);
+      } catch (e) {
+        console.error('Failed to parse coaching:', e);
+      }
+    }
+  }, [params.diagnosis, params.coaching]);
 
   const handleRetake = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -91,14 +48,6 @@ export default function ResultsScreen() {
     if (score >= 80) return 'Beautiful work with excellent technique — subtle refinements will elevate it further.';
     return 'Great foundation to build on — targeted adjustments will make your look truly shine.';
   };
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <LoadingScreen />
-      </View>
-    );
-  }
 
   const categories = diagnosis?.categories ?? [];
   const suggestions = coaching?.suggestions ?? [];

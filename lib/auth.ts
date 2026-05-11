@@ -11,8 +11,8 @@ import {
 const DEV_BYPASS = process.env.EXPO_PUBLIC_DEV_BYPASS === 'true'
 
 // DEV_EMAIL and DEV_PASSWORD must ONLY come from environment variables
-const DEV_EMAIL = process.env.DEV_EMAIL
-const DEV_PASSWORD = process.env.DEV_PASSWORD
+const DEV_EMAIL = process.env.EXPO_PUBLIC_DEV_EMAIL
+const DEV_PASSWORD = process.env.EXPO_PUBLIC_DEV_PASSWORD
 
 /**
  * Validates sign up input

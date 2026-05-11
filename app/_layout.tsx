@@ -8,7 +8,9 @@ import { useBrandFonts } from '@/hooks/use-brand-fonts';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SettingsProvider } from '@/contexts/settings-context';
 import { UserProvider } from '@/contexts/user-context';
-import { View, ActivityIndicator } from 'react-native';
+import { SubscriptionProvider } from '@/contexts/subscription-context';
+import { View } from 'react-native';
+import { LoadingScreen } from '@/components/loading-screen';
 
 const ONBOARDING_KEY = '@remake_onboarding_complete';
 
@@ -16,7 +18,9 @@ function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <SettingsProvider>
-        <UserProvider>{children}</UserProvider>
+        <UserProvider>
+          <SubscriptionProvider>{children}</SubscriptionProvider>
+        </UserProvider>
       </SettingsProvider>
     </AuthProvider>
   );
@@ -33,11 +37,7 @@ export default function RootLayout() {
   }, []);
 
   if (!fontsLoaded || onboardingComplete === null) {
-    return (
-      <View style={{ flex: 1, backgroundColor: tokens.colors.beige, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator color={tokens.colors.gold} />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (

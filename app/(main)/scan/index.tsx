@@ -11,14 +11,20 @@ import { FaceCorners } from '@/components/face-corners';
 import { GalleryIcon } from '@/components/ui/gallery-icon';
 import { FlashIcon } from '@/components/ui/flash-icon';
 import { EdgeFlashOverlay } from '@/components/edge-flash';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSettings } from '@/contexts/settings-context';
 
-// PFP button — initials with gradient border ring (pink → gold)
-function PFPButton({ initials, onPress }: { initials?: string; onPress?: () => void }) {
+// Person silhouette — warm, personal, shows it's "your" space
+function SettingsSparkle({ onPress }: { onPress?: () => void }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.pfpBtn, pressed && styles.pfpBtnPressed]}>
+      {/* Ring light glow */}
+      <View style={styles.pfpGlow}>
+        <View style={styles.pfpGlowInner} />
+      </View>
+      {/* White glass circle with goldSoft border */}
       <View style={styles.pfpBtnRing}>
-        <Text style={styles.pfpBtnText}>{initials ?? 'A'}</Text>
+        <MaterialIcons name="person" size={22} color={tokens.colors.gold} />
       </View>
     </Pressable>
   );
@@ -95,7 +101,7 @@ export default function ScanScreen() {
 
       {/* PFP button — top left */}
       <Animated.View entering={FadeIn.delay(200)} style={[styles.topBar, { paddingTop: insets.top + 14 }]}>
-        <PFPButton onPress={() => router.push('/(main)/settings')} />
+        <SettingsSparkle onPress={() => router.push('/(main)/settings')} />
       </Animated.View>
 
       {/* Bottom controls — HTML brand matching */}
@@ -139,16 +145,37 @@ const styles = StyleSheet.create({
   topBar: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: 22, paddingBottom: 16, alignItems: 'flex-start' },
 
   // PFP button
-  pfpBtn: { width: 38, height: 38 },
+  pfpBtn: { width: 56, height: 56, justifyContent: 'center', alignItems: 'center' },
   pfpBtnPressed: { transform: [{ scale: 0.93 }] },
-  pfpBtnRing: {
-    width: 38, height: 38, borderRadius: 19,
-    borderWidth: 1.5,
-    borderColor: tokens.colors.pink,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center', alignItems: 'center',
+  // Ring light glow — soft radial white behind the avatar
+  pfpGlow: {
+    position: 'absolute',
+    width: 56, height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
   },
-  pfpBtnText: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '600', color: '#fff' },
+  pfpGlowInner: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  // White glass circle with goldSoft border — same as GlassButton
+  pfpBtnRing: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderWidth: 1.5,
+    borderColor: tokens.colors.goldSoft,
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
 
   // Bottom controls
   controls: {
