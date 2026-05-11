@@ -222,7 +222,7 @@ export default function SettingsScreen() {
         {/* Sign out */}
         {isLoggedIn && (
           <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.section}>
-            <Pressable style={styles.signOutBtn} onPress={handleLogout}>
+            <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
               <Text style={styles.signOutText}>Sign Out</Text>
             </Pressable>
           </Animated.View>
