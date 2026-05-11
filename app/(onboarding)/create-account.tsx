@@ -1,24 +1,45 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, Alert } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import { GlassButton } from '@/components/glass-button';
 import { OnboardingPagination } from '@/components/onboarding-pagination';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { signInWithOtp, signInDev, DEV_BYPASS } from '@/lib/auth';
 
 export default function CreateAccountScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
-    if (!email.trim()) return;
+    if (!email.trim() || !name.trim()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
-    await AsyncStorage.setItem('@remake_onboarding_complete', 'true');
-    router.replace('/(main)/home');
+    try {
+      if (DEV_BYPASS) {
+        await signInDev();
+        await AsyncStorage.setItem('@remake_onboarding_complete', 'true');
+        router.replace('/(main)/home');
+      } else {
+        const { error } = await signInWithOtp(email.trim(), {
+          data: { full_name: name.trim() },
+        });
+        if (error) {
+          Alert.alert('Sign in failed', error.message);
+        } else {
+          await AsyncStorage.setItem('@remake_onboarding_complete', 'true');
+          router.replace('/(main)/home');
+        }
+      }
+    } catch {
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,6 +51,18 @@ export default function CreateAccountScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(300).duration(600)} style={styles.form}>
+        <View style={styles.inputWrapper}>
+          <Text style={styles.inputLabel}>Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Your name"
+            placeholderTextColor={tokens.colors.grayLight}
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+        </View>
         <View style={styles.inputWrapper}>
           <Text style={styles.inputLabel}>Email</Text>
           <TextInput
@@ -51,7 +84,7 @@ export default function CreateAccountScreen() {
           onPress={handleContinue}
           variant="primary"
           style={styles.cta}
-          disabled={!email.trim() || loading}
+          disabled={!email.trim() || !name.trim() || loading}
         />
         <Text style={styles.legal}>By continuing you agree to our Terms of Service and Privacy Policy.</Text>
         <OnboardingPagination total={10} current={5} />

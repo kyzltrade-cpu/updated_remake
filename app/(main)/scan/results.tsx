@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
@@ -8,34 +8,41 @@ import { CategoryItem } from '@/components/category-item';
 import { SuggestionItem } from '@/components/suggestion-item';
 import { LoadingScreen } from '@/components/loading-screen';
 import * as Haptics from 'expo-haptics';
-
-const MOCK_CATEGORIES = [
-  { name: 'Complexion', score: 92, description: 'Foundation match, blending, texture, coverage & skin finish.' },
-  { name: 'Eyes', score: 85, description: 'Shadow blending, liner precision, lash definition & brow shape.' },
-  { name: 'Lips', score: 88, description: 'Color accuracy, lip line precision, symmetry & application evenness.' },
-  { name: 'Sculpt & Glow', score: 80, description: 'Contour placement, blush positioning, highlight & bronzer diffusion.' },
-];
-
-const MOCK_SUGGESTIONS = [
-  { text: 'Blend your base along the jawline — the transition should be invisible in natural light.', emphasis: 'transition should be invisible' },
-  { text: 'Soften the outer-V eyeshadow edge with a clean brush for a seamless diffusion.', emphasis: 'seamless diffusion' },
-  { text: 'Bring blush placement slightly higher toward the temples to lift the face shape.', emphasis: 'lift the face shape' },
-];
-
-const COMPLIMENTS: Record<string, string> = {
-  flawless: 'Absolutely stunning execution — your makeup artistry is impeccable and camera-ready.',
-  strong: 'Beautiful work with excellent technique — subtle refinements will elevate it further.',
-  refine: 'Great foundation to build on — targeted adjustments will make your look truly shine.',
-};
+import { analyzeImage, getCoaching } from '@/lib/api';
+import type { DiagnosisResult, CoachingResult } from '@/lib/api/types';
 
 export default function ResultsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ uri?: string }>();
   const [loading, setLoading] = useState(true);
+  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
+  const [coaching, setCoaching] = useState<CoachingResult | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2500);
-    return () => clearTimeout(timer);
-  }, []);
+    const runAnalysis = async () => {
+      const uri = params.uri;
+      if (!uri) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Step 1: Run iCam diagnosis
+        const diagnosisResult = await analyzeImage({ imageUri: uri });
+        setDiagnosis(diagnosisResult);
+
+        // Step 2: Get coaching from GPT-4o mini
+        const coachingResult = await getCoaching({ diagnosis: diagnosisResult });
+        setCoaching(coachingResult);
+      } catch (error) {
+        console.error('Analysis failed:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    runAnalysis();
+  }, [params.uri]);
 
   const handleRetake = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -47,6 +54,12 @@ export default function ResultsScreen() {
     router.replace('/(main)/home');
   };
 
+  const getCompliment = (score: number): string => {
+    if (score >= 90) return 'Absolutely stunning execution — your makeup artistry is impeccable and camera-ready.';
+    if (score >= 80) return 'Beautiful work with excellent technique — subtle refinements will elevate it further.';
+    return 'Great foundation to build on — targeted adjustments will make your look truly shine.';
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -54,6 +67,11 @@ export default function ResultsScreen() {
       </View>
     );
   }
+
+  const categories = diagnosis?.categories ?? [];
+  const suggestions = coaching?.suggestions ?? [];
+  const overallScore = diagnosis?.overallScore ?? 0;
+  const compliment = coaching?.compliment ?? getCompliment(overallScore);
 
   return (
     <View style={styles.container}>
@@ -67,9 +85,9 @@ export default function ResultsScreen() {
         </View>
 
         <Animated.View entering={FadeIn.duration(400)} style={styles.hero}>
-          <ScoreRing score={99} visible />
+          <ScoreRing score={overallScore} visible />
           <Animated.View entering={FadeIn.duration(400)} style={styles.complimentArea}>
-            <Text style={styles.compliment}>{COMPLIMENTS.strong}</Text>
+            <Text style={styles.compliment}>{compliment}</Text>
           </Animated.View>
         </Animated.View>
 
@@ -80,7 +98,7 @@ export default function ResultsScreen() {
         <Animated.View entering={FadeIn.delay(80).duration(300)}>
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Breakdown</Text>
-            {MOCK_CATEGORIES.map((cat, i) => (
+            {categories.map((cat, i) => (
               <CategoryItem key={cat.name} name={cat.name} score={cat.score} description={cat.description} delay={i} />
             ))}
           </View>
@@ -93,7 +111,7 @@ export default function ResultsScreen() {
         <Animated.View entering={FadeIn.delay(220).duration(300)}>
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Suggestions</Text>
-            {MOCK_SUGGESTIONS.map((s, i) => (
+            {suggestions.map((s, i) => (
               <SuggestionItem key={i} text={s.text} emphasis={s.emphasis} delay={i + 4} />
             ))}
           </View>

@@ -1,25 +1,18 @@
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSettings } from '@/contexts/settings-context';
 
 export default function PreviewScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ uri?: string }>();
   const uri = params.uri ?? '';
-  const [mirrorPhotos, setMirrorPhotos] = useState(false);
-
-  useEffect(() => {
-    AsyncStorage.getItem('remake_settings').then(saved => {
-      if (saved) setMirrorPhotos(JSON.parse(saved).mirrorPhotos ?? false);
-    });
-  }, []);
+  const { settings } = useSettings();
 
   const handleAnalyze = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.replace({ pathname: '/(main)/scan/results', params: { uri } });
   };
 
@@ -34,7 +27,7 @@ export default function PreviewScreen() {
         {uri ? (
           <Image
             source={{ uri }}
-            style={[styles.photo, mirrorPhotos && { transform: [{ scaleX: -1 }] }]}
+            style={[styles.photo, settings.mirrorPhotos && { transform: [{ scaleX: -1 }] }]}
             resizeMode="cover"
           />
         ) : (

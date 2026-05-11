@@ -42,8 +42,26 @@ export default function SettingsScreen() {
   const { settings, updateSettings, toggleSetting } = useSettings();
   const { user, logout, isLoggedIn } = useUser();
   const [pickingRef, setPickingRef] = useState(false);
+  const [pickingPfp, setPickingPfp] = useState(false);
 
-  const handleLogout = () => {
+  const pickProfilePhoto = async () => {
+    if (pickingPfp) return;
+    setPickingPfp(true);
+    if (settings.hapticsEnabled) Haptics.selectionAsync();
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.6,
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        updateSettings({ profilePhoto: result.assets[0].uri });
+      }
+    } finally {
+      setPickingPfp(false);
+    }
+  };
     Alert.alert(
       'Sign Out',
       'Are you sure? You can sign back in anytime.',
@@ -101,12 +119,21 @@ export default function SettingsScreen() {
               <Text style={styles.sectionHeader}>Account</Text>
               <View style={styles.card}>
                 <View style={styles.userRow}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{user?.initials}</Text>
-                  </View>
+                  <Pressable onPress={pickProfilePhoto} style={styles.avatarWrap}>
+                    {settings.profilePhoto ? (
+                      <Image source={{ uri: settings.profilePhoto }} style={styles.avatarPhoto} />
+                    ) : (
+                      <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>{user?.initials || '?'}</Text>
+                      </View>
+                    )}
+                    <View style={styles.pfpEditBadge}>
+                      <Text style={styles.pfpEditIcon}>✎</Text>
+                    </View>
+                  </Pressable>
                   <View>
-                    <Text style={styles.userName}>{user?.name}</Text>
-                    <Text style={styles.userEmail}>{user?.email}</Text>
+                    <Text style={styles.userName}>{user?.name || 'Your Name'}</Text>
+                    <Text style={styles.userEmail}>{user?.email || 'your@email.com'}</Text>
                   </View>
                 </View>
               </View>
@@ -310,6 +337,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: tokens.colors.white,
+  },
+  avatarWrap: { position: 'relative' },
+  avatarPhoto: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  pfpEditBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: tokens.colors.pink,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: tokens.colors.white,
+  },
+  pfpEditIcon: {
+    fontSize: 10,
+    color: tokens.colors.white,
+    fontWeight: '700',
   },
   userName: {
     fontFamily: tokens.fonts.regular,

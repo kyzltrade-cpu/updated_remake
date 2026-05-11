@@ -2,56 +2,45 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { useAuth } from './AuthContext';
 
-const USER_KEY = '@remake_user';
-const ONBOARDING_KEY = '@remake_onboarding_complete';
-
-export interface User {
+export interface UserProfile {
   name: string;
   email: string;
   initials: string;
 }
 
 interface UserContextValue {
-  user: User | null;
+  user: UserProfile | null;
   isLoggedIn: boolean;
-  login: (name: string, email: string) => void;
   logout: () => void;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const { user: authUser } = useAuth();
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(USER_KEY).then(saved => {
-      if (saved) setUser(JSON.parse(saved));
-    });
-  }, []);
-
-  const login = useCallback((name: string, email: string) => {
-    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const newUser: User = { name, email, initials };
-    AsyncStorage.setItem(USER_KEY, JSON.stringify(newUser));
-    setUser(newUser);
-  }, []);
+    if (!authUser) {
+      setUser(null);
+      return;
+    }
+    const name = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User';
+    const email = authUser.email || '';
+    const initials = name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+    setUser({ name, email, initials });
+  }, [authUser]);
 
   const logout = useCallback(async () => {
-    if (typeof window !== 'undefined' && window.navigator?.platform !== undefined) {
-      // Already on mobile
-    }
-    await AsyncStorage.removeItem(USER_KEY);
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'false');
-    setUser(null);
-    if (Haptics.ImpactFeedbackStyle) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await AsyncStorage.removeItem('@remake_onboarding_complete');
     router.replace('/(onboarding)');
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, isLoggedIn: !!user, login, logout }}>
+    <UserContext.Provider value={{ user, isLoggedIn: !!authUser, logout }}>
       {children}
     </UserContext.Provider>
   );

@@ -9,6 +9,7 @@ export interface AppSettings {
   notificationsEnabled: boolean;
   mirrorPhotos: boolean;
   referencePhoto: string | null;
+  profilePhoto: string | null;
 }
 
 const defaults: AppSettings = {
@@ -16,6 +17,7 @@ const defaults: AppSettings = {
   notificationsEnabled: true,
   mirrorPhotos: true,
   referencePhoto: null,
+  profilePhoto: null,
 };
 
 interface SettingsContextValue {
