@@ -39,7 +39,7 @@ function Toggle({ value, onValueChange, disabled }: {
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { settings, updateSettings, toggleSetting } = useSettings();
+  const { settings, profilePhoto, updateSettings, toggleSetting, setProfilePhoto } = useSettings();
   const { user, logout, isLoggedIn } = useUser();
   const [pickingRef, setPickingRef] = useState(false);
   const [pickingPfp, setPickingPfp] = useState(false);
@@ -56,12 +56,14 @@ export default function SettingsScreen() {
         aspect: [1, 1],
       });
       if (!result.canceled && result.assets[0]?.uri) {
-        updateSettings({ profilePhoto: result.assets[0].uri });
+        setProfilePhoto(result.assets[0].uri);
       }
     } finally {
       setPickingPfp(false);
     }
   };
+
+  const handleSignOut = () => {
     Alert.alert(
       'Sign Out',
       'Are you sure? You can sign back in anytime.',
@@ -120,8 +122,8 @@ export default function SettingsScreen() {
               <View style={styles.card}>
                 <View style={styles.userRow}>
                   <Pressable onPress={pickProfilePhoto} style={styles.avatarWrap}>
-                    {settings.profilePhoto ? (
-                      <Image source={{ uri: settings.profilePhoto }} style={styles.avatarPhoto} />
+                    {profilePhoto ? (
+                      <Image source={{ uri: profilePhoto }} style={styles.avatarPhoto} />
                     ) : (
                       <View style={styles.avatar}>
                         <Text style={styles.avatarText}>{user?.initials || '?'}</Text>

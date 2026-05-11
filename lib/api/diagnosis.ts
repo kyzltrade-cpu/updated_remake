@@ -13,6 +13,7 @@
 
 import type { AnalyzeImageRequest, DiagnosisResult, DiagnosisProvider } from './types';
 import { withNimRateLimit } from './rateLimiter';
+import { isSafeImageUri } from '@/lib/validation';
 
 // Mock implementation - replace with actual YouCam API calls
 class YouCamDiagnosisProvider implements DiagnosisProvider {
@@ -25,6 +26,11 @@ class YouCamDiagnosisProvider implements DiagnosisProvider {
   }
 
   async analyze(request: AnalyzeImageRequest): Promise<DiagnosisResult> {
+    // Validate image URI before processing
+    if (!request.imageUri || !isSafeImageUri(request.imageUri)) {
+      throw new Error('Invalid image URI - must be file:// or content://');
+    }
+
     // Placeholder response matching the expected format
     // TODO: Implement actual YouCam API call with rate limiting
     // Example with rate limiting:
