@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import { useEffect, useState, ReactNode } from 'react';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status';
+import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokens } from '@/components/theme';
 import { useBrandFonts } from '@/hooks/use-brand-fonts';

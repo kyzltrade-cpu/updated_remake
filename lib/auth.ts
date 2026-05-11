@@ -124,8 +124,8 @@ export async function signOut() {
 
 export async function getSession() {
   const supabase = createClient()
-  const data = await supabase.auth.getSession()
-  return data.session
+  const { data } = await supabase.auth.getSession()
+  return data?.session ?? null
 }
 
 // Dev bypass - requires explicit environment variables
@@ -143,13 +143,13 @@ export async function signInDev() {
   const supabase = createClient()
 
   // Try to sign in first
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email: DEV_EMAIL,
     password: DEV_PASSWORD,
   });
 
-  if (!error && data.session) {
-    return { data, error: null };
+  if (!error && signInData?.session) {
+    return { data: signInData, error: null };
   }
 
   // If sign in fails, try to sign up (for first time)

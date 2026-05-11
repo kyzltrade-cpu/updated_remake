@@ -51,6 +51,26 @@ class GPT4oMiniCoachingProvider implements CoachingProvider {
     return this.getPlaceholderCoaching(diagnosis);
   }
 
+  private parseCoachingResponse(data: { choices?: { message?: { content?: string } }[] }): CoachingResult {
+    try {
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) return this.getPlaceholderCoaching({ categories: [], overallScore: 0, imageAnalysis: { skinTone: '', lighting: '', faceDetected: false, makeupRegions: [] } });
+
+      // Try to parse JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          suggestions: parsed.suggestions || [],
+          compliment: parsed.compliment || 'Great work!',
+        };
+      }
+    } catch (e) {
+      console.error('[Coaching] Failed to parse response:', e);
+    }
+    return this.getPlaceholderCoaching({ categories: [], overallScore: 0, imageAnalysis: { skinTone: '', lighting: '', faceDetected: false, makeupRegions: [] } });
+  }
+
   private buildCoachingPrompt(diagnosis: GetCoachingRequest['diagnosis']): string {
     const categoryScores = diagnosis.categories
       .map(c => `- ${c.name}: ${c.score}/100 (${c.description})`)
