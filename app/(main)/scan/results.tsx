@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import { ScoreRing } from '@/components/score-ring';
 import { CategoryItem } from '@/components/category-item';
 import { SuggestionItem } from '@/components/suggestion-item';
-import { LoadingOverlay } from '@/components/loading-overlay';
+import { LoadingScreen } from '@/components/loading-screen';
 import * as Haptics from 'expo-haptics';
 
 const MOCK_CATEGORIES = [
@@ -50,7 +50,7 @@ export default function ResultsScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <LoadingOverlay visible={loading} />
+        <LoadingScreen />
       </View>
     );
   }
@@ -66,39 +66,49 @@ export default function ResultsScreen() {
           <View style={styles.spacer} />
         </View>
 
-        <Animated.View entering={FadeInUp.delay(100).duration(800)} style={styles.hero}>
+        <Animated.View entering={FadeIn.duration(400)} style={styles.hero}>
           <ScoreRing score={99} visible />
-          <Animated.View entering={FadeInUp.delay(500).duration(600)} style={styles.complimentArea}>
+          <Animated.View entering={FadeIn.duration(400)} style={styles.complimentArea}>
             <Text style={styles.compliment}>{COMPLIMENTS.strong}</Text>
           </Animated.View>
         </Animated.View>
 
-        <View style={styles.divider} />
+        <Animated.View entering={FadeIn.duration(300)}>
+          <View style={styles.divider} />
+        </Animated.View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Breakdown</Text>
-          {MOCK_CATEGORIES.map((cat, i) => (
-            <CategoryItem key={cat.name} name={cat.name} score={cat.score} description={cat.description} delay={i} />
-          ))}
-        </View>
+        <Animated.View entering={FadeIn.delay(80).duration(300)}>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Breakdown</Text>
+            {MOCK_CATEGORIES.map((cat, i) => (
+              <CategoryItem key={cat.name} name={cat.name} score={cat.score} description={cat.description} delay={i} />
+            ))}
+          </View>
+        </Animated.View>
 
-        <View style={styles.divider} />
+        <Animated.View entering={FadeIn.delay(160).duration(300)}>
+          <View style={styles.divider} />
+        </Animated.View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Suggestions</Text>
-          {MOCK_SUGGESTIONS.map((s, i) => (
-            <SuggestionItem key={i} text={s.text} emphasis={s.emphasis} delay={i + 4} />
-          ))}
-        </View>
+        <Animated.View entering={FadeIn.delay(220).duration(300)}>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Suggestions</Text>
+            {MOCK_SUGGESTIONS.map((s, i) => (
+              <SuggestionItem key={i} text={s.text} emphasis={s.emphasis} delay={i + 4} />
+            ))}
+          </View>
+        </Animated.View>
 
-        <View style={styles.bottomCta}>
-          <Pressable style={styles.retakeBtn} onPress={handleRetake}>
-            <Text style={styles.retakeText}>Retake</Text>
-          </Pressable>
-          <Pressable style={styles.doneBtn} onPress={handleDone}>
-            <Text style={styles.doneText}>Done</Text>
-          </Pressable>
-        </View>
+        <Animated.View entering={FadeIn.delay(280).duration(300)}>
+          <View style={styles.bottomCta}>
+            <Pressable style={styles.retakeBtn} onPress={handleRetake}>
+              <Text style={styles.retakeText}>Retake</Text>
+            </Pressable>
+            <Pressable style={styles.doneBtn} onPress={handleDone}>
+              <Text style={styles.doneText}>Done</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );

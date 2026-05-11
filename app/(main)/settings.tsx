@@ -1,169 +1,205 @@
 import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Image } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Image } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokens } from '@/components/theme';
+import { useSettings } from '@/contexts/settings-context';
+import { useUser } from '@/contexts/user-context';
 
-const SETTINGS_KEY = 'remake_settings';
+function SettingRow({ label, sublabel, children }: { label: string; sublabel?: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.rowLeft}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        {sublabel && <Text style={styles.rowSublabel}>{sublabel}</Text>}
+      </View>
+      {children}
+    </View>
+  );
+}
 
-const defaultSettings = {
-  hapticsEnabled: true,
-  notificationsEnabled: true,
-  mirrorPhotos: true,
-  referencePhoto: null as string | null,
-};
+function Toggle({ value, onValueChange, disabled }: {
+  value: boolean;
+  onValueChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={() => {
+        if (!disabled) onValueChange(!value);
+      }}
+      style={[styles.toggle, value && styles.toggleOn, disabled && styles.toggleDisabled]}
+    >
+      <View style={[styles.toggleThumb, value && styles.toggleThumbOn]} />
+    </Pressable>
+  );
+}
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [settings, setSettings] = useState(defaultSettings);
+  const { settings, updateSettings, toggleSetting } = useSettings();
+  const { user, logout, isLoggedIn } = useUser();
+  const [pickingRef, setPickingRef] = useState(false);
 
-  useEffect(() => {
-    AsyncStorage.getItem(SETTINGS_KEY).then(saved => {
-      if (saved) setSettings({ ...defaultSettings, ...JSON.parse(saved) });
-    });
-  }, []);
-
-  const save = (updates: Partial<typeof defaultSettings>) => {
-    const next = { ...settings, ...updates };
-    setSettings(next);
-    AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure? You can sign back in anytime.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: logout,
+        },
+      ]
+    );
   };
 
   const pickReference = async () => {
-    Haptics.selectionAsync();
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.5,
-      allowsEditing: true,
-    });
-    if (!result.canceled && result.assets[0]?.uri) {
-      save({ referencePhoto: result.assets[0].uri });
+    if (pickingRef) return;
+    setPickingRef(true);
+    if (settings.hapticsEnabled) Haptics.selectionAsync();
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.5,
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        updateSettings({ referencePhoto: result.assets[0].uri });
+      }
+    } finally {
+      setPickingRef(false);
     }
   };
 
-  const toggle = (key: keyof typeof defaultSettings) => {
-    Haptics.selectionAsync();
-    save({ [key]: !settings[key] });
+  const clearReference = () => {
+    if (settings.hapticsEnabled) Haptics.selectionAsync();
+    updateSettings({ referencePhoto: null });
   };
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.exitBtn}>
           <Text style={styles.exitBtnText}>✕</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Settings</Text>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.closeBtn}>Done</Text>
-        </Pressable>
+        <View style={styles.exitBtn} />
       </View>
 
-      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-        {/* Profile card */}
-        <Animated.View entering={FadeInUp.delay(50).duration(500)} style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>◎</Text>
-          </View>
-          <Text style={styles.email}>you@example.com</Text>
-          <Text style={styles.memberSince}>Member since May 2026</Text>
-        </Animated.View>
-
-        {/* Stats row */}
-        <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.statsRow}>
-          {[['--', 'Scans'], ['--', 'Streak'], ['--', 'Avg']].map(([val, label]) => (
-            <View key={label} style={styles.stat}>
-              <Text style={styles.statVal}>{val}</Text>
-              <Text style={styles.statLabel}>{label}</Text>
-            </View>
-          ))}
-        </Animated.View>
-
-        {/* Camera & AI */}
-        <Animated.View entering={FadeInUp.delay(150).duration(500)}>
-          <Text style={styles.section}>Camera & AI</Text>
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Mirror Photos</Text>
-              <Switch
-                value={settings.mirrorPhotos}
-                onValueChange={() => toggle('mirrorPhotos')}
-                trackColor={{ true: tokens.colors.pink }}
-                thumbColor="#fff"
-              />
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Reference Photo */}
-        <Animated.View entering={FadeInUp.delay(150).duration(500)}>
-          <Text style={styles.section}>Reference Photo for AI</Text>
-          <View style={styles.card}>
-            {settings.referencePhoto ? (
-              <View style={styles.refPhotoWrap}>
-                <Image source={{ uri: settings.referencePhoto }} style={styles.refPhoto} />
-                <Pressable style={styles.changeBtn} onPress={pickReference}>
-                  <Text style={styles.changeBtnText}>Change</Text>
-                </Pressable>
-                <Pressable style={styles.removeBtn} onPress={() => save({ referencePhoto: null })}>
-                  <Text style={styles.removeBtnText}>Remove</Text>
-                </Pressable>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* User section */}
+        {isLoggedIn && (
+          <Animated.View entering={FadeInUp.delay(50).duration(400)}>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Account</Text>
+              <View style={styles.card}>
+                <View style={styles.userRow}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{user?.initials}</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.userName}>{user?.name}</Text>
+                    <Text style={styles.userEmail}>{user?.email}</Text>
+                  </View>
+                </View>
               </View>
-            ) : (
-              <Pressable style={styles.uploadBox} onPress={pickReference}>
-                <Text style={styles.uploadIcon}>⊕</Text>
-                <Text style={styles.uploadText}>Upload a reference photo</Text>
-                <Text style={styles.uploadSub}>AI uses this to compare against your look</Text>
-              </Pressable>
-            )}
-          </View>
-        </Animated.View>
+            </View>
+          </Animated.View>
+        )}
 
         {/* Preferences */}
-        <Animated.View entering={FadeInUp.delay(200).duration(500)}>
-          <Text style={styles.section}>Preferences</Text>
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Haptic Feedback</Text>
-              <Switch
-                value={settings.hapticsEnabled}
-                onValueChange={() => toggle('hapticsEnabled')}
-                trackColor={{ true: tokens.colors.pink }}
-                thumbColor="#fff"
-              />
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Notifications</Text>
-              <Switch
-                value={settings.notificationsEnabled}
-                onValueChange={() => toggle('notificationsEnabled')}
-                trackColor={{ true: tokens.colors.pink }}
-                thumbColor="#fff"
-              />
+        <Animated.View entering={FadeInUp.delay(120).duration(400)}>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Preferences</Text>
+            <View style={styles.card}>
+              <SettingRow label="Haptic feedback" sublabel="Vibration on interactions">
+                <Toggle
+                  value={settings.hapticsEnabled}
+                  onValueChange={() => toggleSetting('hapticsEnabled')}
+                />
+              </SettingRow>
+
+              <View style={styles.divider} />
+
+              <SettingRow label="Mirror photos" sublabel="Front camera flip">
+                <Toggle
+                  value={settings.mirrorPhotos}
+                  onValueChange={() => toggleSetting('mirrorPhotos')}
+                />
+              </SettingRow>
             </View>
           </View>
         </Animated.View>
 
-        {/* Account */}
-        <Animated.View entering={FadeInUp.delay(250).duration(500)}>
-          <Text style={styles.section}>Account</Text>
-          <View style={styles.card}>
-            <Pressable style={styles.row}>
-              <Text style={styles.rowLabel}>Manage Subscription</Text>
-              <Text style={styles.rowArrow}>›</Text>
-            </Pressable>
-            <View style={styles.divider} />
-            <Pressable style={styles.row} onPress={() => Alert.alert('Coming soon', 'Profile editing coming soon.')}>
-              <Text style={styles.rowLabel}>Edit Profile</Text>
-              <Text style={styles.rowArrow}>›</Text>
-            </Pressable>
+        {/* Reference photo */}
+        <Animated.View entering={FadeInUp.delay(190).duration(400)}>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Reference Photo</Text>
+            <View style={styles.card}>
+              {settings.referencePhoto ? (
+                <Pressable onPress={pickReference}>
+                  <Image source={{ uri: settings.referencePhoto }} style={styles.refPhoto} />
+                  <Text style={styles.refHint}>Tap to change</Text>
+                </Pressable>
+              ) : (
+                <Pressable style={styles.refPlaceholder} onPress={pickReference}>
+                  <Text style={styles.refPlaceholderIcon}>⊕</Text>
+                  <Text style={styles.refPlaceholderText}>Add reference photo</Text>
+                </Pressable>
+              )}
+              {settings.referencePhoto && (
+                <Pressable style={styles.clearBtn} onPress={clearReference}>
+                  <Text style={styles.clearBtnText}>Remove</Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         </Animated.View>
 
-        <View style={styles.bottomPad} />
+        {/* Notifications */}
+        <Animated.View entering={FadeInUp.delay(260).duration(400)}>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Notifications</Text>
+            <View style={styles.card}>
+              <SettingRow label="Push notifications" sublabel="Scan results & tips">
+                <Toggle
+                  value={settings.notificationsEnabled}
+                  onValueChange={() => toggleSetting('notificationsEnabled')}
+                />
+              </SettingRow>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* About */}
+        <Animated.View entering={FadeInUp.delay(330).duration(400)}>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>About</Text>
+            <View style={styles.card}>
+              <SettingRow label="Version" sublabel="1.0.0">
+                <Text style={styles.rowValue}>1.0.0</Text>
+              </SettingRow>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Sign out */}
+        {isLoggedIn && (
+          <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.section}>
+            <Pressable style={styles.signOutBtn} onPress={handleLogout}>
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </Pressable>
+          </Animated.View>
+        )}
+
+        <View style={{ height: 60 }} />
       </ScrollView>
     </View>
   );
@@ -171,36 +207,165 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.colors.beige },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
-  headerTitle: { fontFamily: tokens.fonts.serif, fontSize: 22, color: tokens.colors.text, textAlign: 'center', flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
+  },
   exitBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
   exitBtnText: { fontSize: 18, color: tokens.colors.gray, marginTop: -1 },
-  closeBtn: { fontFamily: tokens.fonts.regular, fontSize: 16, color: '#fff', fontWeight: '600', backgroundColor: tokens.colors.pink, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12, overflow: 'hidden' },
-  body: { flex: 1, paddingHorizontal: 20 },
-  section: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '600', color: tokens.colors.gray, textTransform: 'uppercase', letterSpacing: 0.08, marginTop: 24, marginBottom: 8, marginLeft: 4 },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 4, overflow: 'hidden' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
-  rowLabel: { fontFamily: tokens.fonts.regular, fontSize: 15, color: tokens.colors.text },
-  rowArrow: { fontSize: 18, color: tokens.colors.gray },
-  divider: { height: 1, backgroundColor: tokens.colors.border, marginLeft: 16 },
-  refPhotoWrap: { padding: 12, alignItems: 'center', gap: 12 },
-  refPhoto: { width: 100, height: 100, borderRadius: 12, backgroundColor: tokens.colors.border },
-  changeBtn: { backgroundColor: tokens.colors.pink, paddingHorizontal: 20, paddingVertical: 8, borderRadius: 12 },
-  changeBtnText: { color: '#fff', fontWeight: '500', fontSize: 13 },
-  removeBtn: { paddingVertical: 4 },
-  removeBtnText: { color: tokens.colors.gray, fontSize: 13 },
-  uploadBox: { padding: 24, alignItems: 'center', gap: 6 },
-  uploadIcon: { fontSize: 32, color: tokens.colors.pinkLight },
-  uploadText: { fontFamily: tokens.fonts.regular, fontSize: 14, color: tokens.colors.text },
-  uploadSub: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, textAlign: 'center' },
-  profileCard: { alignItems: 'center', paddingVertical: 24, gap: 6 },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: tokens.colors.cream, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
-  avatarText: { fontSize: 28, color: tokens.colors.pinkDeep },
-  email: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: tokens.colors.text },
-  memberSince: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.grayLight },
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 8, paddingHorizontal: 4 },
-  stat: { flex: 1, backgroundColor: tokens.colors.white, borderRadius: 14, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: tokens.colors.border },
-  statVal: { fontFamily: tokens.fonts.serif, fontSize: 20, color: tokens.colors.pinkDeep, marginBottom: 2 },
-  statLabel: { fontFamily: tokens.fonts.regular, fontSize: 10, color: tokens.colors.gray },
-  bottomPad: { height: 40 },
+  headerTitle: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    fontWeight: '600',
+    color: tokens.colors.text,
+    letterSpacing: 0.02,
+  },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 8 },
+  section: { marginBottom: 24 },
+  sectionHeader: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.12,
+    textTransform: 'uppercase',
+    color: tokens.colors.gray,
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+  card: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    minHeight: 58,
+  },
+  rowLeft: { flex: 1, paddingRight: 12 },
+  rowLabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    fontWeight: '500',
+    color: tokens.colors.text,
+  },
+  rowSublabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    color: tokens.colors.gray,
+    marginTop: 2,
+  },
+  rowValue: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    color: tokens.colors.gray,
+  },
+  divider: { height: 1, backgroundColor: tokens.colors.border, marginLeft: 18 },
+
+  // Toggle
+  toggle: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#e0dbd5',
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleOn: { backgroundColor: tokens.colors.pink },
+  toggleDisabled: { opacity: 0.4 },
+  toggleThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: tokens.colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+  },
+  toggleThumbOn: { alignSelf: 'flex-end' },
+
+  // User
+  userRow: { flexDirection: 'row', alignItems: 'center', padding: 18, gap: 14 },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: tokens.colors.text,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 16,
+    fontWeight: '600',
+    color: tokens.colors.white,
+  },
+  userName: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    fontWeight: '600',
+    color: tokens.colors.text,
+  },
+  userEmail: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    color: tokens.colors.gray,
+    marginTop: 2,
+  },
+
+  // Reference photo
+  refPhoto: { width: '100%', height: 200, borderRadius: 12, margin: 16 },
+  refHint: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    color: tokens.colors.gray,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  refPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    gap: 10,
+  },
+  refPlaceholderIcon: { fontSize: 28, color: tokens.colors.gray },
+  refPlaceholderText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    color: tokens.colors.gray,
+  },
+  clearBtn: { paddingVertical: 14, alignItems: 'center' },
+  clearBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    color: '#e74c3c',
+    fontWeight: '500',
+  },
+
+  // Sign out
+  signOutBtn: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#e74c3c',
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  signOutText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#e74c3c',
+  },
 });

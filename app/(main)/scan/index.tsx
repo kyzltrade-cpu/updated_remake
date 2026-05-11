@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import Animated, { useSharedValue, withSequence, withTiming, FadeIn, Easing } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +10,8 @@ import { tokens } from '@/components/theme';
 import { FaceCorners } from '@/components/face-corners';
 import { GalleryIcon } from '@/components/ui/gallery-icon';
 import { FlashIcon } from '@/components/ui/flash-icon';
-import { triggerEdgeFlash } from '@/components/edge-flash';
+import { EdgeFlashOverlay } from '@/components/edge-flash';
+import { useSettings } from '@/contexts/settings-context';
 
 // PFP button — initials with gradient border ring (pink → gold)
 function PFPButton({ initials, onPress }: { initials?: string; onPress?: () => void }) {
@@ -29,25 +30,15 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [flash, setFlash] = useState(false);
   const cameraRef = useRef<CameraView>(null);
-  const screenFlashOpacity = useSharedValue(0);
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (permission === null) requestPermission();
   }, []);
 
-  const triggerSnapchatFlash = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    triggerEdgeFlash();
-    screenFlashOpacity.value = withSequence(
-      withTiming(1, { duration: 30 }),
-      withTiming(0, { duration: 180, easing: Easing.out(Easing.quad) })
-    );
-  };
-
   const takePhoto = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!cameraRef.current) return;
-    if (flash) triggerSnapchatFlash();
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.7, skipProcessing: true });
       if (photo?.uri) {
@@ -59,7 +50,7 @@ export default function ScanScreen() {
   };
 
   const pickImage = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.7,
@@ -71,7 +62,7 @@ export default function ScanScreen() {
   };
 
   const toggleFlash = () => {
-    Haptics.selectionAsync();
+    if (settings.hapticsEnabled) Haptics.selectionAsync();
     setFlash(f => !f);
   };
 
@@ -93,7 +84,6 @@ export default function ScanScreen() {
         ref={cameraRef}
         style={styles.camera}
         facing="front"
-        flash={flash ? 'on' : 'off'}
         mode="picture"
       />
 
@@ -127,6 +117,8 @@ export default function ScanScreen() {
           <FlashIcon active={flash} />
         </Pressable>
       </Animated.View>
+
+      <EdgeFlashOverlay visible={flash} />
     </View>
   );
 }
