@@ -57,12 +57,12 @@ export default function StyleArchetypeScreen() {
 
   const handleContinue = async () => {
     await saveGloField({ vibe_picks: selected });
-    router.push('/(onboarding)/scan-prep');
+    router.push('/(onboarding)/lighting');
   };
 
   const handleSkip = async () => {
     await saveGloField({ vibe_picks: [] });
-    router.push('/(onboarding)/scan-prep');
+    router.push('/(onboarding)/lighting');
   };
 
   return (

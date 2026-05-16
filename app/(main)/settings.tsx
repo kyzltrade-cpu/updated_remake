@@ -243,7 +243,7 @@ export default function SettingsScreen() {
                 style={styles.upgradePill}
                 onPress={() => {
                   if (settings.hapticsEnabled) Haptics.selectionAsync();
-                  router.push('/(onboarding)/pricing');
+                  router.push('/(main)/paywall');
                 }}
               >
                 <Text style={styles.upgradePillText}>Upgrade to Pro</Text>
