@@ -4,12 +4,12 @@ import { View, Text, StyleSheet, TextInput, Pressable, Alert } from 'react-nativ
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import { GlassButton } from '@/components/glass-button';
-import { OnboardingPagination } from '@/components/onboarding-pagination';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { signInWithOtp, signInDev, DEV_BYPASS } from '@/lib/auth';
 import { isValidEmail, isValidName, sanitizeName, sanitizeEmail } from '@/lib/validation';
 import { useAuth } from '@/contexts/AuthContext';
+import { loadGloDraft, clearGloDraft } from '@/lib/glo-profile';
 
 export default function CreateAccountScreen() {
   const router = useRouter();
@@ -21,12 +21,18 @@ export default function CreateAccountScreen() {
   const [nameError, setNameError] = useState('');
   const [emailSent, setEmailSent] = useState(false);
 
-  // When auth completes (user clicks magic link), finish onboarding
+  // When auth completes (user clicks magic link), sync GLO profile then enter app
   useEffect(() => {
     if (user && emailSent) {
-      AsyncStorage.setItem('@remake_onboarding_complete', 'true').then(() => {
+      const finish = async () => {
+        // TODO: write GLO profile to Supabase user_profiles table
+        // const draft = await loadGloDraft();
+        // await supabase.from('user_profiles').upsert({ user_id: user.id, ...draft });
+        await clearGloDraft();
+        await AsyncStorage.setItem('@remake_onboarding_complete', 'true');
         router.replace('/(main)/home');
-      });
+      };
+      finish();
     }
   }, [user, emailSent]);
 
@@ -177,7 +183,6 @@ export default function CreateAccountScreen() {
           </Pressable>
         )}
         <Text style={styles.legal}>By continuing you agree to our Terms of Service and Privacy Policy.</Text>
-        <OnboardingPagination total={10} current={5} />
       </Animated.View>
     </View>
   );

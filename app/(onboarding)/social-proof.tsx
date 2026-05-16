@@ -28,8 +28,8 @@ export default function SocialProofScreen() {
         ))}
       </View>
       <Animated.View entering={FadeInUp.delay(550).duration(600)} style={styles.bottom}>
-        <GlassButton title="Next" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/(onboarding)/pricing'); }} variant="primary" style={styles.cta} />
-        <OnboardingPagination total={10} current={3} />
+        <GlassButton title="Next" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/(onboarding)/skin-goals'); }} variant="primary" style={styles.cta} />
+        <OnboardingPagination total={3} current={2} />
       </Animated.View>
     </View>
   );

@@ -80,7 +80,6 @@ export default function PricingScreen() {
           variant="primary"
           style={styles.cta}
         />
-        <OnboardingPagination total={10} current={4} />
       </Animated.View>
     </View>
   );

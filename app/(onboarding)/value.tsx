@@ -49,7 +49,7 @@ export default function ValueScreen() {
           variant="primary"
           style={styles.cta}
         />
-        <OnboardingPagination total={10} current={1} />
+        <OnboardingPagination total={3} current={0} />
       </Animated.View>
     </View>
   );

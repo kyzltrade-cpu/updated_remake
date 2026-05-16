@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 const FEATURES = [
   { icon: '◈', title: 'Precision Detection', desc: 'Analyzes 4 key areas: complexion, eyes, lips, and sculpt — each with targeted scoring.' },
   { icon: '◎', title: 'AI-Powered Analysis', desc: 'Powered by GPT-4o vision, trained on professional makeup artistry.' },
+  { icon: '▣', title: 'Product Scanner', desc: 'Scan any product barcode for an instant compatibility score — shade, ingredients, and skin fit in seconds.' },
   { icon: '◉', title: 'Streak System', desc: 'Scan daily to build streaks. Consistency is the secret to mastery.' },
   { icon: '◇', title: 'Progress Tracking', desc: "Watch your scores evolve over time. Improvement becomes visible, then habitual." },
 ];
@@ -33,7 +34,7 @@ export default function FeaturesScreen() {
       </ScrollView>
       <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.bottom}>
         <GlassButton title="Next" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push('/(onboarding)/social-proof'); }} variant="primary" style={styles.cta} />
-        <OnboardingPagination total={10} current={2} />
+        <OnboardingPagination total={3} current={1} />
       </Animated.View>
     </View>
   );
