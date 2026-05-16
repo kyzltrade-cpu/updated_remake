@@ -25,19 +25,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    let cancelled = false;
+    setIsLoading(true);
+
     const supabase = createClient();
 
     supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
       .then(({ data, error }) => {
-        if (!error && data) {
-          setSubscription(data);
+        if (cancelled) return;
+        if (error) {
+          console.error('[Subscription] fetch error:', error.message);
         }
+        setSubscription(data ?? null);
         setIsLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   return (

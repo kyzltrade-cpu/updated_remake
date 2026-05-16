@@ -31,31 +31,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient()
+    // In dev mode, block isLoading from clearing until signInDev() resolves.
+    // INITIAL_SESSION fires with null before signInDev completes, which would
+    // otherwise route to onboarding before the session is established.
+    let devReady = !isDevMode
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-    })
-
-    // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setIsLoading(false)
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+      setUser(newSession?.user ?? null)
+      if (devReady) setIsLoading(false)
     })
+
+    if (isDevMode) {
+      signInDev()
+        .catch(() => {})
+        .finally(() => {
+          devReady = true
+          supabase.auth.getSession().then(({ data }) => {
+            setSession(data.session)
+            setUser(data.session?.user ?? null)
+            setIsLoading(false)
+          })
+        })
+    }
 
     return () => subscription.unsubscribe()
   }, [])
 
   const signInWithDevBypass = async () => {
     if (!isDevMode) return
-    const { data, error } = await signInDev()
+    const { error } = await signInDev()
     if (error) throw error
-    // Session will update via onAuthStateChange
+    // Session updates via onAuthStateChange
   }
 
   return (

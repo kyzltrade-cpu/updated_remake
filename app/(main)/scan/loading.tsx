@@ -1,33 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Alert } from 'react-native';
 import { LoadingScreen } from '@/components/loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
-import type { DiagnosisResult, CoachingResult } from '@/lib/api/types';
 
-/**
- * Validates that the URI comes from the local ImagePicker (file:// protocol).
- * Prevents SSRF attacks where an attacker could pass a malicious external URL.
- */
 function validateImageUri(uri: string | undefined): string | null {
   if (!uri) {
     Alert.alert('Error', 'No image provided');
     return null;
   }
 
-  // Only allow file:// URIs from ImagePicker
   const allowedSchemes = ['file://', 'content://'];
   const isAllowed = allowedSchemes.some(scheme => uri.startsWith(scheme));
 
   if (!isAllowed) {
-    console.error('[Security] Invalid image URI scheme rejected:', uri.substring(0, 50));
+    if (__DEV__) console.error('[Security] Invalid image URI scheme rejected:', uri.substring(0, 50));
     Alert.alert('Error', 'Invalid image source');
     return null;
   }
 
-  // Basic path traversal check
   if (uri.includes('..') || uri.includes('%2e%2e')) {
-    console.error('[Security] Path traversal attempt detected');
+    if (__DEV__) console.error('[Security] Path traversal attempt detected');
     Alert.alert('Error', 'Invalid image path');
     return null;
   }
@@ -38,18 +31,27 @@ function validateImageUri(uri: string | undefined): string | null {
 export default function LoadingPage() {
   const router = useRouter();
   const params = useLocalSearchParams<{ uri?: string }>();
+  const analysisStarted = useRef(false);
 
   useEffect(() => {
+    // Prevent double-fire in React 19 strict mode and on param identity changes
+    if (analysisStarted.current) return;
+    analysisStarted.current = true;
+
+    let isMounted = true;
+
     const runAnalysis = async () => {
       const validUri = validateImageUri(params.uri);
       if (!validUri) {
-        router.replace('/(main)/scan');
+        if (isMounted) router.replace('/(main)/scan');
         return;
       }
 
       try {
         const diagnosisResult = await analyzeImage({ imageUri: validUri });
         const coachingResult = await getCoaching({ diagnosis: diagnosisResult });
+
+        if (!isMounted) return;
 
         router.replace({
           pathname: '/(main)/scan/results',
@@ -60,7 +62,8 @@ export default function LoadingPage() {
           },
         });
       } catch (error) {
-        console.error('Analysis failed:', error);
+        if (!isMounted) return;
+        if (__DEV__) console.error('Analysis failed:', error);
         Alert.alert('Analysis failed', 'Please try again.', [
           { text: 'OK', onPress: () => router.replace('/(main)/scan') },
         ]);
@@ -68,7 +71,11 @@ export default function LoadingPage() {
     };
 
     runAnalysis();
-  }, [params.uri]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f5f0eb' }}>

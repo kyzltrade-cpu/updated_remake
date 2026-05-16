@@ -103,14 +103,14 @@ export async function signInWithOtp(email: string, options?: { data?: Record<str
   const supabase = createClient()
   const cleanEmail = sanitizeEmail(email);
 
-  // Sanitize name if provided
-  if (options?.data?.full_name && typeof options.data.full_name === 'string') {
-    options.data.full_name = sanitizeName(options.data.full_name);
-  }
+  // Sanitize name immutably to avoid mutating the caller's object
+  const sanitizedOptions = options?.data?.full_name && typeof options.data.full_name === 'string'
+    ? { ...options, data: { ...options.data, full_name: sanitizeName(options.data.full_name) } }
+    : options;
 
   const { data, error } = await supabase.auth.signInWithOtp({
     email: cleanEmail,
-    options,
+    options: sanitizedOptions,
   });
 
   return { data, error };

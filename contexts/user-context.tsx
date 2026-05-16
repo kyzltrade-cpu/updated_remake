@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -30,16 +31,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
     const name = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User';
     const email = authUser.email || '';
-    const initials = name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+    const initials = name.trim().split(/\s+/).map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
     setUser({ name, email, initials });
   }, [authUser]);
 
   const logout = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    await AsyncStorage.removeItem('@remake_onboarding_complete');
-    router.replace('/(onboarding)');
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      await AsyncStorage.multiRemove([
+        '@remake_onboarding_complete',
+        'remake_settings',
+        'remake_profile_photo',
+      ]);
+      router.replace('/(onboarding)');
+    } catch {
+      Alert.alert('Error', 'Sign out failed. Please try again.');
+    }
   }, []);
 
   return (

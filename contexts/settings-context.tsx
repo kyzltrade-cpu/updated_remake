@@ -45,14 +45,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           setSettings({ ...defaults, ...JSON.parse(saved) });
         }
 
-        // Load sensitive settings (haptics, notifications, etc.) and profile photo from AsyncStorage
         const savedPhoto = await storage.getItem(PROFILE_PHOTO_KEY);
         if (savedPhoto) {
           setProfilePhotoState(savedPhoto);
-          console.log('[Settings] Loaded profile photo from storage');
         }
       } catch (e) {
-        console.error('[Settings] Failed to load:', e);
+        if (__DEV__) console.error('[Settings] Failed to load:', e);
       }
     };
 
@@ -63,7 +61,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings(prev => {
       const next = { ...prev, ...updates };
       // Persist non-sensitive settings
-      storage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(console.error);
+      storage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(e => { if (__DEV__) console.error('[Settings] persist failed:', e); });
       return next;
     });
   }, []);
@@ -76,28 +74,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [settings, updateSettings]);
 
   const setProfilePhoto = useCallback(async (uri: string | null) => {
-    console.log('[Settings] setProfilePhoto called with:', uri ? `${uri.substring(0, 50)}...` : 'null');
     try {
       if (uri) {
-        // Save to AsyncStorage - blob URIs are too long for SecureStore's 2048-byte limit
-        // The URI is just a temp file path, not sensitive data
         await storage.setItem(PROFILE_PHOTO_KEY, uri);
-        console.log('[Settings] Profile photo saved to storage');
       } else {
         await storage.removeItem(PROFILE_PHOTO_KEY);
-        console.log('[Settings] Profile photo removed from storage');
       }
       setProfilePhotoState(uri);
-      console.log('[Settings] State updated successfully');
     } catch (e) {
-      console.error('[Settings] Failed to save profile photo:', e);
+      if (__DEV__) console.error('[Settings] Failed to save profile photo:', e);
     }
   }, []);
 
   const clearAllData = useCallback(async () => {
-    const keys = await storage.getAllKeys();
-    const appKeys = keys.filter(k => k.startsWith('@remake'));
-    await storage.multiRemove(appKeys);
+    await Promise.all([
+      storage.removeItem(SETTINGS_KEY),
+      storage.removeItem(PROFILE_PHOTO_KEY),
+    ]);
     setSettings(defaults);
     setProfilePhotoState(null);
   }, []);
