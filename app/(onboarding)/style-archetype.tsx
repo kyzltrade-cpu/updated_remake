@@ -4,12 +4,11 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
+import { OnboardingHeader } from '@/components/onboarding-header';
 import { GlassButton } from '@/components/glass-button';
 import { saveGloField } from '@/lib/glo-profile';
 import * as Haptics from 'expo-haptics';
 
-const STEP = 9;
-const TOTAL = 9;
 
 const VIBES = [
   { id: 'coquette_rose',    label: 'Coquette Rose',      palette: ['#D4A096', '#C97E8A', '#E8C4B0', '#F2DDD5'] },
@@ -46,15 +45,9 @@ export default function StyleArchetypeScreen() {
 
   return (
     <View style={[styles.root, { paddingBottom: insets.bottom + 20 }]}>
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
-      </View>
-      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
-        <Text style={styles.backIcon}>‹</Text>
-      </Pressable>
+      <OnboardingHeader step={10} total={11} onBack={() => router.back()} />
 
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
-        <Text style={styles.step}>{STEP} of {TOTAL}</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
         <Text style={styles.title}>Which vibes{'\n'}feel like you?</Text>
         <Text style={styles.sub}>Pick up to 2 — or skip.</Text>
       </Animated.View>
@@ -104,8 +97,6 @@ export default function StyleArchetypeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
-  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border },
-  fill: { height: '100%', backgroundColor: tokens.colors.pinkDeep },
   header: { marginBottom: 20 },
   step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
   title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
@@ -126,6 +117,4 @@ const styles = StyleSheet.create({
   cta: { width: '100%' },
   skipBtn: { paddingVertical: 8 },
   skipText: { fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.gray, textDecorationLine: 'underline' },
-  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
-  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
 });

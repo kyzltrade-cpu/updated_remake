@@ -2,17 +2,29 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   View, Text, StyleSheet, TextInput, Alert,
-  KeyboardAvoidingView, Platform, ScrollView, Pressable,
+  KeyboardAvoidingView, Platform, Pressable,
 } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tokens } from '@/components/theme';
-import { GlassButton } from '@/components/glass-button';
 import { signUp, signInDev, DEV_BYPASS } from '@/lib/auth';
 import { isValidEmail, isValidPassword, sanitizeEmail } from '@/lib/validation';
 import { clearGloDraft } from '@/lib/glo-profile';
 import * as Haptics from 'expo-haptics';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+const DNA_CHIPS = [
+  { glyph: '◯', label: 'Foundation Shade' },
+  { glyph: '✦', label: 'Colour Season' },
+  { glyph: '⬭', label: 'Face Shape' },
+  { glyph: '—', label: 'Brow Blueprint' },
+  { glyph: '✦', label: 'Lash Profile' },
+  { glyph: '◉', label: 'Energy Type' },
+  { glyph: '♡', label: 'Lip Profile' },
+  { glyph: '◉', label: 'Blush Profile' },
+  { glyph: '✦', label: 'Beauty Archetype' },
+  { glyph: '♡', label: 'Beauty Wrapped' },
+];
 
 export default function CreateAccountScreen() {
   const router = useRouter();
@@ -20,14 +32,10 @@ export default function CreateAccountScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [confirmError, setConfirmError] = useState('');
 
   const validate = (): boolean => {
     let valid = true;
@@ -40,10 +48,6 @@ export default function CreateAccountScreen() {
       setPasswordError('At least 8 characters with a letter and number');
       valid = false;
     } else setPasswordError('');
-    if (password !== confirmPassword) {
-      setConfirmError("Passwords don't match");
-      valid = false;
-    } else setConfirmError('');
     return valid;
   };
 
@@ -79,9 +83,12 @@ export default function CreateAccountScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.track}>
-        <View style={styles.fill} />
-      </View>
+      <LinearGradient
+        colors={['#0A0807', '#1C1310', '#0A0807']}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Back */}
       <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
         <Text style={styles.backIcon}>‹</Text>
       </Pressable>
@@ -90,26 +97,39 @@ export default function CreateAccountScreen() {
         style={styles.kav}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
-          contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 40 }]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+        <View style={[styles.inner, { paddingTop: insets.top + 54, paddingBottom: insets.bottom + 24 }]}>
+
+          {/* Header */}
           <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-            <Text style={styles.eyebrow}>You're almost there</Text>
-            <Text style={styles.title}>Lock in your{'\n'}Beauty DNA.</Text>
-            <Text style={styles.sub}>
-              Your results are being held for you. Create an account to unlock your Beauty Wrapped, track your glow-up over time, and get coaching built around your face.
-            </Text>
+            <Text style={styles.eyebrow}>Your results are ready</Text>
+            <Text style={styles.title}>Unlock your{'\n'}Beauty DNA.</Text>
           </Animated.View>
 
-          <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.form}>
+          {/* DNA chip grid */}
+          <Animated.View entering={FadeIn.delay(180).duration(700)} style={styles.chipSection}>
+            <Text style={styles.chipSectionLabel}>10 RESULTS · LOCKED</Text>
+            <View style={styles.chipGrid}>
+              {DNA_CHIPS.map((chip) => (
+                <View key={chip.label} style={styles.chip}>
+                  <Text style={styles.chipGlyph}>{chip.glyph}</Text>
+                  <Text style={styles.chipLabel}>{chip.label}</Text>
+                  <MaterialIcons name="lock" size={8} color="rgba(200,168,130,0.35)" />
+                </View>
+              ))}
+            </View>
+          </Animated.View>
+
+          {/* Divider */}
+          <Animated.View entering={FadeIn.delay(260).duration(500)} style={styles.divider} />
+
+          {/* Form */}
+          <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.form}>
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Email address</Text>
+              <Text style={styles.fieldLabel}>Email</Text>
               <TextInput
                 style={[styles.input, emailError ? styles.inputError : null]}
                 placeholder="you@example.com"
-                placeholderTextColor={tokens.colors.grayLight}
+                placeholderTextColor="rgba(255,249,247,0.22)"
                 value={email}
                 onChangeText={t => { setEmail(t); if (emailError) setEmailError(''); }}
                 keyboardType="email-address"
@@ -126,7 +146,7 @@ export default function CreateAccountScreen() {
                 <TextInput
                   style={[styles.input, styles.inputFlex, passwordError ? styles.inputError : null]}
                   placeholder="Min. 8 chars, 1 letter, 1 number"
-                  placeholderTextColor={tokens.colors.grayLight}
+                  placeholderTextColor="rgba(255,249,247,0.22)"
                   value={password}
                   onChangeText={t => { setPassword(t); if (passwordError) setPasswordError(''); }}
                   secureTextEntry={!showPassword}
@@ -137,48 +157,28 @@ export default function CreateAccountScreen() {
                   <MaterialIcons
                     name={showPassword ? 'visibility-off' : 'visibility'}
                     size={20}
-                    color={tokens.colors.grayLight}
+                    color="rgba(255,249,247,0.3)"
                   />
                 </Pressable>
               </View>
               {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
             </View>
-
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Confirm password</Text>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={[styles.input, styles.inputFlex, confirmError ? styles.inputError : null]}
-                  placeholder="Repeat your password"
-                  placeholderTextColor={tokens.colors.grayLight}
-                  value={confirmPassword}
-                  onChangeText={t => { setConfirmPassword(t); if (confirmError) setConfirmError(''); }}
-                  secureTextEntry={!showConfirm}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                <Pressable onPress={() => setShowConfirm(v => !v)} hitSlop={10}>
-                  <MaterialIcons
-                    name={showConfirm ? 'visibility-off' : 'visibility'}
-                    size={20}
-                    color={tokens.colors.grayLight}
-                  />
-                </Pressable>
-              </View>
-              {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
-            </View>
           </Animated.View>
 
           <View style={styles.spacer} />
 
-          <Animated.View entering={FadeInUp.delay(360).duration(500)} style={styles.actions}>
-            <GlassButton
-              title={loading ? 'Creating account…' : 'Reveal My Beauty Wrapped'}
+          {/* Actions */}
+          <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.actions}>
+            <Pressable
               onPress={handleCreate}
-              variant="primary"
-              style={styles.cta}
               disabled={loading}
-            />
+              style={({ pressed }) => [styles.cta, pressed && { opacity: 0.88 }, loading && { opacity: 0.5 }]}
+            >
+              <Text style={styles.ctaText}>
+                {loading ? 'Creating account…' : 'Reveal My Beauty DNA'}
+              </Text>
+              {!loading && <MaterialIcons name="arrow-forward" size={16} color="#1A1715" />}
+            </Pressable>
             <Text style={styles.legal}>
               By continuing you agree to our Terms of Service and Privacy Policy.
             </Text>
@@ -186,68 +186,157 @@ export default function CreateAccountScreen() {
               <Text style={styles.skipText}>Skip for now</Text>
             </Pressable>
           </Animated.View>
-        </ScrollView>
+
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: tokens.colors.beige },
-  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border, zIndex: 10 },
-  fill: { height: '100%', width: '100%', backgroundColor: tokens.colors.pinkDeep },
+  root: { flex: 1, backgroundColor: '#0A0807' },
   kav: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 28 },
+  inner: {
+    flex: 1,
+    paddingHorizontal: 28,
+  },
 
-  header: { marginBottom: 32 },
+  // Header
+  header: { marginBottom: 24 },
   eyebrow: {
-    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500',
-    letterSpacing: 1.2, textTransform: 'uppercase',
-    color: tokens.colors.grayLight, marginBottom: 14,
+    fontFamily: 'Inter',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 3.5,
+    textTransform: 'uppercase',
+    color: '#C8A882',
+    marginBottom: 8,
   },
   title: {
-    fontFamily: tokens.fonts.serif, fontSize: 36, fontWeight: '400',
-    color: tokens.colors.text, lineHeight: 48, marginBottom: 14,
-  },
-  sub: {
-    fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300',
-    color: tokens.colors.gray, lineHeight: 24,
+    fontFamily: 'Playfair Display',
+    fontSize: 34,
+    fontWeight: '400',
+    color: '#FFF9F7',
+    lineHeight: 44,
   },
 
-  form: { gap: 16 },
-  field: { gap: 8 },
+  // Chip grid
+  chipSection: { marginBottom: 20 },
+  chipSectionLabel: {
+    fontFamily: 'Inter',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2.5,
+    color: 'rgba(200,168,130,0.45)',
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
+  chipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(200,168,130,0.14)',
+  },
+  chipGlyph: {
+    fontFamily: 'Playfair Display',
+    fontSize: 10,
+    color: 'rgba(200,168,130,0.6)',
+    lineHeight: 14,
+  },
+  chipLabel: {
+    fontFamily: 'Inter',
+    fontSize: 10,
+    fontWeight: '500',
+    color: 'rgba(255,249,247,0.48)',
+    letterSpacing: 0.1,
+  },
+
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 20,
+  },
+
+  // Form
+  form: { gap: 12 },
+  field: { gap: 6 },
   fieldLabel: {
-    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '600',
-    color: tokens.colors.text, letterSpacing: 0.4, textTransform: 'uppercase',
+    fontFamily: 'Inter',
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,249,247,0.38)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: tokens.colors.white, borderRadius: 14,
-    paddingHorizontal: 18, paddingVertical: 16,
-    fontFamily: tokens.fonts.regular, fontSize: 15,
-    color: tokens.colors.text,
-    borderWidth: 1.5, borderColor: tokens.colors.border,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    fontFamily: 'Inter',
+    fontSize: 15,
+    color: '#FFF9F7',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.09)',
   },
   inputFlex: { flex: 1 },
-  inputError: { borderColor: tokens.colors.pinkDeep },
+  inputError: { borderColor: '#C8A882' },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  errorText: {
-    fontFamily: tokens.fonts.regular, fontSize: 12,
-    color: tokens.colors.pinkDeep, marginTop: 2,
+  errorText: { fontFamily: 'Inter', fontSize: 11, color: '#C8A882', marginTop: 2 },
+
+  spacer: { flex: 1, minHeight: 20 },
+
+  // Actions
+  actions: { alignItems: 'center', gap: 10 },
+  cta: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#C8A882',
+    borderRadius: 50,
+    paddingVertical: 16,
+    shadowColor: '#C8A882',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    elevation: 6,
   },
-
-  spacer: { flex: 1, minHeight: 28 },
-
-  actions: { alignItems: 'center', gap: 14 },
-  cta: { width: '100%' },
+  ctaText: {
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1A1715',
+    letterSpacing: 0.2,
+  },
   legal: {
-    fontFamily: tokens.fonts.regular, fontSize: 11,
-    color: tokens.colors.grayLight, textAlign: 'center', lineHeight: 17,
+    fontFamily: 'Inter',
+    fontSize: 11,
+    color: 'rgba(255,249,247,0.2)',
+    textAlign: 'center',
+    lineHeight: 17,
   },
-  skipBtn: { paddingVertical: 6 },
-  skipText: {
-    fontFamily: tokens.fonts.regular, fontSize: 13,
-    color: tokens.colors.grayLight,
+  skipBtn: { paddingVertical: 4 },
+  skipText: { fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,249,247,0.28)' },
+  backBtn: {
+    position: 'absolute',
+    left: 20,
+    zIndex: 10,
+    width: 34,
+    height: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
-  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
+  backIcon: { fontSize: 24, color: 'rgba(255,249,247,0.4)', lineHeight: 26 },
 });

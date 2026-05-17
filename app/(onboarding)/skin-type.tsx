@@ -4,11 +4,10 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
+import { OnboardingHeader } from '@/components/onboarding-header';
 import { saveGloField } from '@/lib/glo-profile';
 import * as Haptics from 'expo-haptics';
 
-const STEP = 4;
-const TOTAL = 9;
 
 const TYPES = [
   { id: 'normal',      label: 'Normal',      desc: 'Balanced, rarely breaks out' },
@@ -32,15 +31,9 @@ export default function SkinTypeScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
-      </View>
-      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
-        <Text style={styles.backIcon}>‹</Text>
-      </Pressable>
+      <OnboardingHeader step={5} total={11} onBack={() => router.back()} />
 
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
-        <Text style={styles.step}>{STEP} of {TOTAL}</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
         <Text style={styles.title}>How does your skin{'\n'}feel by noon?</Text>
         <Text style={styles.sub}>Tap to select — we'll move on automatically.</Text>
       </Animated.View>
@@ -80,8 +73,6 @@ export default function SkinTypeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
-  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border },
-  fill: { height: '100%', backgroundColor: tokens.colors.pinkDeep },
   header: { marginBottom: 28 },
   step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
   title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
@@ -98,7 +89,5 @@ const styles = StyleSheet.create({
   labelActive: { color: tokens.colors.pinkRich },
   desc: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '300', color: tokens.colors.gray, lineHeight: 18 },
   spacer: { flex: 1, minHeight: 24 },
-  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
-  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
   confirm: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '500', color: tokens.colors.pinkDeep, textAlign: 'center', marginTop: 16, letterSpacing: 0.2 },
 });

@@ -1,63 +1,84 @@
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
-import { GlassButton } from '@/components/glass-button';
 import * as Haptics from 'expo-haptics';
 
-const ZONES = ['Complexion', 'Eyes', 'Lips', 'Sculpt & Glow'];
+const DNA_SLIDES = [
+  { glyph: '◯', label: 'Foundation\nShade' },
+  { glyph: '✦', label: 'Colour\nSeason' },
+  { glyph: '⬭', label: 'Face\nShape' },
+  { glyph: '—', label: 'Brow\nBlueprint' },
+  { glyph: '✦', label: 'Lash\nProfile' },
+  { glyph: '◉', label: 'Energy\nType' },
+  { glyph: '♡', label: 'Lip\nProfile' },
+  { glyph: '◉', label: 'Blush\nProfile' },
+  { glyph: '✦', label: 'Beauty\nArchetype' },
+  { glyph: '♡', label: 'Beauty\nWrapped' },
+];
 
 export default function ValueScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 36 }]}>
+    <View style={[styles.root, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 40 }]}>
 
-      {/* Typographic anchor — decorative background number */}
-      <Animated.Text entering={FadeIn.duration(700)} style={styles.scoreDecor}>
+      {/* Decorative score */}
+      <Animated.Text entering={FadeIn.duration(900)} style={styles.scoreDecor}>
         78
       </Animated.Text>
 
-      <Animated.View entering={FadeInUp.delay(120).duration(600)} style={styles.eyebrowRow}>
+      {/* Brand wordmark */}
+      <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.eyebrowRow}>
         <Text style={styles.eyebrow}>REMAKE</Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(240).duration(600)} style={styles.headlineBlock}>
-        <Text style={styles.headline}>See your makeup the way{'\n'}the camera does.</Text>
+      {/* Headline */}
+      <Animated.View entering={FadeInUp.delay(220).duration(600)} style={styles.headlineBlock}>
+        <Text style={styles.headline}>See your makeup{'\n'}the way the{'\n'}camera does.</Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(380).duration(500)} style={styles.body}>
+      {/* Body */}
+      <Animated.View entering={FadeInUp.delay(360).duration(500)} style={styles.body}>
         <Text style={styles.bodyText}>
-          In 60 seconds, REMAKE analyses your makeup across four zones and tells you exactly what to fix — not just what looks good.
+          One photo. Ten personalised results — built around your exact face.
         </Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(460).duration(500)} style={styles.zones}>
-        {ZONES.map(z => (
-          <View key={z} style={styles.zoneRow}>
-            <View style={styles.zoneDot} />
-            <Text style={styles.zoneLabel}>{z}</Text>
-            <View style={styles.zoneLine} />
+      {/* DNA slides preview — 4×2 grid */}
+      <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.dnaGrid}>
+        {DNA_SLIDES.map((slide, i) => (
+          <View key={slide.label} style={styles.dnaCell}>
+            <Text style={styles.dnaCellGlyph}>{slide.glyph}</Text>
+            <Text style={styles.dnaCellLabel}>{slide.label}</Text>
           </View>
         ))}
       </Animated.View>
 
       <View style={styles.spacer} />
 
-      <Animated.View entering={FadeInUp.delay(560).duration(500)} style={styles.bottom}>
-        <GlassButton
-          title="See How It Works"
+      {/* CTA */}
+      <Animated.View entering={FadeInUp.delay(540).duration(500)} style={styles.bottom}>
+        <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/name');
+            router.push('/(onboarding)/features');
           }}
-          variant="primary"
-          style={styles.cta}
-        />
+          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+        >
+          <Text style={styles.ctaText}>Start My Analysis</Text>
+        </Pressable>
+        <Text style={styles.footnote}>Free · No card required</Text>
       </Animated.View>
 
+      <LinearGradient
+        colors={['transparent', 'rgba(10,8,7,0.06)']}
+        style={styles.bottomGlow}
+        pointerEvents="none"
+      />
     </View>
   );
 }
@@ -70,54 +91,113 @@ const styles = StyleSheet.create({
   },
   scoreDecor: {
     position: 'absolute',
-    top: -8,
-    right: -20,
+    top: -10,
+    right: -22,
     fontFamily: tokens.fonts.serif,
-    fontSize: 220,
+    fontSize: 230,
     fontWeight: '400',
-    color: 'rgba(232,57,154,0.06)',
-    lineHeight: 220,
+    color: 'rgba(232,57,154,0.055)',
+    lineHeight: 230,
   },
   eyebrowRow: { marginBottom: 28 },
   eyebrow: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 11, fontWeight: '600',
-    letterSpacing: 3, textTransform: 'uppercase',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 3.5,
+    textTransform: 'uppercase',
     color: tokens.colors.pinkDeep,
   },
-  headlineBlock: { marginBottom: 20 },
+  headlineBlock: { marginBottom: 16 },
   headline: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 36, fontWeight: '400',
+    fontSize: 38,
+    fontWeight: '400',
     color: tokens.colors.text,
-    lineHeight: 48,
+    lineHeight: 50,
   },
-  body: { marginBottom: 28 },
+  body: { marginBottom: 20 },
   bodyText: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 15, fontWeight: '300',
+    fontSize: 14,
+    fontWeight: '300',
     color: tokens.colors.gray,
-    lineHeight: 24,
+    lineHeight: 22,
   },
-  zones: { gap: 10 },
-  zoneRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  zoneDot: {
-    width: 5, height: 5, borderRadius: 2.5,
-    backgroundColor: tokens.colors.pinkDeep, flexShrink: 0,
+
+  // DNA slide preview grid
+  dnaGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  zoneLabel: {
+  dnaCell: {
+    width: '22%',
+    flexGrow: 1,
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    backgroundColor: tokens.colors.white,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+  },
+  dnaCellGlyph: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 18,
+    color: tokens.colors.pinkDeep,
+    lineHeight: 22,
+  },
+  dnaCellLabel: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 13, fontWeight: '500',
-    color: tokens.colors.text, letterSpacing: 0.1,
+    fontSize: 9,
+    fontWeight: '500',
+    color: tokens.colors.text,
+    textAlign: 'center',
+    letterSpacing: 0.2,
+    lineHeight: 13,
   },
-  zoneLine: { flex: 1, height: 1, backgroundColor: tokens.colors.border },
-  spacer: { flex: 1, minHeight: 24 },
-  bottom: { alignItems: 'center', gap: 12 },
-  cta: { width: '100%' },
+
+  spacer: { flex: 1, minHeight: 16 },
+  bottom: { alignItems: 'center', gap: 14 },
+  cta: {
+    width: '100%',
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 50,
+    paddingVertical: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 7,
+  },
+  ctaPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.97 }],
+  },
+  ctaText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: tokens.colors.white,
+  },
   footnote: {
     fontFamily: tokens.fonts.regular,
     fontSize: 11,
     color: tokens.colors.grayLight,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
+  },
+  bottomGlow: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    pointerEvents: 'none',
   },
 });

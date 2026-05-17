@@ -39,64 +39,50 @@ const MOCK_UV: UVData = {
 
 function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number }) {
   const [uv, setUV] = useState<UVData | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setUV(MOCK_UV);
-    setLoading(false);
   }, []);
-
-  // Position the bubble just below the UV button (paddingTop 12 + marginTop 4 + button 40 + gap 8)
-  const bubbleTop = insetTop + 64;
 
   return (
     <Modal transparent animationType="none" onRequestClose={onClose}>
       <Pressable style={styles.bubbleBackdrop} onPress={onClose}>
-        <View style={[styles.bubbleAnchor, { top: bubbleTop }]}>
-          {/* Arrow pointing up, aligned to sun button on the right */}
-          <View style={styles.bubbleArrow} />
+        <Animated.View
+          entering={FadeInDown.duration(220)}
+          style={[styles.uvPanel, { top: insetTop + 62 }]}
+        >
+          {uv !== null && (
+            <View style={styles.uvPanelInner}>
+              <View style={styles.uvPanelLeft}>
+                <Text style={styles.uvPanelEyebrow}>UV Index</Text>
+                <View style={styles.uvPanelMain}>
+                  <Text style={styles.uvPanelNum}>{uv.uvIndex}</Text>
+                  <View style={styles.uvPanelMeta}>
+                    <Text style={styles.uvPanelCat}>{uv.category}</Text>
+                    <Text style={styles.uvPanelSub}>Now · your location</Text>
+                  </View>
+                </View>
+              </View>
 
-          <Animated.View entering={FadeInUp.duration(200)} style={styles.bubbleCard}>
-            <View style={styles.bubbleHeader}>
-              <Text style={styles.bubbleTitle}>☀️  UV Index</Text>
-              <Pressable onPress={onClose} hitSlop={12}>
-                <MaterialIcons name="close" size={16} color={tokens.colors.grayLight} />
+              <View style={styles.uvPanelSep} />
+
+              <View style={styles.uvPanelRight}>
+                <View style={styles.uvAdviceRow}>
+                  <Text style={styles.uvAdviceLbl}>SPF</Text>
+                  <Text style={styles.uvAdviceVal}>{uv.spfRecommendation}</Text>
+                </View>
+                <View style={styles.uvAdviceRow}>
+                  <Text style={styles.uvAdviceLbl}>Tanning</Text>
+                  <Text style={styles.uvAdviceVal}>{uv.tanningAdvice}</Text>
+                </View>
+              </View>
+
+              <Pressable onPress={onClose} hitSlop={12} style={styles.uvPanelClose}>
+                <MaterialIcons name="close" size={13} color={tokens.colors.grayLight} />
               </Pressable>
             </View>
-            <View style={styles.popupDivider} />
-
-            {uv !== null && (
-              <View style={styles.popupBody}>
-                <View style={styles.uvNumRow}>
-                  <View style={[styles.uvBadge, { backgroundColor: uv.color + '22' }]}>
-                    <Text style={[styles.uvNum, { color: uv.color }]}>{uv.uvIndex}</Text>
-                  </View>
-                  <View>
-                    <Text style={[styles.uvCategory, { color: uv.color }]}>{uv.category}</Text>
-                    <Text style={styles.uvCategorySub}>UV Index right now</Text>
-                  </View>
-                </View>
-                <View style={styles.popupDivider} />
-                <View style={styles.adviceRow}>
-                  <Text style={styles.adviceIcon}>🧴</Text>
-                  <View style={styles.adviceText}>
-                    <Text style={styles.adviceLabel}>Sunscreen</Text>
-                    <Text style={styles.adviceValue}>{uv.spfRecommendation}</Text>
-                  </View>
-                </View>
-                <View style={styles.adviceRow}>
-                  <Text style={styles.adviceIcon}>🌊</Text>
-                  <View style={styles.adviceText}>
-                    <Text style={styles.adviceLabel}>Tanning</Text>
-                    <Text style={styles.adviceValue}>{uv.tanningAdvice}</Text>
-                  </View>
-                </View>
-                <View style={styles.popupDivider} />
-                <Text style={styles.uvSource}>📍 Based on your current location</Text>
-              </View>
-            )}
-          </Animated.View>
-        </View>
+          )}
+        </Animated.View>
       </Pressable>
     </Modal>
   );
@@ -341,7 +327,7 @@ export default function ScanScreen() {
             style={({ pressed }) => [styles.topBtn, pressed && { opacity: 0.65 }]}
           >
             <View style={styles.sunBtnInner}>
-              <MaterialIcons name="wb-sunny" size={19} color="rgba(255,220,100,0.92)" />
+              <MaterialIcons name="wb-sunny" size={19} color="rgba(255,215,50,0.88)" />
             </View>
           </Pressable>
         </Animated.View>
@@ -473,8 +459,8 @@ const styles = StyleSheet.create({
   },
   sunBtnInner: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,220,100,0.12)',
-    borderWidth: 1, borderColor: 'rgba(255,220,100,0.28)',
+    backgroundColor: 'rgba(255,215,50,0.10)',
+    borderWidth: 1, borderColor: 'rgba(255,215,50,0.28)',
     justifyContent: 'center', alignItems: 'center',
   },
   wordmark: {
@@ -592,59 +578,52 @@ const styles = StyleSheet.create({
     color: 'rgba(255,210,235,0.92)', letterSpacing: 0.3,
   },
 
-  // ── UV Speech Bubble ─────────────────────────────────────
+  // ── UV Panel ──────────────────────────────────────────────
   bubbleBackdrop: { flex: 1 },
-  bubbleAnchor: {
-    position: 'absolute', right: 12,
-    alignItems: 'flex-end',
-  },
-  bubbleArrow: {
-    width: 0, height: 0,
-    borderLeftWidth: 7, borderRightWidth: 7, borderBottomWidth: 8,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent',
-    borderBottomColor: tokens.colors.white,
-    marginRight: 14,
-    // shadow doesn't apply to zero-size views — keep it clean
-  },
-  bubbleCard: {
-    width: 250, backgroundColor: tokens.colors.white,
-    borderRadius: 16, borderWidth: 1, borderColor: tokens.colors.border,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14, shadowRadius: 16, elevation: 12,
+  uvPanel: {
+    position: 'absolute', left: 12, right: 12,
+    backgroundColor: tokens.colors.white,
+    borderRadius: 14,
+    borderWidth: 1, borderColor: tokens.colors.border,
+    shadowColor: tokens.colors.pinkDeep, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12, shadowRadius: 18, elevation: 14,
     overflow: 'hidden',
   },
-  bubbleHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12,
+  uvPanelInner: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 14, gap: 14,
   },
-  bubbleTitle: {
-    fontFamily: tokens.fonts.regular, fontSize: 13,
-    fontWeight: '600', color: tokens.colors.text,
+  uvPanelLeft: { gap: 4 },
+  uvPanelEyebrow: {
+    fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700',
+    letterSpacing: 1.8, textTransform: 'uppercase', color: tokens.colors.pinkDeep,
   },
-  // aliases kept for shared body styles
-  popupHeader: { flexDirection: 'row' },
-  popupTitle: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '600', color: tokens.colors.text },
-  popupDivider: { height: 1, backgroundColor: tokens.colors.border },
-  popupBody: { paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
-  uvNumRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  uvBadge: { width: 56, height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  uvNum: { fontFamily: tokens.fonts.serif, fontSize: 28, fontWeight: '400' },
-  uvCategory: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '600' },
-  uvCategorySub: {
-    fontFamily: tokens.fonts.regular, fontSize: 11, color: tokens.colors.grayLight, marginTop: 2,
+  uvPanelMain: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  uvPanelNum: {
+    fontFamily: tokens.fonts.serif, fontSize: 44, fontWeight: '400', lineHeight: 48,
+    color: tokens.colors.text,
   },
-  adviceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  adviceIcon: { fontSize: 18, marginTop: 1 },
-  adviceText: { flex: 1, gap: 2 },
-  adviceLabel: {
-    fontFamily: tokens.fonts.regular, fontSize: 10,
-    fontWeight: '600', letterSpacing: 0.4,
-    color: tokens.colors.grayLight, textTransform: 'uppercase',
+  uvPanelMeta: { gap: 2 },
+  uvPanelCat: {
+    fontFamily: tokens.fonts.serif, fontStyle: 'italic', fontSize: 15, color: tokens.colors.text,
   },
-  adviceValue: {
-    fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.text, lineHeight: 18,
+  uvPanelSub: {
+    fontFamily: tokens.fonts.regular, fontSize: 10, color: tokens.colors.grayLight, letterSpacing: 0.2,
   },
-  uvSource: { fontFamily: tokens.fonts.regular, fontSize: 11, color: tokens.colors.grayLight },
+  uvPanelSep: {
+    width: 1, height: 38, backgroundColor: tokens.colors.border,
+  },
+  uvPanelRight: { flex: 1, gap: 8 },
+  uvAdviceRow: { gap: 1 },
+  uvAdviceLbl: {
+    fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700',
+    letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.pinkDeep,
+  },
+  uvAdviceVal: {
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500',
+    color: tokens.colors.text, lineHeight: 15,
+  },
+  uvPanelClose: { alignSelf: 'flex-start', paddingTop: 2 },
 
   // ── Permission screen ─────────────────────────────────────
   permissionScreen: {

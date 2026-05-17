@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import Animated, {
@@ -173,14 +173,10 @@ export default function ProductScanResultsScreen() {
   // barcode: from auto-scan, uri: from shutter capture — both route here
   const { barcode, uri } = useLocalSearchParams<{ barcode?: string; uri?: string }>();
 
-  const [saved, setSaved] = useState(false);
-
   const handleSave = () => {
-    if (saved) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setSaved(true);
     // TODO: persist scan to Supabase scans table
-    setTimeout(() => router.replace('/(main)/scan'), 700);
+    router.replace('/(main)/scan');
   };
 
   const handlePaoReminder = () => {
@@ -369,24 +365,20 @@ export default function ProductScanResultsScreen() {
           </View>
         </Card>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 76 }} />
       </ScrollView>
 
       {/* Sticky save bar */}
       <Animated.View
         entering={FadeIn.delay(400).duration(400)}
-        style={[s.saveWrap, { paddingBottom: insets.bottom + 16 }]}
+        style={[s.saveWrap, { paddingBottom: insets.bottom }]}
       >
         <Pressable
           onPress={handleSave}
-          style={({ pressed }) => [s.saveBtn, saved && s.saveBtnDone, pressed && !saved && { opacity: 0.85 }]}
+          style={({ pressed }) => [s.saveBtn, pressed && { opacity: 0.85 }]}
         >
-          <MaterialIcons
-            name={saved ? 'check' : 'bookmark-border'}
-            size={16}
-            color={tokens.colors.white}
-          />
-          <Text style={s.saveTxt}>{saved ? 'Saved!' : 'Save to history'}</Text>
+          <MaterialIcons name="bookmark-border" size={16} color={tokens.colors.white} />
+          <Text style={s.saveTxt}>Save to history</Text>
         </Pressable>
         <Pressable onPress={handlePaoReminder} style={s.paoBtn}>
           <MaterialIcons name="notifications-none" size={14} color={tokens.colors.gray} />
@@ -527,13 +519,13 @@ const s = StyleSheet.create({
   spfAlertTxt: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', flex: 1, lineHeight: 16 },
 
   // PAO reminder
-  paoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 10 },
+  paoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 4, paddingBottom: 2 },
   paoTxt: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray },
 
   // Save bar
   saveWrap: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    paddingHorizontal: 16, paddingTop: 12,
+    paddingHorizontal: 16, paddingTop: 10,
     backgroundColor: tokens.colors.cream,
     borderTopWidth: 1, borderTopColor: tokens.colors.border,
   },
@@ -541,6 +533,5 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: tokens.colors.text, borderRadius: 14, paddingVertical: 14,
   },
-  saveBtnDone: { backgroundColor: '#2D7D46' },
   saveTxt: { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '700', color: tokens.colors.white, letterSpacing: 1, textTransform: 'uppercase' },
 });

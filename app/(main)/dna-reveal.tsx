@@ -24,6 +24,8 @@ const PLACEHOLDER_DNA: DnaResult = {
   browSymmetryPct: 84,
   lashProfile: 'Long & Full',
   energy: 'Balanced',
+  lipProfile: 'Warm Satin',
+  blushProfile: 'Bronze Flush',
   archetype: 'The Natural',
   archetypeDescription: '',
 };
@@ -258,6 +260,48 @@ function SlideArchetype({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean 
   );
 }
 
+function SlideLip({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+  return (
+    <View style={styles.page}>
+      <LinearGradient colors={['#0A0807', '#1A0E12', '#0A0807']} style={StyleSheet.absoluteFill} />
+      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.body}>
+        <Text style={styles.slideEyebrow}>LIP PROFILE</Text>
+        <Text style={[styles.lashGlyph, isLocked && { opacity: 0.15 }]}>♡</Text>
+        <Text style={styles.slideTitle}>Your Lips</Text>
+        {isLocked
+          ? <LockedValue size="lg" />
+          : <Text style={styles.bigValue}>{dna.lipProfile}</Text>}
+        <Text style={styles.slideText}>
+          {isLocked
+            ? 'Your natural lip tone shapes the finish that looks most alive on you. Unlock your profile.'
+            : `${dna.lipProfile} — the finish that works with your natural lip tone, not against it.`}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+function SlideBlush({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+  return (
+    <View style={styles.page}>
+      <LinearGradient colors={['#0A0807', '#180D0E', '#0A0807']} style={StyleSheet.absoluteFill} />
+      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.body}>
+        <Text style={styles.slideEyebrow}>BLUSH PROFILE</Text>
+        <Text style={[styles.lashGlyph, isLocked && { opacity: 0.15 }]}>◉</Text>
+        <Text style={styles.slideTitle}>Your Blush</Text>
+        {isLocked
+          ? <LockedValue size="lg" />
+          : <Text style={styles.bigValue}>{dna.blushProfile}</Text>}
+        <Text style={styles.slideText}>
+          {isLocked
+            ? 'Blush placed wrong reads heavy or invisible. The right tone for your face changes everything. Unlock yours.'
+            : `${dna.blushProfile} — your exact tone reads like a natural flush, nothing more.`}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
+
 function SlideSummary({ dna, isLocked, onShare }: { dna: DnaResult; isLocked?: boolean; onShare: () => void }) {
   const rows = [
     { label: 'Foundation Tone', value: dna.skinToneHex.toUpperCase() },
@@ -265,6 +309,8 @@ function SlideSummary({ dna, isLocked, onShare }: { dna: DnaResult; isLocked?: b
     { label: 'Face Shape', value: dna.faceShape },
     { label: 'Brow Shape', value: dna.browShape },
     { label: 'Lash Profile', value: dna.lashProfile },
+    { label: 'Lip Profile', value: dna.lipProfile },
+    { label: 'Blush Profile', value: dna.blushProfile },
     { label: 'Archetype', value: dna.archetype },
   ];
   return (
@@ -298,7 +344,7 @@ function SlideSummary({ dna, isLocked, onShare }: { dna: DnaResult; isLocked?: b
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-const SLIDE_COUNT = 8;
+const SLIDE_COUNT = 10;
 
 export default function DnaRevealScreen() {
   const router = useRouter();
@@ -354,6 +400,8 @@ export default function DnaRevealScreen() {
         <SlideBrows dna={displayDna} isLocked={locked} />
         <SlideLashes dna={displayDna} isLocked={locked} />
         <SlideEnergy dna={displayDna} isLocked={locked} />
+        <SlideLip dna={displayDna} isLocked={locked} />
+        <SlideBlush dna={displayDna} isLocked={locked} />
         <SlideArchetype dna={displayDna} isLocked={locked} />
         <SlideSummary dna={displayDna} isLocked={locked} onShare={handleShare} />
       </ScrollView>

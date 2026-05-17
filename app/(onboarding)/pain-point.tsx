@@ -5,11 +5,10 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { GlassButton } from '@/components/glass-button';
+import { OnboardingHeader } from '@/components/onboarding-header';
 import { saveOnboardingField, type PriorityCategory } from '@/lib/onboarding-store';
 import * as Haptics from 'expo-haptics';
 
-const STEP = 1;
-const TOTAL = 9;
 
 const OPTIONS: { value: PriorityCategory; label: string; desc: string }[] = [
   { value: 'Blending',       label: 'Blending',        desc: 'Eyeshadow transitions and gradient edges' },
@@ -37,15 +36,9 @@ export default function PainPointScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
-      </View>
-      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
-        <Text style={styles.backIcon}>‹</Text>
-      </Pressable>
+      <OnboardingHeader step={2} total={11} onBack={() => router.back()} />
 
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
-        <Text style={styles.step}>{STEP} of {TOTAL}</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
         <Text style={styles.title}>What do you struggle{'\n'}with most?</Text>
         <Text style={styles.sub}>Pick as many as apply — we'll give these extra attention.</Text>
       </Animated.View>
@@ -89,8 +82,6 @@ export default function PainPointScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
-  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border },
-  fill: { height: '100%', backgroundColor: tokens.colors.pinkDeep },
   header: { marginBottom: 28 },
   step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
   title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
@@ -108,6 +99,4 @@ const styles = StyleSheet.create({
   desc: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '300', color: tokens.colors.gray, lineHeight: 18 },
   spacer: { flex: 1, minHeight: 24 },
   cta: { width: '100%' },
-  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
-  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
 });

@@ -75,6 +75,8 @@ export interface DnaResult {
   browSymmetryPct: number;
   lashProfile: LashProfile;
   energy: EnergyType;
+  lipProfile: string;
+  blushProfile: string;
   archetype: string;
   archetypeDescription: string;
 }
@@ -135,6 +137,20 @@ interface GeminiDnaResponse {
   energy: string;
 }
 
+const LIP_BY_SEASON: Record<ColorSeason, string> = {
+  'Warm Spring': 'Peach Gloss', 'Light Spring': 'Nude Gloss',
+  'Warm Autumn': 'Warm Satin', 'Deep Autumn': 'Berry Stain',
+  'Cool Summer': 'Mauve Satin', 'Light Summer': 'Sheer Pink',
+  'Deep Winter': 'Deep Matte', 'Cool Winter': 'Nude Matte',
+};
+
+const BLUSH_BY_SEASON: Record<ColorSeason, string> = {
+  'Warm Spring': 'Warm Coral', 'Light Spring': 'Soft Peach',
+  'Warm Autumn': 'Bronze Flush', 'Deep Autumn': 'Bronze Warmth',
+  'Cool Summer': 'Cool Rose', 'Light Summer': 'Soft Pink',
+  'Deep Winter': 'Berry Flush', 'Cool Winter': 'Cool Berry',
+};
+
 function randomFrom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -159,6 +175,8 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
     browSymmetryPct: 82 + Math.floor(Math.random() * 15),
     lashProfile: randomFrom<LashProfile>(['Long & Sparse', 'Short & Full', 'Long & Full', 'Curly']),
     energy: randomFrom<EnergyType>(['Soft', 'Sharp', 'Balanced']),
+    lipProfile: LIP_BY_SEASON[colorSeason],
+    blushProfile: BLUSH_BY_SEASON[colorSeason],
     archetype,
     archetypeDescription: ARCHETYPE_DESCRIPTIONS[archetype] ?? '',
   };
@@ -201,6 +219,8 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
         browSymmetryPct,
         lashProfile,
         energy,
+        lipProfile: LIP_BY_SEASON[colorSeason] ?? 'Warm Satin',
+        blushProfile: BLUSH_BY_SEASON[colorSeason] ?? 'Peach Flush',
         archetype,
         archetypeDescription: ARCHETYPE_DESCRIPTIONS[archetype] ?? '',
       };

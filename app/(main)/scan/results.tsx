@@ -186,12 +186,6 @@ export default function ResultsScreen() {
         {/* Actions */}
         <Animated.View entering={FadeIn.delay(700).duration(300)} style={styles.actions}>
           <Pressable
-            style={({ pressed }) => [styles.retakeBtn, pressed && { opacity: 0.75 }]}
-            onPress={handleRetake}
-          >
-            <Text style={styles.retakeText}>Re-check</Text>
-          </Pressable>
-          <Pressable
             style={({ pressed }) => [styles.doneBtn, pressed && { opacity: 0.82 }]}
             onPress={handleDone}
           >
@@ -286,16 +280,13 @@ const styles = StyleSheet.create({
   proLock: { backgroundColor: tokens.colors.cream, borderRadius: 8, padding: 10 },
   proLockText: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, textAlign: 'center' },
 
-  actions: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  retakeBtn: {
-    flex: 1, paddingVertical: 15, borderRadius: 50,
-    borderWidth: 1.5, borderColor: tokens.colors.border,
-    alignItems: 'center',
-  },
-  retakeText: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '500', color: tokens.colors.text },
+  actions: { marginTop: 16 },
   doneBtn: {
-    flex: 1, paddingVertical: 15, borderRadius: 50,
-    backgroundColor: tokens.colors.accent, alignItems: 'center',
+    paddingVertical: 15, borderRadius: 50,
+    backgroundColor: tokens.colors.pinkDeep, alignItems: 'center',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25, shadowRadius: 12, elevation: 5,
   },
   doneText: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '600', color: '#FFF9F7' },
 });
