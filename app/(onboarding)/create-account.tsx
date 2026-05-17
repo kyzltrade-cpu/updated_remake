@@ -126,9 +126,9 @@ export default function CreateAccountScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-          <Text style={styles.tag}>Almost There</Text>
-          <Text style={styles.title}>Save your profile{'\n'}and unlock results.</Text>
-          <Text style={styles.sub}>Create a free account to reveal your full Beauty DNA.</Text>
+          <Text style={styles.tag}>One Last Step</Text>
+          <Text style={styles.title}>Analyse your face shape{'\n'}and makeup style.</Text>
+          <Text style={styles.sub}>Create a free account to save your results and unlock your beauty profile.</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(300).duration(600)} style={styles.form}>
@@ -173,6 +173,15 @@ export default function CreateAccountScreen() {
             disabled={!email.trim() || !name.trim() || loading}
           />
           <Text style={styles.legal}>By continuing you agree to our Terms of Service and Privacy Policy.</Text>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.replace('/(onboarding)/dna-loading');
+            }}
+            style={styles.skipBtn}
+          >
+            <Text style={styles.skipText}>Skip for now</Text>
+          </Pressable>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -201,4 +210,6 @@ const styles = StyleSheet.create({
   cta: { width: '100%' },
   legal: { fontFamily: tokens.fonts.regular, fontSize: 11, color: tokens.colors.grayLight, textAlign: 'center' },
   backLink: { fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.gray, textDecorationLine: 'underline' },
+  skipBtn: { paddingVertical: 8, paddingHorizontal: 16 },
+  skipText: { fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.gray, textDecorationLine: 'underline' },
 });
