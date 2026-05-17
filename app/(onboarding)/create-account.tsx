@@ -12,6 +12,7 @@ import { signUp, signInDev, DEV_BYPASS } from '@/lib/auth';
 import { isValidEmail, isValidPassword, sanitizeEmail } from '@/lib/validation';
 import { clearGloDraft } from '@/lib/glo-profile';
 import * as Haptics from 'expo-haptics';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function CreateAccountScreen() {
   const router = useRouter();
@@ -30,29 +31,19 @@ export default function CreateAccountScreen() {
 
   const validate = (): boolean => {
     let valid = true;
-
     const cleanEmail = sanitizeEmail(email);
     if (!cleanEmail || !isValidEmail(cleanEmail)) {
       setEmailError('Enter a valid email address');
       valid = false;
-    } else {
-      setEmailError('');
-    }
-
+    } else setEmailError('');
     if (!isValidPassword(password)) {
       setPasswordError('At least 8 characters with a letter and number');
       valid = false;
-    } else {
-      setPasswordError('');
-    }
-
+    } else setPasswordError('');
     if (password !== confirmPassword) {
-      setConfirmError('Passwords don\'t match');
+      setConfirmError("Passwords don't match");
       valid = false;
-    } else {
-      setConfirmError('');
-    }
-
+    } else setConfirmError('');
     return valid;
   };
 
@@ -67,7 +58,6 @@ export default function CreateAccountScreen() {
         router.replace('/(onboarding)/dna-loading');
         return;
       }
-
       const { error } = await signUp(sanitizeEmail(email), password);
       if (error) {
         Alert.alert('Sign up failed', error.message);
@@ -88,122 +78,176 @@ export default function CreateAccountScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.kav, { backgroundColor: tokens.colors.beige }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 32 }]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <View style={styles.root}>
+      <View style={styles.track}>
+        <View style={styles.fill} />
+      </View>
+      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
+        <Text style={styles.backIcon}>‹</Text>
+      </Pressable>
+
+      <KeyboardAvoidingView
+        style={styles.kav}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-          <Text style={styles.eyebrow}>Almost there</Text>
-          <Text style={styles.title}>Create your account{'\n'}to see your Beauty Wrapped.</Text>
-          <Text style={styles.sub}>Save your results, track your progress, and unlock personalised coaching.</Text>
-        </Animated.View>
+        <ScrollView
+          contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 40 }]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
+            <Text style={styles.eyebrow}>You're almost there</Text>
+            <Text style={styles.title}>Lock in your{'\n'}Beauty DNA.</Text>
+            <Text style={styles.sub}>
+              Your results are being held for you. Create an account to unlock your Beauty Wrapped, track your glow-up over time, and get coaching built around your face.
+            </Text>
+          </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(240).duration(500)} style={styles.form}>
+          <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.form}>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Email address</Text>
+              <TextInput
+                style={[styles.input, emailError ? styles.inputError : null]}
+                placeholder="you@example.com"
+                placeholderTextColor={tokens.colors.grayLight}
+                value={email}
+                onChangeText={t => { setEmail(t); if (emailError) setEmailError(''); }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+              />
+              {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Email</Text>
-            <TextInput
-              style={[styles.input, emailError ? styles.inputError : null]}
-              placeholder="you@example.com"
-              placeholderTextColor={tokens.colors.grayLight}
-              value={email}
-              onChangeText={t => { setEmail(t); if (emailError) setEmailError(''); }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Password</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={[styles.input, styles.inputFlex, passwordError ? styles.inputError : null]}
+                  placeholder="Min. 8 chars, 1 letter, 1 number"
+                  placeholderTextColor={tokens.colors.grayLight}
+                  value={password}
+                  onChangeText={t => { setPassword(t); if (passwordError) setPasswordError(''); }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Pressable onPress={() => setShowPassword(v => !v)} hitSlop={10}>
+                  <MaterialIcons
+                    name={showPassword ? 'visibility-off' : 'visibility'}
+                    size={20}
+                    color={tokens.colors.grayLight}
+                  />
+                </Pressable>
+              </View>
+              {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Confirm password</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={[styles.input, styles.inputFlex, confirmError ? styles.inputError : null]}
+                  placeholder="Repeat your password"
+                  placeholderTextColor={tokens.colors.grayLight}
+                  value={confirmPassword}
+                  onChangeText={t => { setConfirmPassword(t); if (confirmError) setConfirmError(''); }}
+                  secureTextEntry={!showConfirm}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Pressable onPress={() => setShowConfirm(v => !v)} hitSlop={10}>
+                  <MaterialIcons
+                    name={showConfirm ? 'visibility-off' : 'visibility'}
+                    size={20}
+                    color={tokens.colors.grayLight}
+                  />
+                </Pressable>
+              </View>
+              {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
+            </View>
+          </Animated.View>
+
+          <View style={styles.spacer} />
+
+          <Animated.View entering={FadeInUp.delay(360).duration(500)} style={styles.actions}>
+            <GlassButton
+              title={loading ? 'Creating account…' : 'Reveal My Beauty Wrapped'}
+              onPress={handleCreate}
+              variant="primary"
+              style={styles.cta}
+              disabled={loading}
             />
-            {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Password</Text>
-            <View style={styles.inputRow}>
-              <TextInput
-                style={[styles.input, styles.inputFlex, passwordError ? styles.inputError : null]}
-                placeholder="Min. 8 chars, 1 letter, 1 number"
-                placeholderTextColor={tokens.colors.grayLight}
-                value={password}
-                onChangeText={t => { setPassword(t); if (passwordError) setPasswordError(''); }}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <Pressable onPress={() => setShowPassword(v => !v)} style={styles.eyeBtn}>
-                <Text style={styles.eyeText}>{showPassword ? 'Hide' : 'Show'}</Text>
-              </Pressable>
-            </View>
-            {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Confirm password</Text>
-            <View style={styles.inputRow}>
-              <TextInput
-                style={[styles.input, styles.inputFlex, confirmError ? styles.inputError : null]}
-                placeholder="Repeat your password"
-                placeholderTextColor={tokens.colors.grayLight}
-                value={confirmPassword}
-                onChangeText={t => { setConfirmPassword(t); if (confirmError) setConfirmError(''); }}
-                secureTextEntry={!showConfirm}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <Pressable onPress={() => setShowConfirm(v => !v)} style={styles.eyeBtn}>
-                <Text style={styles.eyeText}>{showConfirm ? 'Hide' : 'Show'}</Text>
-              </Pressable>
-            </View>
-            {confirmError ? <Text style={styles.error}>{confirmError}</Text> : null}
-          </View>
-
-        </Animated.View>
-
-        <View style={styles.spacer} />
-
-        <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.bottom}>
-          <GlassButton
-            title={loading ? 'Creating account…' : 'Create Account'}
-            onPress={handleCreate}
-            variant="primary"
-            style={styles.cta}
-            disabled={!email.trim() || !password || !confirmPassword || loading}
-          />
-          <Text style={styles.legal}>By continuing you agree to our Terms of Service and Privacy Policy.</Text>
-          <Pressable onPress={handleSkip} style={styles.skipBtn}>
-            <Text style={styles.skipText}>Skip for now</Text>
-          </Pressable>
-        </Animated.View>
-
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <Text style={styles.legal}>
+              By continuing you agree to our Terms of Service and Privacy Policy.
+            </Text>
+            <Pressable onPress={handleSkip} hitSlop={8} style={styles.skipBtn}>
+              <Text style={styles.skipText}>Skip for now</Text>
+            </Pressable>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: tokens.colors.beige },
+  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border, zIndex: 10 },
+  fill: { height: '100%', width: '100%', backgroundColor: tokens.colors.pinkDeep },
   kav: { flex: 1 },
   scroll: { flexGrow: 1, paddingHorizontal: 28 },
+
   header: { marginBottom: 32 },
-  eyebrow: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
-  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 10 },
-  sub: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300', color: tokens.colors.gray, lineHeight: 22 },
+  eyebrow: {
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500',
+    letterSpacing: 1.2, textTransform: 'uppercase',
+    color: tokens.colors.grayLight, marginBottom: 14,
+  },
+  title: {
+    fontFamily: tokens.fonts.serif, fontSize: 36, fontWeight: '400',
+    color: tokens.colors.text, lineHeight: 48, marginBottom: 14,
+  },
+  sub: {
+    fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300',
+    color: tokens.colors.gray, lineHeight: 24,
+  },
+
   form: { gap: 16 },
-  field: { gap: 6 },
-  fieldLabel: { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '500', color: tokens.colors.gray, letterSpacing: 0.1 },
-  input: { backgroundColor: tokens.colors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontFamily: tokens.fonts.regular, fontSize: 15, color: tokens.colors.text, borderWidth: 1.5, borderColor: tokens.colors.border },
+  field: { gap: 8 },
+  fieldLabel: {
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '600',
+    color: tokens.colors.text, letterSpacing: 0.4, textTransform: 'uppercase',
+  },
+  input: {
+    backgroundColor: tokens.colors.white, borderRadius: 14,
+    paddingHorizontal: 18, paddingVertical: 16,
+    fontFamily: tokens.fonts.regular, fontSize: 15,
+    color: tokens.colors.text,
+    borderWidth: 1.5, borderColor: tokens.colors.border,
+  },
   inputFlex: { flex: 1 },
-  inputError: { borderColor: '#FF3B30' },
+  inputError: { borderColor: tokens.colors.pinkDeep },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  eyeBtn: { paddingHorizontal: 4, paddingVertical: 4 },
-  eyeText: { fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.gray, textDecorationLine: 'underline' },
-  error: { fontFamily: tokens.fonts.regular, fontSize: 12, color: '#FF3B30' },
-  spacer: { flex: 1, minHeight: 32 },
-  bottom: { alignItems: 'center', gap: 10 },
+  errorText: {
+    fontFamily: tokens.fonts.regular, fontSize: 12,
+    color: tokens.colors.pinkDeep, marginTop: 2,
+  },
+
+  spacer: { flex: 1, minHeight: 28 },
+
+  actions: { alignItems: 'center', gap: 14 },
   cta: { width: '100%' },
-  legal: { fontFamily: tokens.fonts.regular, fontSize: 11, color: tokens.colors.grayLight, textAlign: 'center' },
-  skipBtn: { paddingVertical: 8 },
-  skipText: { fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.gray, textDecorationLine: 'underline' },
+  legal: {
+    fontFamily: tokens.fonts.regular, fontSize: 11,
+    color: tokens.colors.grayLight, textAlign: 'center', lineHeight: 17,
+  },
+  skipBtn: { paddingVertical: 6 },
+  skipText: {
+    fontFamily: tokens.fonts.regular, fontSize: 13,
+    color: tokens.colors.grayLight,
+  },
+  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
+  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
 });

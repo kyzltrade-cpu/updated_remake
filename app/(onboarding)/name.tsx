@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,6 +29,10 @@ export default function NameScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={[styles.root, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32 }]}>
+        <View style={styles.track}><View style={styles.fill} /></View>
+        <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
+          <Text style={styles.backIcon}>‹</Text>
+        </Pressable>
 
         <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
           <Text style={styles.title}>What's your name?</Text>
@@ -72,6 +76,16 @@ export default function NameScreen() {
 const styles = StyleSheet.create({
   kav: { flex: 1, backgroundColor: tokens.colors.beige },
   root: { flex: 1, paddingHorizontal: 28 },
+  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border, zIndex: 10 },
+  fill: { height: '100%', width: '5%', backgroundColor: tokens.colors.pinkDeep },
+  backBtn: {
+    position: 'absolute', left: 20, zIndex: 10,
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1, borderColor: tokens.colors.border,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
   header: { marginBottom: 32 },
   title: {
     fontFamily: tokens.fonts.serif,

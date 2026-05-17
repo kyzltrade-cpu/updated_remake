@@ -34,6 +34,9 @@ export default function FoundationPainScreen() {
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
       </View>
+      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
+        <Text style={styles.backIcon}>‹</Text>
+      </Pressable>
 
       <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
         <Text style={styles.step}>{STEP} of {TOTAL}</Text>
@@ -111,4 +114,6 @@ const styles = StyleSheet.create({
   brandInput: { backgroundColor: tokens.colors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontFamily: tokens.fonts.regular, fontSize: 14, color: tokens.colors.text, borderWidth: 1.5, borderColor: tokens.colors.border },
   spacer: { flex: 1, minHeight: 16 },
   cta: { width: '100%' },
+  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
+  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
 });

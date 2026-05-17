@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Alert, Image,
-  Modal, Linking, ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Animated, {
@@ -13,14 +13,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { FaceCorners } from '@/components/face-corners';
 import { EdgeFlashOverlay } from '@/components/edge-flash';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSettings } from '@/contexts/settings-context';
-import { fetchUVIndex, type UVData } from '@/lib/uv';
+import { type UVData } from '@/lib/uv';
 
 type ScanMode = 'face' | 'product';
 
@@ -41,86 +40,63 @@ const MOCK_UV: UVData = {
 function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number }) {
   const [uv, setUV] = useState<UVData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [noPermission, setNoPermission] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setNoPermission(true);
-        setLoading(false);
-        return;
-      }
-      setUV(MOCK_UV);
-      setLoading(false);
-    })();
+    setUV(MOCK_UV);
+    setLoading(false);
   }, []);
 
-  return (
-    <Modal transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.popupBackdrop} onPress={onClose}>
-        <Animated.View
-          entering={FadeInUp.duration(220)}
-          style={[styles.popupCard, { marginTop: insetTop + 64 }]}
-        >
-          <View style={styles.popupHeader}>
-            <Text style={styles.popupTitle}>☀️  UV Index</Text>
-            <Pressable onPress={onClose} hitSlop={12}>
-              <MaterialIcons name="close" size={18} color={tokens.colors.grayLight} />
-            </Pressable>
-          </View>
-          <View style={styles.popupDivider} />
+  // Position the bubble just below the UV button (paddingTop 12 + marginTop 4 + button 40 + gap 8)
+  const bubbleTop = insetTop + 64;
 
-          {loading && (
-            <View style={styles.popupLoading}>
-              <ActivityIndicator color={tokens.colors.pinkDeep} />
-              <Text style={styles.popupLoadingText}>Checking UV levels…</Text>
-            </View>
-          )}
-          {!loading && noPermission && (
-            <View style={styles.popupBody}>
-              <Text style={styles.popupNoPermText}>Location access is needed to check UV levels.</Text>
-              <Pressable style={styles.popupSettingsBtn} onPress={() => Linking.openSettings()}>
-                <Text style={styles.popupSettingsBtnText}>Open Settings</Text>
+  return (
+    <Modal transparent animationType="none" onRequestClose={onClose}>
+      <Pressable style={styles.bubbleBackdrop} onPress={onClose}>
+        <View style={[styles.bubbleAnchor, { top: bubbleTop }]}>
+          {/* Arrow pointing up, aligned to sun button on the right */}
+          <View style={styles.bubbleArrow} />
+
+          <Animated.View entering={FadeInUp.duration(200)} style={styles.bubbleCard}>
+            <View style={styles.bubbleHeader}>
+              <Text style={styles.bubbleTitle}>☀️  UV Index</Text>
+              <Pressable onPress={onClose} hitSlop={12}>
+                <MaterialIcons name="close" size={16} color={tokens.colors.grayLight} />
               </Pressable>
             </View>
-          )}
-          {!loading && !noPermission && uv === null && (
-            <View style={styles.popupBody}>
-              <Text style={styles.popupNoPermText}>Couldn't load UV data. Check your connection.</Text>
-            </View>
-          )}
-          {!loading && !noPermission && uv !== null && (
-            <View style={styles.popupBody}>
-              <View style={styles.uvNumRow}>
-                <View style={[styles.uvBadge, { backgroundColor: uv.color + '22' }]}>
-                  <Text style={[styles.uvNum, { color: uv.color }]}>{uv.uvIndex}</Text>
+            <View style={styles.popupDivider} />
+
+            {uv !== null && (
+              <View style={styles.popupBody}>
+                <View style={styles.uvNumRow}>
+                  <View style={[styles.uvBadge, { backgroundColor: uv.color + '22' }]}>
+                    <Text style={[styles.uvNum, { color: uv.color }]}>{uv.uvIndex}</Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.uvCategory, { color: uv.color }]}>{uv.category}</Text>
+                    <Text style={styles.uvCategorySub}>UV Index right now</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={[styles.uvCategory, { color: uv.color }]}>{uv.category}</Text>
-                  <Text style={styles.uvCategorySub}>UV Index right now</Text>
+                <View style={styles.popupDivider} />
+                <View style={styles.adviceRow}>
+                  <Text style={styles.adviceIcon}>🧴</Text>
+                  <View style={styles.adviceText}>
+                    <Text style={styles.adviceLabel}>Sunscreen</Text>
+                    <Text style={styles.adviceValue}>{uv.spfRecommendation}</Text>
+                  </View>
                 </View>
+                <View style={styles.adviceRow}>
+                  <Text style={styles.adviceIcon}>🌊</Text>
+                  <View style={styles.adviceText}>
+                    <Text style={styles.adviceLabel}>Tanning</Text>
+                    <Text style={styles.adviceValue}>{uv.tanningAdvice}</Text>
+                  </View>
+                </View>
+                <View style={styles.popupDivider} />
+                <Text style={styles.uvSource}>📍 Based on your current location</Text>
               </View>
-              <View style={styles.popupDivider} />
-              <View style={styles.adviceRow}>
-                <Text style={styles.adviceIcon}>🧴</Text>
-                <View style={styles.adviceText}>
-                  <Text style={styles.adviceLabel}>Sunscreen</Text>
-                  <Text style={styles.adviceValue}>{uv.spfRecommendation}</Text>
-                </View>
-              </View>
-              <View style={styles.adviceRow}>
-                <Text style={styles.adviceIcon}>🌊</Text>
-                <View style={styles.adviceText}>
-                  <Text style={styles.adviceLabel}>Tanning</Text>
-                  <Text style={styles.adviceValue}>{uv.tanningAdvice}</Text>
-                </View>
-              </View>
-              <View style={styles.popupDivider} />
-              <Text style={styles.uvSource}>📍 Based on your current location</Text>
-            </View>
-          )}
-        </Animated.View>
+            )}
+          </Animated.View>
+        </View>
       </Pressable>
     </Modal>
   );
@@ -135,7 +111,6 @@ function BarcodeCorners() {
       <View style={[barcodeStyles.corner, barcodeStyles.tr]} />
       <View style={[barcodeStyles.corner, barcodeStyles.bl]} />
       <View style={[barcodeStyles.corner, barcodeStyles.br]} />
-      <View style={barcodeStyles.scanLine} />
     </View>
   );
 }
@@ -147,10 +122,6 @@ const barcodeStyles = StyleSheet.create({
   tr: { top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 4 },
   bl: { bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 4 },
   br: { bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 4 },
-  scanLine: {
-    position: 'absolute', left: 12, right: 12, height: 1.5,
-    backgroundColor: 'rgba(232,57,154,0.6)', borderRadius: 1,
-  },
 });
 
 // ── Main screen ───────────────────────────────────────────────────────────────
@@ -170,6 +141,9 @@ export default function ScanScreen() {
   const pillX = useSharedValue(0);
   const pillStyle = useAnimatedStyle(() => ({ transform: [{ translateX: pillX.value }] }));
 
+  const [comparing, setComparing] = useState(false);
+  const [compareFirst, setCompareFirst] = useState<{ barcode?: string; uri?: string } | null>(null);
+
   useEffect(() => {
     if (permission === null) requestPermission();
   }, []);
@@ -178,11 +152,26 @@ export default function ScanScreen() {
     if (next === mode) return;
     Haptics.selectionAsync();
     setScanned(false);
+    if (next === 'face') { setComparing(false); setCompareFirst(null); }
     setMode(next);
     pillX.value = withTiming(next === 'face' ? 0 : PILL_WIDTH + 4, {
       duration: 260,
       easing: Easing.out(Easing.quad),
     });
+  };
+
+  const startCompare = () => {
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setComparing(true);
+    setCompareFirst(null);
+    setScanned(false);
+  };
+
+  const cancelCompare = () => {
+    if (settings.hapticsEnabled) Haptics.selectionAsync();
+    setComparing(false);
+    setCompareFirst(null);
+    setScanned(false);
   };
 
   const takePhoto = async () => {
@@ -199,7 +188,20 @@ export default function ScanScreen() {
         setShowLowLight(true);
         setTimeout(() => setShowLowLight(false), 3500);
       }
-      router.push({ pathname: '/(main)/scan/preview', params: { uri: photo.uri } });
+      if (mode === 'product') {
+        if (comparing) {
+          if (!compareFirst) {
+            setCompareFirst({ uri: photo.uri });
+            if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } else {
+            router.push({ pathname: '/(main)/product-scan/compare', params: { uri1: compareFirst.uri, uri2: photo.uri } });
+          }
+        } else {
+          router.push({ pathname: '/(main)/product-scan/results', params: { uri: photo.uri } });
+        }
+      } else {
+        router.push({ pathname: '/(main)/scan/preview', params: { uri: photo.uri } });
+      }
     } catch {
       Alert.alert('Camera error', 'Could not capture photo');
     }
@@ -213,7 +215,21 @@ export default function ScanScreen() {
       allowsEditing: true,
     });
     if (!result.canceled && result.assets[0]?.uri) {
-      router.push({ pathname: '/(main)/scan/preview', params: { uri: result.assets[0].uri } });
+      const picked = result.assets[0].uri;
+      if (mode === 'product') {
+        if (comparing) {
+          if (!compareFirst) {
+            setCompareFirst({ uri: picked });
+            if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          } else {
+            router.push({ pathname: '/(main)/product-scan/compare', params: { uri1: compareFirst.uri, uri2: picked } });
+          }
+        } else {
+          router.push({ pathname: '/(main)/product-scan/results', params: { uri: picked } });
+        }
+      } else {
+        router.push({ pathname: '/(main)/scan/preview', params: { uri: picked } });
+      }
     }
   };
 
@@ -231,7 +247,16 @@ export default function ScanScreen() {
     if (scanned || mode !== 'product') return;
     setScanned(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.push({ pathname: '/(main)/scan/loading', params: { barcode: data, barcodeType: type } });
+    if (comparing) {
+      if (!compareFirst) {
+        setCompareFirst({ barcode: data });
+        setTimeout(() => setScanned(false), 800);
+      } else {
+        router.push({ pathname: '/(main)/product-scan/compare', params: { barcode1: compareFirst.barcode, barcode2: data } });
+      }
+    } else {
+      router.push({ pathname: '/(main)/product-scan/results', params: { barcode: data, barcodeType: type } });
+    }
   };
 
   if (!permission) return <View style={styles.container} />;
@@ -260,6 +285,7 @@ export default function ScanScreen() {
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
         facing={mode === 'face' ? 'front' : 'back'}
+        flash={mode === 'product' && flash ? 'on' : 'off'}
         mode="picture"
         onBarcodeScanned={mode === 'product' ? handleBarcode : undefined}
         barcodeScannerSettings={
@@ -306,19 +332,8 @@ export default function ScanScreen() {
               )}
           </Pressable>
 
-          {/* REMAKE wordmark + liquid glass mode toggle */}
-          <View style={styles.topCentre}>
-            <Text style={styles.wordmark}>REMAKE</Text>
-            <BlurView tint="light" intensity={28} style={styles.capsule}>
-              <Animated.View style={[styles.pill, pillStyle]} />
-              <Pressable style={styles.option} onPress={() => switchMode('face')}>
-                <Text style={[styles.optionText, mode === 'face' && styles.optionTextActive]}>Face</Text>
-              </Pressable>
-              <Pressable style={styles.option} onPress={() => switchMode('product')}>
-                <Text style={[styles.optionText, mode === 'product' && styles.optionTextActive]}>Product</Text>
-              </Pressable>
-            </BlurView>
-          </View>
+          {/* REMAKE wordmark */}
+          <Text style={styles.wordmark}>REMAKE</Text>
 
           {/* UV sun button */}
           <Pressable
@@ -330,69 +345,96 @@ export default function ScanScreen() {
             </View>
           </Pressable>
         </Animated.View>
+
+        {/* Mode toggle — centered below top bar */}
+        <Animated.View entering={FadeIn.delay(220)} style={styles.toggleRow}>
+          <BlurView tint="light" intensity={28} style={styles.capsule}>
+            <Animated.View style={[styles.pill, pillStyle]} />
+            <Pressable style={styles.option} onPress={() => switchMode('face')}>
+              <Text style={[styles.optionText, mode === 'face' && styles.optionTextActive]}>Face</Text>
+            </Pressable>
+            <Pressable style={styles.option} onPress={() => switchMode('product')}>
+              <Text style={[styles.optionText, mode === 'product' && styles.optionTextActive]}>Product</Text>
+            </Pressable>
+          </BlurView>
+        </Animated.View>
       </LinearGradient>
 
-      {/* Bottom gradient + controls — face mode only */}
-      {mode === 'face' && (
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.42)', 'rgba(0,0,0,0.82)']}
-          locations={[0, 0.35, 1]}
-          style={[styles.bottomGradient, { paddingBottom: insets.bottom + 44 }]}
-          pointerEvents="box-none"
-        >
-          <Animated.View entering={FadeIn.delay(250)} style={styles.controls}>
+      {/* Bottom gradient + controls — both modes */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.42)', 'rgba(0,0,0,0.82)']}
+        locations={[0, 0.35, 1]}
+        style={[styles.bottomGradient, { paddingBottom: insets.bottom + 28 }]}
+        pointerEvents="box-none"
+      >
+        {mode === 'product' && (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.compareRow}>
             <Pressable
-              onPress={pickImage}
-              style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
+              onPress={comparing ? cancelCompare : startCompare}
+              style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
             >
-              <View style={styles.sideBtnInner}>
-                <MaterialIcons name="photo-library" size={21} color="rgba(255,255,255,0.88)" />
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={takePhoto}
-              style={({ pressed }) => [styles.shutterWrap, pressed && { transform: [{ scale: 0.94 }] }]}
-            >
-              <View style={styles.shutterRing}>
-                <View style={styles.shutterInner} />
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={toggleFlash}
-              style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
-            >
-              <View style={[styles.sideBtnInner, flash && styles.sideBtnFlashOn]}>
-                <MaterialIcons
-                  name={flash ? 'flash-on' : 'flash-off'}
-                  size={21}
-                  color={flash ? '#FFD700' : 'rgba(255,255,255,0.88)'}
-                />
-              </View>
+              <BlurView tint="light" intensity={28} style={styles.compareBtn}>
+                {comparing && <View style={styles.compareBtnPinkFill} />}
+                <MaterialIcons name="compare-arrows" size={15} color="rgba(255,255,255,0.92)" />
+                <Text style={styles.compareBtnText}>Compare Products</Text>
+              </BlurView>
             </Pressable>
           </Animated.View>
-        </LinearGradient>
-      )}
+        )}
+        {mode === 'product' && (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.scanHintRow}>
+            <Text style={styles.productHintText}>
+              {comparing
+                ? compareFirst
+                  ? '✓ Product 1 — now scan product 2'
+                  : 'Step 1 of 2 — Scan first product'
+                : scanned
+                  ? 'Scanned — analysing product...'
+                  : 'Hold steady over the barcode'
+              }
+            </Text>
+          </Animated.View>
+        )}
+        <Animated.View entering={FadeIn.delay(250)} style={styles.controls}>
+          <Pressable
+            onPress={pickImage}
+            style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
+          >
+            <View style={styles.sideBtnInner}>
+              <MaterialIcons name="photo-library" size={21} color="rgba(255,255,255,0.88)" />
+            </View>
+          </Pressable>
 
-      {/* Product mode hint */}
-      {mode === 'product' && (
-        <Animated.View
-          entering={FadeIn.duration(300)}
-          style={[styles.productHint, { paddingBottom: insets.bottom + 36 }]}
-        >
-          <Text style={styles.productHintText}>
-            {scanned ? 'Scanned — analysing product...' : 'Hold steady over the barcode'}
-          </Text>
+          <Pressable
+            onPress={takePhoto}
+            style={({ pressed }) => [styles.shutterWrap, pressed && { transform: [{ scale: 0.94 }] }]}
+          >
+            <View style={styles.shutterRing}>
+              <View style={styles.shutterInner} />
+            </View>
+          </Pressable>
+
+          <Pressable
+            onPress={toggleFlash}
+            style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
+          >
+            <View style={[styles.sideBtnInner, flash && styles.sideBtnFlashOn]}>
+              <MaterialIcons
+                name={flash ? 'flash-on' : 'flash-off'}
+                size={21}
+                color={flash ? '#FFD700' : 'rgba(255,255,255,0.88)'}
+              />
+            </View>
+          </Pressable>
         </Animated.View>
-      )}
+      </LinearGradient>
 
       {/* Low-light warning */}
       {showLowLight && (
         <Animated.View
           entering={FadeInDown.springify().damping(18)}
           exiting={FadeOut.duration(200)}
-          style={[styles.lowLightBanner, { top: insets.top + 80 }]}
+          style={[styles.lowLightBanner, { top: insets.top + 112 }]}
           pointerEvents="none"
         >
           <Text style={styles.lowLightIcon}>✦</Text>
@@ -413,12 +455,12 @@ const styles = StyleSheet.create({
   // ── Top ──────────────────────────────────────────────────
   topGradient: {
     position: 'absolute', top: 0, left: 0, right: 0,
-    zIndex: 10, paddingHorizontal: 20, paddingBottom: 60,
+    zIndex: 10, paddingHorizontal: 20, paddingBottom: 20,
   },
   topBar: {
-    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    flexDirection: 'row', alignItems: 'center',
   },
-  topBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
+  topBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   profileImg: {
     width: 36, height: 36, borderRadius: 18,
     borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.30)',
@@ -435,8 +477,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,220,100,0.28)',
     justifyContent: 'center', alignItems: 'center',
   },
-  topCentre: { alignItems: 'center', gap: 10 },
   wordmark: {
+    flex: 1, textAlign: 'center',
     fontFamily: tokens.fonts.serif,
     fontSize: 17, fontWeight: '400',
     color: 'rgba(255,255,255,0.82)',
@@ -481,11 +523,29 @@ const styles = StyleSheet.create({
   // ── Bottom ───────────────────────────────────────────────
   bottomGradient: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    zIndex: 10, paddingTop: 52, alignItems: 'center',
+    zIndex: 10, paddingTop: 80, alignItems: 'center',
   },
   controls: {
     flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'center', gap: 40,
+    justifyContent: 'center', gap: 28,
+  },
+  toggleRow: { marginTop: 12, alignSelf: 'stretch', alignItems: 'center' },
+  scanHintRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 },
+  compareRow: { alignItems: 'center', marginBottom: 10 },
+  compareBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    paddingHorizontal: 20, paddingVertical: 10,
+    borderRadius: 24, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+  },
+  compareBtnPinkFill: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: tokens.colors.pinkDeep,
+    opacity: 0.72,
+  },
+  compareBtnText: {
+    fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '500',
+    color: 'rgba(255,255,255,0.92)',
   },
   sideBtn: { width: 52, height: 52, justifyContent: 'center', alignItems: 'center' },
   sideBtnInner: {
@@ -512,10 +572,6 @@ const styles = StyleSheet.create({
   },
 
   // ── Product mode hint ─────────────────────────────────────
-  productHint: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    alignItems: 'center', zIndex: 10,
-  },
   productHintText: {
     fontFamily: tokens.fonts.regular, fontSize: 13,
     fontWeight: '300', color: 'rgba(255,255,255,0.5)', letterSpacing: 0.04,
@@ -536,39 +592,40 @@ const styles = StyleSheet.create({
     color: 'rgba(255,210,235,0.92)', letterSpacing: 0.3,
   },
 
-  // ── UV Popup ─────────────────────────────────────────────
-  popupBackdrop: { flex: 1, paddingHorizontal: 20, alignItems: 'flex-end' },
-  popupCard: {
-    width: 260, backgroundColor: tokens.colors.white,
-    borderRadius: 20, borderWidth: 1, borderColor: tokens.colors.border,
+  // ── UV Speech Bubble ─────────────────────────────────────
+  bubbleBackdrop: { flex: 1 },
+  bubbleAnchor: {
+    position: 'absolute', right: 12,
+    alignItems: 'flex-end',
+  },
+  bubbleArrow: {
+    width: 0, height: 0,
+    borderLeftWidth: 7, borderRightWidth: 7, borderBottomWidth: 8,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent',
+    borderBottomColor: tokens.colors.white,
+    marginRight: 14,
+    // shadow doesn't apply to zero-size views — keep it clean
+  },
+  bubbleCard: {
+    width: 250, backgroundColor: tokens.colors.white,
+    borderRadius: 16, borderWidth: 1, borderColor: tokens.colors.border,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14, shadowRadius: 16, elevation: 12,
     overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18, shadowRadius: 20, elevation: 16,
   },
-  popupHeader: {
+  bubbleHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 18, paddingTop: 16, paddingBottom: 14,
+    paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12,
   },
-  popupTitle: {
-    fontFamily: tokens.fonts.regular, fontSize: 14,
-    fontWeight: '600', color: tokens.colors.text, letterSpacing: 0.1,
+  bubbleTitle: {
+    fontFamily: tokens.fonts.regular, fontSize: 13,
+    fontWeight: '600', color: tokens.colors.text,
   },
+  // aliases kept for shared body styles
+  popupHeader: { flexDirection: 'row' },
+  popupTitle: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '600', color: tokens.colors.text },
   popupDivider: { height: 1, backgroundColor: tokens.colors.border },
-  popupBody: { paddingHorizontal: 18, paddingVertical: 16, gap: 14 },
-  popupLoading: { paddingVertical: 24, alignItems: 'center', gap: 10 },
-  popupLoadingText: {
-    fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.grayLight,
-  },
-  popupNoPermText: {
-    fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.gray, lineHeight: 19,
-  },
-  popupSettingsBtn: {
-    backgroundColor: tokens.colors.pinkDeep, borderRadius: 12,
-    paddingVertical: 10, alignItems: 'center',
-  },
-  popupSettingsBtnText: {
-    fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '600', color: '#fff',
-  },
+  popupBody: { paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
   uvNumRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   uvBadge: { width: 56, height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   uvNum: { fontFamily: tokens.fonts.serif, fontSize: 28, fontWeight: '400' },

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
@@ -18,6 +18,9 @@ export default function LightingScreen() {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 32 }]}>
+      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
+        <Text style={styles.backIcon}>‹</Text>
+      </Pressable>
 
       <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
         <Text style={styles.eyebrow}>Before you scan</Text>
@@ -75,4 +78,6 @@ const styles = StyleSheet.create({
   bottom: { alignItems: 'center', gap: 12 },
   cta: { width: '100%' },
   note: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.grayLight, letterSpacing: 0.2 },
+  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
+  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
 });

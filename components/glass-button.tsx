@@ -63,13 +63,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primary: {
-    backgroundColor: tokens.colors.white,
-    borderWidth: 1,
-    borderColor: tokens.colors.goldSoft,
-    shadowColor: '#D4AF37',
+    backgroundColor: tokens.colors.pinkDeep,
+    shadowColor: tokens.colors.pinkDeep,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    elevation: 6,
   },
   secondary: {
     backgroundColor: tokens.colors.white,
@@ -86,7 +85,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   disabled: {
-    opacity: 0.25,
+    opacity: 0.55,
   },
   text: {
     fontFamily: tokens.fonts.regular,
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   textPrimary: {
-    color: tokens.colors.gold,
+    color: '#fff',
   },
   textSecondary: {
     color: tokens.colors.text,

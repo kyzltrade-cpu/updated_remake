@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { saveGloField } from '@/lib/glo-profile';
@@ -52,6 +52,9 @@ export default function ToneGuessScreen() {
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
       </View>
+      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
+        <Text style={styles.backIcon}>‹</Text>
+      </Pressable>
 
       <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
         <Text style={styles.step}>{STEP} of {TOTAL}</Text>
@@ -89,6 +92,12 @@ export default function ToneGuessScreen() {
         })}
       </Animated.View>
 
+      {selected !== null && (
+        <Animated.Text entering={FadeIn.duration(250)} style={styles.confirm}>
+          ✓ Got it
+        </Animated.Text>
+      )}
+
       <Animated.View entering={FadeInUp.delay(500).duration(500)} style={styles.footnote}>
         <Text style={styles.footnoteText}>
           35% of people pick "Not sure" — your scan will confirm it.
@@ -125,4 +134,7 @@ const styles = StyleSheet.create({
   footnote: { marginTop: 20 },
   footnoteText: { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '300', color: tokens.colors.grayLight, lineHeight: 18, fontStyle: 'italic' },
   spacer: { flex: 1, minHeight: 24 },
+  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
+  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
+  confirm: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '500', color: tokens.colors.pinkDeep, textAlign: 'center', marginTop: 16, letterSpacing: 0.2 },
 });

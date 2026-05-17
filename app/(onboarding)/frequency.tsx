@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokens } from '@/components/theme';
-import { GlassButton } from '@/components/glass-button';
 import * as Haptics from 'expo-haptics';
 
 const STEP = 2;
@@ -23,11 +22,11 @@ export default function FrequencyScreen() {
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<string | null>(null);
 
-  const handleContinue = async () => {
-    if (!selected) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await AsyncStorage.setItem('@remake_practice_frequency', selected);
-    router.push('/(onboarding)/skin-goals');
+  const handleSelect = async (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelected(id);
+    await AsyncStorage.setItem('@remake_practice_frequency', id);
+    setTimeout(() => router.push('/(onboarding)/skin-goals'), 600);
   };
 
   return (
@@ -35,6 +34,9 @@ export default function FrequencyScreen() {
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
       </View>
+      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
+        <Text style={styles.backIcon}>‹</Text>
+      </Pressable>
 
       <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
         <Text style={styles.step}>{STEP} of {TOTAL}</Text>
@@ -47,7 +49,7 @@ export default function FrequencyScreen() {
           return (
             <Animated.View key={opt.id} entering={FadeInUp.delay(200 + i * 50).duration(400)}>
               <Pressable
-                onPress={() => { Haptics.selectionAsync(); setSelected(opt.id); }}
+                onPress={() => handleSelect(opt.id)}
                 style={({ pressed }) => [styles.card, active && styles.cardActive, pressed && styles.cardPressed]}
               >
                 <View style={[styles.radio, active && styles.radioActive]}>
@@ -63,17 +65,13 @@ export default function FrequencyScreen() {
         })}
       </Animated.View>
 
-      <View style={styles.spacer} />
+      {selected !== null && (
+        <Animated.Text entering={FadeIn.duration(250)} style={styles.confirm}>
+          ✓ Got it
+        </Animated.Text>
+      )}
 
-      <Animated.View entering={FadeInUp.delay(480).duration(500)} style={{ paddingBottom: insets.bottom + 32 }}>
-        <GlassButton
-          title="Continue"
-          onPress={handleContinue}
-          variant="primary"
-          style={styles.cta}
-          disabled={!selected}
-        />
-      </Animated.View>
+      <View style={styles.spacer} />
     </View>
   );
 }
@@ -98,4 +96,7 @@ const styles = StyleSheet.create({
   desc: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '300', color: tokens.colors.gray, lineHeight: 18 },
   spacer: { flex: 1, minHeight: 24 },
   cta: { width: '100%' },
+  backBtn: { position: 'absolute', left: 20, zIndex: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border, justifyContent: 'center', alignItems: 'center' },
+  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
+  confirm: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '500', color: tokens.colors.pinkDeep, textAlign: 'center', marginTop: 16, letterSpacing: 0.2 },
 });

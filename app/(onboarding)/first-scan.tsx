@@ -375,12 +375,16 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 36,
     borderRadius: 30,
-    backgroundColor: '#C8A882',
+    backgroundColor: tokens.colors.pinkDeep,
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
   },
   permissionBtnText: {
     fontFamily: tokens.fonts.regular,
     fontSize: 15,
     fontWeight: '700',
-    color: '#1A1715',
+    color: '#fff',
   },
 });

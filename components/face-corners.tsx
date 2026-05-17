@@ -1,7 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import { tokens } from '@/components/theme';
 
-export function FaceCorners({ size = 180 }: { size?: number }) {
+export function FaceCorners({ size = 180, color = tokens.colors.pinkDeep }: { size?: number; color?: string }) {
   const corner = 28;
   const borderWidth = 1.5;
   const radius = 16;
@@ -17,7 +17,7 @@ export function FaceCorners({ size = 180 }: { size?: number }) {
             width: corner,
             height: corner,
             borderWidth,
-            borderColor: 'rgba(232, 160, 170, 0.25)',
+            borderColor: color,
             borderTopLeftRadius: radius,
             borderRightWidth: 0,
             borderBottomWidth: 0,
@@ -33,7 +33,7 @@ export function FaceCorners({ size = 180 }: { size?: number }) {
             width: corner,
             height: corner,
             borderWidth,
-            borderColor: 'rgba(232, 160, 170, 0.25)',
+            borderColor: color,
             borderTopRightRadius: radius,
             borderLeftWidth: 0,
             borderBottomWidth: 0,
@@ -49,7 +49,7 @@ export function FaceCorners({ size = 180 }: { size?: number }) {
             width: corner,
             height: corner,
             borderWidth,
-            borderColor: 'rgba(232, 160, 170, 0.25)',
+            borderColor: color,
             borderBottomLeftRadius: 14,
             borderTopWidth: 0,
             borderRightWidth: 0,
@@ -65,7 +65,7 @@ export function FaceCorners({ size = 180 }: { size?: number }) {
             width: corner,
             height: corner,
             borderWidth,
-            borderColor: 'rgba(232, 160, 170, 0.25)',
+            borderColor: color,
             borderBottomRightRadius: 14,
             borderTopWidth: 0,
             borderLeftWidth: 0,
