@@ -85,34 +85,30 @@ export default function ProductCompareScreen() {
         <Animated.View entering={FadeInUp.delay(80).duration(500)} style={s.duel}>
 
           {/* Product A */}
-          <View style={s.product}>
+          <View style={[s.productHalf, winner === 'A' && { backgroundColor: `${COLOR_A}0D` }]}>
             <Text style={s.productBrand}>{PRODUCT_A.brand}</Text>
             <Text style={s.productName}>{PRODUCT_A.name}</Text>
             <Text style={s.productCategory}>{PRODUCT_A.category}</Text>
             <Text style={[s.productScore, { color: COLOR_A }]}>{scoreA}</Text>
-            {winner === 'A' && (
-              <View style={[s.winBadge, { backgroundColor: `${COLOR_A}14`, borderColor: `${COLOR_A}2A` }]}>
-                <Text style={[s.winBadgeText, { color: COLOR_A }]}>Best match</Text>
-              </View>
-            )}
+            <View style={[s.winBadge, { backgroundColor: `${COLOR_A}14`, borderColor: `${COLOR_A}30` }, winner !== 'A' && s.winBadgeHidden]}>
+              <Text style={[s.winBadgeText, { color: COLOR_A }]}>Best match</Text>
+            </View>
           </View>
 
-          {/* VS */}
-          <View style={s.vsSep}>
+          {/* VS — absolutely centered so both halves are exactly 50% */}
+          <View style={s.vsSep} pointerEvents="none">
             <Text style={s.vsText}>VS</Text>
           </View>
 
           {/* Product B */}
-          <View style={[s.product, s.productB]}>
+          <View style={[s.productHalf, s.productHalfRight, winner === 'B' && { backgroundColor: `${COLOR_B}0D` }]}>
             <Text style={[s.productBrand, s.textRight]}>{PRODUCT_B.brand}</Text>
             <Text style={[s.productName, s.textRight]}>{PRODUCT_B.name}</Text>
             <Text style={[s.productCategory, s.textRight]}>{PRODUCT_B.category}</Text>
             <Text style={[s.productScore, s.textRight, { color: COLOR_B }]}>{scoreB}</Text>
-            {winner === 'B' && (
-              <View style={[s.winBadge, s.winBadgeRight, { backgroundColor: `${COLOR_B}14`, borderColor: `${COLOR_B}2A` }]}>
-                <Text style={[s.winBadgeText, { color: COLOR_B }]}>Best match</Text>
-              </View>
-            )}
+            <View style={[s.winBadge, s.winBadgeRight, { backgroundColor: `${COLOR_B}14`, borderColor: `${COLOR_B}30` }, winner !== 'B' && s.winBadgeHidden]}>
+              <Text style={[s.winBadgeText, { color: COLOR_B }]}>Best match</Text>
+            </View>
           </View>
 
         </Animated.View>
@@ -190,11 +186,13 @@ const s = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     borderColor: tokens.colors.border,
-    padding: 22,
-    alignItems: 'center',
+    overflow: 'hidden',
+    alignItems: 'stretch',
   },
-  product: { flex: 1, gap: 3 },
-  productB: { alignItems: 'flex-end' },
+  productHalf: {
+    flex: 1, gap: 3, padding: 22,
+  },
+  productHalfRight: { alignItems: 'flex-end' },
   productBrand: {
     fontFamily: tokens.fonts.regular, fontSize: 8, fontWeight: '600',
     letterSpacing: 1.8, textTransform: 'uppercase', color: tokens.colors.grayLight,
@@ -212,17 +210,26 @@ const s = StyleSheet.create({
   },
   winBadge: {
     alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 20, borderWidth: 1, marginTop: 6,
+    borderRadius: 20, marginTop: 6, borderWidth: 1,
   },
   winBadgeRight: { alignSelf: 'flex-end' },
-  winBadgeText: { fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700', letterSpacing: 0.3 },
+  winBadgeHidden: { opacity: 0 },
+  winBadgeText: {
+    fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700', letterSpacing: 0.3,
+  },
   textRight: { textAlign: 'right' },
 
-  // VS separator
-  vsSep: { paddingHorizontal: 14, alignItems: 'center' },
+  // VS separator — absolute so it doesn't affect flex widths
+  vsSep: {
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center',
+  },
   vsText: {
     fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700',
     color: tokens.colors.grayLight, letterSpacing: 2,
+    backgroundColor: tokens.colors.white,
+    paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6,
+    overflow: 'hidden',
   },
 
   // Legend
