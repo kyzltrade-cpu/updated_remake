@@ -163,12 +163,12 @@ export default function FirstScanScreen() {
             {
               text: 'Continue anyway',
               onPress: () =>
-                router.push({ pathname: '/(onboarding)/dna-loading', params: { uri: photo.uri } }),
+                router.push({ pathname: '/(onboarding)/email-capture', params: { uri: photo.uri } }),
             },
           ],
         );
       } else {
-        router.push({ pathname: '/(onboarding)/dna-loading', params: { uri: photo.uri } });
+        router.push({ pathname: '/(onboarding)/email-capture', params: { uri: photo.uri } });
       }
     } catch {
       Alert.alert('Camera error', 'Could not take photo. Please try again.');
