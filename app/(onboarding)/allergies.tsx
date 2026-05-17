@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable, TextInput, ScrollView } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { GlassButton } from '@/components/glass-button';
-import * as Haptics from 'expo-haptics';
 import { saveGloField } from '@/lib/glo-profile';
+import * as Haptics from 'expo-haptics';
+
+const STEP = 5;
+const TOTAL = 9;
 
 const PRESETS = [
   'Fragrance / Parfum',
@@ -20,10 +24,9 @@ const PRESETS = [
   'Tea Tree Oil',
 ];
 
-const PROGRESS = 3 / 7;
-
 export default function AllergiesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [toggled, setToggled] = useState<Set<string>>(new Set());
   const [custom, setCustom] = useState('');
   const [customList, setCustomList] = useState<string[]>([]);
@@ -45,53 +48,39 @@ export default function AllergiesScreen() {
   };
 
   const handleContinue = async () => {
-    const all = [...Array.from(toggled), ...customList];
-    await saveGloField({ allergies: all });
+    await saveGloField({ allergies: [...Array.from(toggled), ...customList] });
     router.push('/(onboarding)/ethics');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${PROGRESS * 100}%` }]} />
+    <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
+      <View style={styles.track}>
+        <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
       </View>
 
-      <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>5 of 9</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
+        <Text style={styles.step}>{STEP} of {TOTAL}</Text>
         <Text style={styles.title}>Anything your{'\n'}skin hates?</Text>
-        <Text style={styles.sub}>Toggle all that apply — or skip if none</Text>
+        <Text style={styles.sub}>Toggle all that apply — or skip if none.</Text>
       </Animated.View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {PRESETS.map((item) => {
-          const active = toggled.has(item);
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {[...PRESETS, ...customList].map((item) => {
+          const active = toggled.has(item) || customList.includes(item);
           return (
             <Pressable key={item} onPress={() => toggle(item)} style={styles.row}>
               <Text style={[styles.rowLabel, active && styles.rowLabelActive]}>{item}</Text>
-              <View style={[styles.toggle, active && styles.toggleActive]}>
-                <View style={[styles.toggleThumb, active && styles.toggleThumbActive]} />
+              <View style={[styles.tog, active && styles.togActive]}>
+                <View style={[styles.togThumb, active && styles.togThumbActive]} />
               </View>
             </Pressable>
           );
         })}
 
-        {customList.map((item) => (
-          <Pressable key={item} onPress={() => setCustomList(p => p.filter(i => i !== item))} style={styles.row}>
-            <Text style={[styles.rowLabel, styles.rowLabelActive]}>{item}</Text>
-            <View style={[styles.toggle, styles.toggleActive]}>
-              <View style={[styles.toggleThumb, styles.toggleThumbActive]} />
-            </View>
-          </Pressable>
-        ))}
-
-        <View style={styles.customRow}>
+        <View style={styles.addRow}>
           <TextInput
-            style={styles.customInput}
-            placeholder="Add your own..."
+            style={styles.addInput}
+            placeholder="Add ingredient..."
             placeholderTextColor={tokens.colors.grayLight}
             value={custom}
             onChangeText={setCustom}
@@ -100,161 +89,39 @@ export default function AllergiesScreen() {
             autoCapitalize="words"
             maxLength={60}
           />
-          <Pressable
-            onPress={addCustom}
-            style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.7 }]}
-          >
+          <Pressable onPress={addCustom} style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.7 }]}>
             <Text style={styles.addBtnText}>+</Text>
           </Pressable>
         </View>
       </ScrollView>
 
-      <Animated.View entering={FadeInUp.delay(400).duration(600)} style={styles.bottom}>
-        <GlassButton
-          title="Continue"
-          onPress={handleContinue}
-          variant="primary"
-          style={styles.cta}
-        />
+      <Animated.View entering={FadeInUp.delay(400).duration(500)}>
+        <GlassButton title="Continue" onPress={handleContinue} variant="primary" style={styles.cta} />
       </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.beige,
-    paddingHorizontal: 28,
-    paddingTop: 60,
-    paddingBottom: 50,
-  },
-  progressTrack: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: tokens.colors.border,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: tokens.colors.pinkDeep,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-    paddingTop: 10,
-  },
-  step: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    letterSpacing: 0.16,
-    textTransform: 'uppercase',
-    color: tokens.colors.grayLight,
-    fontWeight: '500',
-    marginBottom: 18,
-  },
-  title: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 28,
-    fontWeight: '400',
-    color: tokens.colors.text,
-    textAlign: 'center',
-    lineHeight: 38,
-    marginBottom: 8,
-  },
-  sub: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 12,
-    fontWeight: '300',
-    color: tokens.colors.gray,
-    textAlign: 'center',
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    gap: 0,
-    paddingBottom: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: 0.5,
-    borderBottomColor: tokens.colors.border,
-  },
-  rowLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 14,
-    fontWeight: '400',
-    color: tokens.colors.gray,
-    flex: 1,
-  },
-  rowLabelActive: {
-    color: tokens.colors.text,
-    fontWeight: '500',
-  },
-  toggle: {
-    width: 40,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: tokens.colors.border,
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleActive: {
-    backgroundColor: tokens.colors.pinkDeep,
-  },
-  toggleThumb: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: tokens.colors.white,
-    alignSelf: 'flex-start',
-  },
-  toggleThumbActive: {
-    alignSelf: 'flex-end',
-  },
-  customRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  customInput: {
-    flex: 1,
-    backgroundColor: tokens.colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontFamily: tokens.fonts.regular,
-    fontSize: 14,
-    color: tokens.colors.text,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-  },
-  addBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: tokens.colors.pinkDeep,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addBtnText: {
-    color: tokens.colors.white,
-    fontSize: 22,
-    lineHeight: 24,
-    fontWeight: '300',
-  },
-  bottom: {
-    alignItems: 'center',
-    paddingTop: 16,
-  },
-  cta: {
-    width: '100%',
-  },
+  root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
+  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border },
+  fill: { height: '100%', backgroundColor: tokens.colors.pinkDeep },
+  header: { marginBottom: 20 },
+  step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
+  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
+  sub: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300', color: tokens.colors.gray, lineHeight: 22 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: tokens.colors.border },
+  rowLabel: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '400', color: tokens.colors.gray, flex: 1 },
+  rowLabelActive: { color: tokens.colors.text, fontWeight: '500' },
+  tog: { width: 42, height: 24, borderRadius: 12, backgroundColor: tokens.colors.border, justifyContent: 'center', paddingHorizontal: 2 },
+  togActive: { backgroundColor: tokens.colors.pinkDeep },
+  togThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: tokens.colors.white, alignSelf: 'flex-start' },
+  togThumbActive: { alignSelf: 'flex-end' },
+  addRow: { flexDirection: 'row', gap: 10, marginTop: 16, alignItems: 'center' },
+  addInput: { flex: 1, backgroundColor: tokens.colors.white, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, fontFamily: tokens.fonts.regular, fontSize: 14, color: tokens.colors.text, borderWidth: 1.5, borderColor: tokens.colors.border },
+  addBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: tokens.colors.pinkDeep, justifyContent: 'center', alignItems: 'center' },
+  addBtnText: { color: tokens.colors.white, fontSize: 22, lineHeight: 24, fontWeight: '300' },
+  cta: { width: '100%' },
 });

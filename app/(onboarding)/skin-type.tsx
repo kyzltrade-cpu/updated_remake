@@ -2,185 +2,91 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
-import * as Haptics from 'expo-haptics';
 import { saveGloField } from '@/lib/glo-profile';
+import * as Haptics from 'expo-haptics';
+
+const STEP = 4;
+const TOTAL = 9;
 
 const TYPES = [
-  { id: 'normal', label: 'Normal', icon: '◎', desc: 'Balanced, rarely breaks out' },
-  { id: 'oily', label: 'Oily', icon: '◉', desc: 'Shiny by mid-morning' },
-  { id: 'dry', label: 'Dry', icon: '◇', desc: 'Tight, sometimes flaky' },
-  { id: 'combination', label: 'Combination', icon: '◈', desc: 'Oily T-zone, dry cheeks' },
-  { id: 'sensitive', label: 'Sensitive', icon: '◫', desc: 'Reacts easily, prone to redness' },
+  { id: 'normal',      label: 'Normal',      desc: 'Balanced, rarely breaks out' },
+  { id: 'oily',        label: 'Oily',        desc: 'Shiny by mid-morning' },
+  { id: 'dry',         label: 'Dry',         desc: 'Tight, sometimes flaky' },
+  { id: 'combination', label: 'Combination', desc: 'Oily T-zone, dry cheeks' },
+  { id: 'sensitive',   label: 'Sensitive',   desc: 'Reacts easily, prone to redness' },
 ] as const;
-
-const PROGRESS = 2 / 7;
 
 export default function SkinTypeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleSelect = async (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelected(id);
     await saveGloField({ skin_type: id });
-    setTimeout(() => router.push('/(onboarding)/allergies'), 800);
+    setTimeout(() => router.push('/(onboarding)/allergies'), 600);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${PROGRESS * 100}%` }]} />
+    <View style={styles.root}>
+      <View style={styles.track}>
+        <View style={[styles.fill, { width: `${(STEP / TOTAL) * 100}%` as `${number}%` }]} />
       </View>
 
-      <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>4 of 9</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={[styles.header, { paddingTop: insets.top + 24 }]}>
+        <Text style={styles.step}>{STEP} of {TOTAL}</Text>
         <Text style={styles.title}>How does your skin{'\n'}feel by noon?</Text>
-        <Text style={styles.sub}>Tap to select</Text>
+        <Text style={styles.sub}>Tap to select — we'll move on automatically.</Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(250).duration(600)} style={styles.cards}>
-        {TYPES.map((type) => {
+      <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.options}>
+        {TYPES.map((type, i) => {
           const active = selected === type.id;
           return (
-            <Pressable
-              key={type.id}
-              onPress={() => handleSelect(type.id)}
-              style={({ pressed }) => [
-                styles.card,
-                active && styles.cardActive,
-                pressed && styles.cardPressed,
-              ]}
-            >
-              <Text style={[styles.cardIcon, active && styles.cardIconActive]}>
-                {type.icon}
-              </Text>
-              <View style={styles.cardText}>
-                <Text style={[styles.cardLabel, active && styles.cardLabelActive]}>
-                  {type.label}
-                </Text>
-                <Text style={[styles.cardDesc, active && styles.cardDescActive]}>
-                  {type.desc}
-                </Text>
-              </View>
-              {active && <View style={styles.checkDot} />}
-            </Pressable>
+            <Animated.View key={type.id} entering={FadeInUp.delay(200 + i * 50).duration(400)}>
+              <Pressable
+                onPress={() => handleSelect(type.id)}
+                style={({ pressed }) => [styles.card, active && styles.cardActive, pressed && styles.cardPressed]}
+              >
+                <View style={[styles.radio, active && styles.radioActive]}>
+                  {active && <View style={styles.radioDot} />}
+                </View>
+                <View style={styles.cardBody}>
+                  <Text style={[styles.label, active && styles.labelActive]}>{type.label}</Text>
+                  <Text style={styles.desc}>{type.desc}</Text>
+                </View>
+              </Pressable>
+            </Animated.View>
           );
         })}
       </Animated.View>
+
+      <View style={styles.spacer} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.beige,
-    paddingHorizontal: 28,
-    paddingTop: 60,
-    paddingBottom: 50,
-  },
-  progressTrack: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: tokens.colors.border,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: tokens.colors.pinkDeep,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 28,
-    paddingTop: 10,
-  },
-  step: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    letterSpacing: 0.16,
-    textTransform: 'uppercase',
-    color: tokens.colors.grayLight,
-    fontWeight: '500',
-    marginBottom: 18,
-  },
-  title: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 28,
-    fontWeight: '400',
-    color: tokens.colors.text,
-    textAlign: 'center',
-    lineHeight: 38,
-    marginBottom: 8,
-  },
-  sub: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 12,
-    fontWeight: '300',
-    color: tokens.colors.grayLight,
-    textTransform: 'uppercase',
-    letterSpacing: 0.08,
-  },
-  cards: {
-    flex: 1,
-    gap: 10,
-    justifyContent: 'center',
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    backgroundColor: tokens.colors.white,
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: tokens.colors.border,
-  },
-  cardActive: {
-    borderColor: tokens.colors.pinkDeep,
-    backgroundColor: tokens.colors.pinkLight,
-  },
-  cardPressed: {
-    transform: [{ scale: 0.98 }],
-  },
-  cardIcon: {
-    fontSize: 22,
-    color: tokens.colors.grayLight,
-    width: 28,
-    textAlign: 'center',
-  },
-  cardIconActive: {
-    color: tokens.colors.pinkDeep,
-  },
-  cardText: {
-    flex: 1,
-  },
-  cardLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 15,
-    fontWeight: '500',
-    color: tokens.colors.text,
-    marginBottom: 2,
-  },
-  cardLabelActive: {
-    color: tokens.colors.pinkRich,
-  },
-  cardDesc: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 12,
-    fontWeight: '300',
-    color: tokens.colors.gray,
-    lineHeight: 17,
-  },
-  cardDescActive: {
-    color: tokens.colors.pinkDeep,
-  },
-  checkDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: tokens.colors.pinkDeep,
-  },
+  root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
+  track: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: tokens.colors.border },
+  fill: { height: '100%', backgroundColor: tokens.colors.pinkDeep },
+  header: { marginBottom: 28 },
+  step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
+  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
+  sub: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300', color: tokens.colors.gray, lineHeight: 22 },
+  options: { gap: 10 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: tokens.colors.white, borderRadius: 14, paddingVertical: 16, paddingHorizontal: 18, borderWidth: 1.5, borderColor: tokens.colors.border },
+  cardActive: { borderColor: tokens.colors.pinkDeep, backgroundColor: tokens.colors.pinkLight },
+  cardPressed: { opacity: 0.9 },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: tokens.colors.grayLight, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  radioActive: { borderColor: tokens.colors.pinkDeep },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: tokens.colors.pinkDeep },
+  cardBody: { flex: 1, gap: 2 },
+  label: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '500', color: tokens.colors.text },
+  labelActive: { color: tokens.colors.pinkRich },
+  desc: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '300', color: tokens.colors.gray, lineHeight: 18 },
+  spacer: { flex: 1, minHeight: 24 },
 });

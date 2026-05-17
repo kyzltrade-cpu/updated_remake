@@ -1,26 +1,26 @@
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import { useRouter } from 'expo-router';
-import {
-  View, Text, StyleSheet, TextInput,
-  KeyboardAvoidingView, Platform, ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokens } from '@/components/theme';
 import { GlassButton } from '@/components/glass-button';
 import * as Haptics from 'expo-haptics';
+import { useState } from 'react';
 
 export default function NameScreen() {
   const router = useRouter();
-  const [name, setName] = useState('');
+  const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
+  const [name, setName] = useState('');
 
   const handleContinue = async () => {
     const clean = name.trim();
     if (!clean) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await AsyncStorage.setItem('@remake_user_name', clean);
-    router.push('/(onboarding)/skill');
+    router.push('/(onboarding)/pain-point');
   };
 
   return (
@@ -28,17 +28,14 @@ export default function NameScreen() {
       style={styles.kav}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
+      <View style={[styles.root, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32 }]}>
+
+        <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
           <Text style={styles.title}>What's your name?</Text>
           <Text style={styles.sub}>We'll personalise your coaching just for you.</Text>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(280).duration(600)} style={styles.inputWrap}>
+        <Animated.View entering={FadeInUp.delay(220).duration(500)}>
           <TextInput
             ref={inputRef}
             style={styles.input}
@@ -57,7 +54,7 @@ export default function NameScreen() {
 
         <View style={styles.spacer} />
 
-        <Animated.View entering={FadeInUp.delay(450).duration(600)} style={styles.bottom}>
+        <Animated.View entering={FadeInUp.delay(380).duration(500)}>
           <GlassButton
             title="Continue"
             onPress={handleContinue}
@@ -66,22 +63,23 @@ export default function NameScreen() {
             disabled={!name.trim()}
           />
         </Animated.View>
-      </ScrollView>
+
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   kav: { flex: 1, backgroundColor: tokens.colors.beige },
-  scroll: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 100, paddingBottom: 50 },
-  header: { marginBottom: 40 },
+  root: { flex: 1, paddingHorizontal: 28 },
+  header: { marginBottom: 32 },
   title: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '400',
     color: tokens.colors.text,
-    lineHeight: 46,
-    marginBottom: 12,
+    lineHeight: 42,
+    marginBottom: 10,
   },
   sub: {
     fontFamily: tokens.fonts.regular,
@@ -90,7 +88,6 @@ const styles = StyleSheet.create({
     color: tokens.colors.gray,
     lineHeight: 22,
   },
-  inputWrap: {},
   input: {
     backgroundColor: tokens.colors.white,
     borderRadius: 14,
@@ -103,6 +100,5 @@ const styles = StyleSheet.create({
     borderColor: tokens.colors.border,
   },
   spacer: { flex: 1, minHeight: 40 },
-  bottom: {},
   cta: { width: '100%' },
 });
