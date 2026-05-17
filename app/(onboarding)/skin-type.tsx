@@ -34,7 +34,7 @@ export default function SkinTypeScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>2 of 7</Text>
+        <Text style={styles.step}>4 of 9</Text>
         <Text style={styles.title}>How does your skin{'\n'}feel by noon?</Text>
         <Text style={styles.sub}>Tap to select</Text>
       </Animated.View>

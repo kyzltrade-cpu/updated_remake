@@ -1,70 +1,38 @@
-import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
-import Animated, {
-  FadeIn, FadeInUp,
-  useSharedValue, useAnimatedStyle,
-  withTiming, withDelay, withSpring, Easing,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from 'react-native';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
+import { ScoreRing } from '@/components/score-ring';
 import * as Haptics from 'expo-haptics';
 
-const { width: W } = Dimensions.get('window');
+const MOCK_CATEGORIES = [
+  { name: 'Blending', score: 73, isPriority: true, tip: 'Your blend drops off at the left temple — start 2cm higher and use smaller circles near the edge.', tipShort: 'Start your blend 2cm higher on the temple.', tutorialQuery: 'eyeshadow blending technique tutorial' },
+  { name: 'Colour Harmony', score: 91, isPriority: false, tip: 'Your warm undertones pair well with the shades you chose today.', tipShort: 'Great tone match today.', tutorialQuery: 'colour harmony makeup tutorial' },
+  { name: 'Brow Framing', score: 88, isPriority: false, tip: 'Right brow arch sits 2mm higher — mirror both sides for symmetry.', tipShort: 'Match the arch height on both sides.', tutorialQuery: 'brow shaping tutorial' },
+  { name: 'Coverage', score: 79, isPriority: false, tip: 'Light patchiness under the left eye — one extra press with a damp sponge will fix it.', tipShort: 'One extra press under the eye.', tutorialQuery: 'foundation coverage tutorial' },
+];
 
-const SCORE_TARGET = 79;
-const RING_SIZE = W * 0.52;
-const STROKE = 5;
-const R = (RING_SIZE - STROKE * 2) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * R;
+const CATEGORY_ICONS: Record<string, string> = {
+  Blending: '✦',
+  Symmetry: '◈',
+  'Colour Harmony': '◉',
+  Coverage: '▣',
+  Cleanliness: '◌',
+  'Brow Framing': '⌒',
+};
 
-function ScoreRingMock() {
-  const [count, setCount] = useState(0);
-  const arcProgress = useSharedValue(0);
-  const glowO = useSharedValue(0);
-
-  useEffect(() => {
-    // Count up the number
-    const steps = 40;
-    const stepMs = 30;
-    let step = 0;
-    const id = setTimeout(() => {
-      const iv = setInterval(() => {
-        step++;
-        setCount(Math.min(Math.round((SCORE_TARGET / steps) * step), SCORE_TARGET));
-        if (step >= steps) clearInterval(iv);
-      }, stepMs);
-    }, 600);
-
-    // Animate the arc
-    arcProgress.value = withDelay(600, withTiming(SCORE_TARGET / 100, {
-      duration: 1300,
-      easing: Easing.out(Easing.exp),
-    }));
-    glowO.value = withDelay(900, withTiming(1, { duration: 600 }));
-
-    return () => clearTimeout(id);
-  }, []);
-
-  const glowStyle = useAnimatedStyle(() => ({ opacity: glowO.value }));
-
-  const dashOffset = CIRCUMFERENCE * (1 - (arcProgress.value as number));
-
+function ScoreBar({ score, isPriority }: { score: number; isPriority: boolean }) {
   return (
-    <View style={styles.ringWrap}>
-      <Animated.View style={[styles.ringGlow, glowStyle]} />
-      <View style={[styles.ring, { width: RING_SIZE, height: RING_SIZE }]}>
-        {/* Background track */}
-        <View style={[styles.ringTrack, { width: RING_SIZE, height: RING_SIZE, borderRadius: RING_SIZE / 2, borderWidth: STROKE }]} />
-        {/* SVG-style arc would require react-native-svg — using border trick instead */}
-      </View>
-      <View style={styles.ringCenter}>
-        <Animated.Text entering={FadeIn.delay(600).duration(400)} style={styles.scoreNum}>
-          {count}
-        </Animated.Text>
-        <Text style={styles.scoreOf}>/100</Text>
-      </View>
+    <View style={styles.barTrack}>
+      <View
+        style={[
+          styles.barFill,
+          { width: `${score}%` as `${number}%` },
+          isPriority && styles.barFillPriority,
+          score < 65 && styles.barFillLow,
+        ]}
+      />
     </View>
   );
 }
@@ -73,217 +41,214 @@ export default function ValueScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const ctaSc = useSharedValue(0.88);
-  useEffect(() => {
-    ctaSc.value = withDelay(1400, withSpring(1, { damping: 10, stiffness: 120 }));
-  }, []);
-  const ctaStyle = useAnimatedStyle(() => ({ transform: [{ scale: ctaSc.value }] }));
+  const priorityCat = MOCK_CATEGORIES.find(c => c.isPriority)!;
+  const otherCats = MOCK_CATEGORIES.filter(c => !c.isPriority);
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 32 }]}>
-      <LinearGradient
-        colors={['#1A0818', '#2E0A24', '#1A0818']}
-        style={StyleSheet.absoluteFill}
-      />
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Mirror the results top bar */}
+        <View style={styles.topBar}>
+          <View style={styles.backBtn}>
+            <Text style={styles.backIcon}>◈</Text>
+          </View>
+          <Text style={styles.brand}>REMAKE</Text>
+          <View style={{ width: 34 }} />
+        </View>
 
-      {/* Top copy */}
-      <Animated.View entering={FadeInUp.delay(100).duration(700)} style={styles.top}>
-        <Text style={styles.eyebrow}>REMAKE</Text>
-        <Text style={styles.headline}>You've been{'\n'}guessing.</Text>
-      </Animated.View>
-
-      {/* Score hero */}
-      <View style={styles.scoreSection}>
-        <ScoreRingMock />
-        <Animated.View entering={FadeIn.delay(1000).duration(600)} style={styles.categories}>
-          {[
-            { label: 'Blending', score: '73', warn: true },
-            { label: 'Colour Harmony', score: '91', warn: false },
-            { label: 'Brow Framing', score: '88', warn: false },
-          ].map(c => (
-            <View key={c.label} style={[styles.catPill, c.warn && styles.catPillWarn]}>
-              <Text style={[styles.catLabel, c.warn && styles.catLabelWarn]}>{c.label}</Text>
-              <Text style={[styles.catScore, c.warn && styles.catScoreWarn]}>{c.score}</Text>
+        {/* Score hero — identical to results page */}
+        <Animated.View entering={FadeIn.duration(500)} style={styles.hero}>
+          <ScoreRing score={79} visible />
+          <View style={styles.heroMeta}>
+            <View style={[styles.verdictBadge, styles.verdictGo]}>
+              <Text style={[styles.verdictText, styles.verdictTextGo]}>✓ GO</Text>
             </View>
-          ))}
+            <Text style={styles.occasionTag}>Polished for everyday</Text>
+          </View>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(1200).duration(600)} style={styles.callout}>
-          "Your blend drops off at the left temple.{'\n'}Start 2cm higher."
-        </Animated.Text>
-      </View>
 
-      {/* Bottom */}
-      <View style={styles.bottom}>
-        <Animated.Text entering={FadeIn.delay(1300).duration(600)} style={styles.pitch}>
-          This is what REMAKE sees.{'\n'}Your mirror can't.
-        </Animated.Text>
-        <Animated.View style={ctaStyle}>
-          <Pressable
-            style={({ pressed }) => [styles.cta, pressed && { opacity: 0.88 }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push('/(onboarding)/name');
-            }}
-          >
-            <Text style={styles.ctaText}>See mine  →</Text>
-          </Pressable>
+        {/* Colour harmony banner */}
+        <Animated.View entering={FadeIn.delay(350).duration(400)} style={[styles.harmonyBanner, styles.harmonyGood]}>
+          <Text style={styles.harmonyIcon}>◉</Text>
+          <Text style={[styles.harmonyText, styles.harmonyTextGood]}>Great tone match today.</Text>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(1600).duration(500)} style={styles.hint}>
-          2 minutes · free to start
-        </Animated.Text>
-      </View>
+
+        {/* Focus card — YOUR NEXT WIN */}
+        <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.focusCard}>
+          <View style={styles.focusLabel}>
+            <Text style={styles.focusLabelText}>YOUR NEXT WIN</Text>
+          </View>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardLeft}>
+              <Text style={styles.cardIcon}>{CATEGORY_ICONS[priorityCat.name]}</Text>
+              <Text style={styles.cardName}>{priorityCat.name}</Text>
+            </View>
+            <Text style={[styles.cardScore, { color: '#B94040' }]}>{priorityCat.score}</Text>
+          </View>
+          <ScoreBar score={priorityCat.score} isPriority />
+          <Text style={styles.focusWinIntro}>You're this close — one small tweak here will make the biggest difference:</Text>
+          <Text style={styles.focusTip}>{priorityCat.tip}</Text>
+          <View style={styles.proLock}>
+            <Text style={styles.proLockText}>Upgrade for detailed coaching + tutorial</Text>
+          </View>
+        </Animated.View>
+
+        {/* All categories */}
+        <Animated.View entering={FadeIn.delay(350).duration(300)}>
+          <Text style={styles.sectionLabel}>All Categories</Text>
+        </Animated.View>
+
+        {otherCats.map((cat, i) => (
+          <Animated.View key={cat.name} entering={FadeInUp.delay(380 + i * 70).duration(350)} style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardLeft}>
+                <Text style={styles.cardIcon}>{CATEGORY_ICONS[cat.name]}</Text>
+                <Text style={styles.cardName}>{cat.name}</Text>
+              </View>
+              <Text style={[styles.cardScore, { color: cat.score >= 80 ? '#2D7D46' : cat.score >= 65 ? tokens.colors.gold : '#B94040' }]}>
+                {cat.score}
+              </Text>
+            </View>
+            <ScoreBar score={cat.score} isPriority={false} />
+            <Text style={styles.cardTip}>{cat.tipShort}</Text>
+            <View style={styles.proLock}>
+              <Text style={styles.proLockText}>Upgrade for detailed coaching + tutorial</Text>
+            </View>
+          </Animated.View>
+        ))}
+      </ScrollView>
+
+      {/* Fixed CTA overlay at bottom — like a paywall lock */}
+      <Animated.View entering={FadeIn.delay(800).duration(400)} style={[styles.ctaOverlay, { paddingBottom: insets.bottom + 20 }]}>
+        <Text style={styles.ctaEyebrow}>Your results are waiting.</Text>
+        <Pressable
+          style={({ pressed }) => [styles.cta, pressed && { opacity: 0.88 }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/(onboarding)/name');
+          }}
+        >
+          <Text style={styles.ctaText}>Get my free analysis  →</Text>
+        </Pressable>
+        <Text style={styles.ctaHint}>Takes 2 minutes · No account needed yet</Text>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    paddingHorizontal: 32,
-    justifyContent: 'space-between',
+  root: { flex: 1, backgroundColor: tokens.colors.white },
+  content: { paddingHorizontal: 20 },
+
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, paddingHorizontal: 4,
+  },
+  backBtn: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: tokens.colors.cream,
+    borderWidth: 1, borderColor: tokens.colors.border,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  backIcon: { fontSize: 14, color: tokens.colors.pinkDeep },
+  brand: {
+    fontFamily: tokens.fonts.serif, fontSize: 18, fontWeight: '400',
+    letterSpacing: 0.12, color: tokens.colors.text,
   },
 
-  // Top copy
-  top: { gap: 10 },
-  eyebrow: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 5,
-    color: tokens.colors.pinkMid,
-    textTransform: 'uppercase',
+  hero: { alignItems: 'center', paddingTop: 20, paddingBottom: 8 },
+  heroMeta: { alignItems: 'center', gap: 10, marginTop: 16 },
+
+  verdictBadge: { paddingHorizontal: 20, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
+  verdictGo: { backgroundColor: '#EBF7EE', borderColor: '#2D7D46' },
+  verdictText: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '700', letterSpacing: 1.5 },
+  verdictTextGo: { color: '#2D7D46' },
+  occasionTag: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.grayLight },
+
+  harmonyBanner: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    paddingHorizontal: 14, paddingVertical: 10,
+    borderRadius: 10, borderLeftWidth: 3, borderWidth: 0, marginBottom: 14,
   },
-  headline: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 50,
-    color: '#FFF0F7',
-    lineHeight: 60,
-    letterSpacing: 0.3,
+  harmonyGood: { backgroundColor: '#F0FAF3', borderLeftColor: '#2D7D46' },
+  harmonyIcon: { fontSize: 12, marginTop: 2 },
+  harmonyText: { fontFamily: tokens.fonts.regular, fontSize: 12.5, lineHeight: 19, flex: 1 },
+  harmonyTextGood: { color: '#2D7D46' },
+
+  focusCard: {
+    backgroundColor: tokens.colors.white, borderRadius: 18, padding: 20,
+    borderWidth: 1.5, borderColor: tokens.colors.pinkDeep,
+    marginBottom: 16, gap: 10,
+    shadowColor: tokens.colors.pinkDeep, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 8, elevation: 2,
+  },
+  focusLabel: {
+    alignSelf: 'flex-start', backgroundColor: tokens.colors.blush,
+    borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 2,
+  },
+  focusLabelText: {
+    fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700',
+    color: tokens.colors.pinkDeep, letterSpacing: 1.2,
+  },
+  focusWinIntro: {
+    fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray,
+    lineHeight: 18, fontStyle: 'italic',
+  },
+  focusTip: {
+    fontFamily: tokens.fonts.regular, fontSize: 13.5, color: tokens.colors.text, lineHeight: 22,
   },
 
-  // Score ring
-  scoreSection: {
-    alignItems: 'center',
-    gap: 22,
+  sectionLabel: {
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '600', letterSpacing: 1.8,
+    textTransform: 'uppercase', color: tokens.colors.grayLight,
+    marginTop: 4, marginBottom: 12,
   },
-  ringWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: RING_SIZE,
-    height: RING_SIZE,
+  card: {
+    backgroundColor: tokens.colors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: tokens.colors.border,
+    marginBottom: 10, gap: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
-  ringGlow: {
-    position: 'absolute',
-    width: RING_SIZE + 40,
-    height: RING_SIZE + 40,
-    borderRadius: (RING_SIZE + 40) / 2,
-    backgroundColor: tokens.colors.pinkDeep,
-    opacity: 0,
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 40,
-  },
-  ring: { position: 'absolute' },
-  ringTrack: {
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'transparent',
-  },
-  ringCenter: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    alignSelf: 'center',
-    gap: 3,
-  },
-  scoreNum: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 88,
-    color: '#FFF0F7',
-    lineHeight: 96,
-    letterSpacing: -3,
-  },
-  scoreOf: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 18,
-    color: 'rgba(255,240,247,0.4)',
-    alignSelf: 'flex-end',
-    marginBottom: 14,
-  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cardIcon: { fontSize: 14, color: tokens.colors.pinkDeep },
+  cardName: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '600', color: tokens.colors.text },
+  cardScore: { fontFamily: tokens.fonts.regular, fontSize: 22, fontWeight: '700' },
+  barTrack: { height: 4, borderRadius: 2, backgroundColor: tokens.colors.border, overflow: 'hidden' },
+  barFill: { height: '100%', borderRadius: 2, backgroundColor: tokens.colors.pinkDeep },
+  barFillPriority: { backgroundColor: tokens.colors.pinkRich },
+  barFillLow: { backgroundColor: '#C44' },
+  cardTip: { fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.text, lineHeight: 20 },
+  proLock: { backgroundColor: tokens.colors.cream, borderRadius: 8, padding: 10 },
+  proLockText: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, textAlign: 'center' },
 
-  // Category pills
-  categories: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+  // Fixed CTA overlay
+  ctaOverlay: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    paddingHorizontal: 20, paddingTop: 20, gap: 10, alignItems: 'center',
+    backgroundColor: tokens.colors.white,
+    borderTopWidth: 1, borderTopColor: tokens.colors.border,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06, shadowRadius: 12,
   },
-  catPill: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  catPillWarn: {
-    backgroundColor: 'rgba(204,68,68,0.12)',
-    borderColor: 'rgba(204,68,68,0.3)',
-  },
-  catLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    color: 'rgba(255,240,247,0.65)',
-  },
-  catLabelWarn: { color: 'rgba(255,160,160,0.8)' },
-  catScore: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    fontWeight: '700',
-    color: tokens.colors.pinkMid,
-  },
-  catScoreWarn: { color: '#E85A5A' },
-
-  // Specific callout — the thing that feels real
-  callout: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: 'rgba(255,214,239,0.7)',
-    textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: W * 0.78,
-  },
-
-  // Bottom
-  bottom: { gap: 18, alignItems: 'center' },
-  pitch: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 14,
-    color: 'rgba(255,249,247,0.5)',
-    textAlign: 'center',
-    lineHeight: 22,
+  ctaEyebrow: {
+    fontFamily: tokens.fonts.serif, fontSize: 14, fontStyle: 'italic',
+    color: tokens.colors.gray,
   },
   cta: {
-    backgroundColor: tokens.colors.pinkDeep,
-    borderRadius: 30,
-    paddingVertical: 18,
-    paddingHorizontal: 52,
-    alignItems: 'center',
+    width: '100%', backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 30, paddingVertical: 18, alignItems: 'center',
   },
   ctaText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF0F7',
-    letterSpacing: 0.3,
+    fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '700',
+    color: tokens.colors.white,
   },
-  hint: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    color: 'rgba(255,249,247,0.25)',
-    letterSpacing: 0.5,
+  ctaHint: {
+    fontFamily: tokens.fonts.regular, fontSize: 11,
+    color: tokens.colors.grayLight,
   },
 });

@@ -41,7 +41,7 @@ export default function FoundationPainScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>5 of 7</Text>
+        <Text style={styles.step}>7 of 9</Text>
         <Text style={styles.title}>How often do you buy{'\n'}the wrong shade?</Text>
         <Text style={styles.sub}>Be honest — we're about to fix this</Text>
       </Animated.View>

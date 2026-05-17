@@ -40,7 +40,7 @@ export default function EthicsScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>4 of 7</Text>
+        <Text style={styles.step}>6 of 9</Text>
         <Text style={styles.title}>What matters{'\n'}to you?</Text>
         <Text style={styles.sub}>Select all that apply — or skip</Text>
       </Animated.View>

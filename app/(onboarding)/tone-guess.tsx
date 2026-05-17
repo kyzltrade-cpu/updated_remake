@@ -51,7 +51,7 @@ export default function ToneGuessScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>6 of 7</Text>
+        <Text style={styles.step}>8 of 9</Text>
         <Text style={styles.title}>Quick — what do you think{'\n'}your undertone is?</Text>
       </Animated.View>
 

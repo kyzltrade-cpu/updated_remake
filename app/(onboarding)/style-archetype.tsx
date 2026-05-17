@@ -72,7 +72,7 @@ export default function StyleArchetypeScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>7 of 7</Text>
+        <Text style={styles.step}>9 of 9</Text>
         <Text style={styles.title}>Which of these{'\n'}vibes feel like you?</Text>
         <Text style={styles.sub}>Pick up to 2 — or skip</Text>
       </Animated.View>

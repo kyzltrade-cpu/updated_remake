@@ -27,7 +27,11 @@ export default function FrequencyScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${(2 / 9) * 100}%` as `${number}%` }]} />
+      </View>
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
+        <Text style={styles.step}>2 of 9</Text>
         <Text style={styles.title}>How often do you do makeup?</Text>
       </Animated.View>
 
@@ -71,10 +75,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.beige,
     paddingHorizontal: 28,
-    paddingTop: 100,
+    paddingTop: 60,
     paddingBottom: 50,
   },
-  header: { marginBottom: 36 },
+  progressTrack: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+    backgroundColor: tokens.colors.border,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: tokens.colors.pinkDeep,
+  },
+  header: { marginBottom: 36, paddingTop: 10 },
+  step: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    letterSpacing: 0.16,
+    textTransform: 'uppercase',
+    color: tokens.colors.grayLight,
+    fontWeight: '500',
+    marginBottom: 18,
+  },
   title: {
     fontFamily: tokens.fonts.serif,
     fontSize: 34,

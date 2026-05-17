@@ -57,7 +57,7 @@ export default function AllergiesScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>3 of 7</Text>
+        <Text style={styles.step}>5 of 9</Text>
         <Text style={styles.title}>Anything your{'\n'}skin hates?</Text>
         <Text style={styles.sub}>Toggle all that apply — or skip if none</Text>
       </Animated.View>

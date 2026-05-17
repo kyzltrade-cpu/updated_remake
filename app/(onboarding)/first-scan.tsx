@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import {
   View, Text, StyleSheet, Pressable, Alert, Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Brightness from 'expo-brightness';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -162,13 +163,16 @@ export default function FirstScanScreen() {
             },
             {
               text: 'Continue anyway',
-              onPress: () =>
-                router.push({ pathname: '/(onboarding)/email-capture', params: { uri: photo.uri } }),
+              onPress: async () => {
+                await AsyncStorage.setItem('@remake_pending_dna_uri', photo.uri);
+                router.push('/(onboarding)/create-account');
+              },
             },
           ],
         );
       } else {
-        router.push({ pathname: '/(onboarding)/email-capture', params: { uri: photo.uri } });
+        await AsyncStorage.setItem('@remake_pending_dna_uri', photo.uri);
+        router.push('/(onboarding)/create-account');
       }
     } catch {
       Alert.alert('Camera error', 'Could not take photo. Please try again.');

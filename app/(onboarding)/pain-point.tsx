@@ -37,7 +37,7 @@ export default function PainPointScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingPagination total={6} current={2} />
+      <OnboardingPagination total={9} current={1} />
 
       <Animated.View entering={FadeInUp.duration(500).springify()} style={styles.content}>
         <Text style={styles.heading}>What do you struggle with most?</Text>

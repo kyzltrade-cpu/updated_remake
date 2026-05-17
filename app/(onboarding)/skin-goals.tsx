@@ -43,7 +43,7 @@ export default function SkinGoalsScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
-        <Text style={styles.step}>1 of 7</Text>
+        <Text style={styles.step}>3 of 9</Text>
         <Text style={styles.title}>What does your{'\n'}skin want most?</Text>
         <Text style={styles.sub}>Pick up to 3</Text>
       </Animated.View>

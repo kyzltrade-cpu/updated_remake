@@ -4,7 +4,6 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { GlassButton } from '@/components/glass-button';
-import { OnboardingPagination } from '@/components/onboarding-pagination';
 import * as Haptics from 'expo-haptics';
 
 const TIPS = [
@@ -31,8 +30,6 @@ export default function LightingScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingPagination total={6} current={5} />
-
       <Animated.View entering={FadeInUp.duration(500)} style={styles.header}>
         <Text style={styles.title}>Before you scan</Text>
         <Text style={styles.sub}>Three quick things for the most accurate results.</Text>
