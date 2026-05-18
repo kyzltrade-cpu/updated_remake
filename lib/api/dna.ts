@@ -86,10 +86,10 @@ export interface DnaResult {
   browSymmetryPct: number;
   lashProfile: LashProfile;
   energy: EnergyType;
-  lipProfile: string;
-  blushProfile: string;
   archetype: string;
   archetypeDescription: string;
+  lipProfile?: string;
+  blushProfile?: string;
 }
 
 export interface DnaAnalysisRequest {
