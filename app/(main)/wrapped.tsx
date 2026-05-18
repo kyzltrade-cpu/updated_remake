@@ -11,22 +11,43 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { tokens } from '@/components/theme';
+import { useAuth } from '@/contexts/AuthContext';
+import { getScanHistory, getScanStats } from '@/lib/api/scan-storage';
+import type { ScanRecord } from '@/lib/api/scan-storage';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-// TODO: replace with real Supabase query from `scans` table
-const DEMO_STATS = {
-  totalScans: 47,
-  bestScore: 94,
-  bestScoreMonth: 'March',
-  topCategory: { name: 'Blending', avgScore: 88 },
-  mostImproved: { name: 'Colour Harmony', delta: 22 },
-  longestStreak: 12,
-  startAvgScore: 61,
-  endAvgScore: 79,
+type WrappedStats = {
+  totalScans: number;
+  bestScore: number;
+  bestScoreMonth: string;
+  topCategory: { name: string; avgScore: number };
+  mostImproved: { name: string; delta: number };
+  longestStreak: number;
+  startAvgScore: number;
+  endAvgScore: number;
 };
 
-type WrappedStats = typeof DEMO_STATS;
+function deriveStats(scans: ScanRecord[], streak: number): WrappedStats {
+  const sorted = [...scans].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const scores = sorted.map(s => s.overall_score);
+  const best = scores.length ? Math.max(...scores) : 0;
+  const bestScan = sorted.find(s => s.overall_score === best);
+  const bestMonth = bestScan ? new Date(bestScan.created_at).toLocaleString('default', { month: 'long' }) : 'this month';
+  const half = Math.max(1, Math.floor(scores.length / 2));
+  const startAvg = scores.length >= 2 ? Math.round(scores.slice(0, half).reduce((a, b) => a + b, 0) / half) : 60;
+  const endAvg = scores.length >= 2 ? Math.round(scores.slice(half).reduce((a, b) => a + b, 0) / (scores.length - half)) : startAvg + 10;
+  return {
+    totalScans: scans.length,
+    bestScore: best,
+    bestScoreMonth: bestMonth,
+    topCategory: { name: 'Blending', avgScore: endAvg },
+    mostImproved: { name: 'Colour Harmony', delta: Math.max(0, endAvg - startAvg) },
+    longestStreak: streak,
+    startAvgScore: startAvg,
+    endAvgScore: endAvg,
+  };
+}
 
 function useCounter(target: number, delayMs = 300, duration = 1500) {
   const [count, setCount] = useState(0);
@@ -429,10 +450,23 @@ const TRANSITION_MS = 360;
 export default function WrappedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [current, setCurrent] = useState(0);
   const [prevSlide, setPrevSlide] = useState<number | null>(null);
   const [transDir, setTransDir] = useState<1 | -1>(1);
-  const stats = DEMO_STATS;
+  const [stats, setStats] = useState<WrappedStats>({
+    totalScans: 0, bestScore: 0, bestScoreMonth: 'this month',
+    topCategory: { name: 'Blending', avgScore: 0 },
+    mostImproved: { name: 'Colour Harmony', delta: 0 },
+    longestStreak: 0, startAvgScore: 0, endAvgScore: 0,
+  });
+
+  useEffect(() => {
+    const uid = user?.id ?? 'guest';
+    Promise.all([getScanHistory(uid, 100), getScanStats(uid)])
+      .then(([scans, scanStats]) => setStats(deriveStats(scans, scanStats.currentStreak)))
+      .catch(() => null);
+  }, [user?.id]);
 
   const currentRef = useRef(0);
   const isAnimating = useRef(false);

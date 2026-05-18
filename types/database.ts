@@ -56,22 +56,30 @@ export type Database = {
         Row: Profile
         Insert: Omit<Profile, 'created_at' | 'updated_at'>
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>
+        Relationships: []
       }
       scans: {
         Row: Scan
         Insert: Omit<Scan, 'id' | 'created_at'>
         Update: Partial<Omit<Scan, 'id' | 'created_at'>>
+        Relationships: []
       }
       streaks: {
         Row: Streak
         Insert: Omit<Streak, 'id'>
         Update: Partial<Omit<Streak, 'id'>>
+        Relationships: []
       }
       subscriptions: {
         Row: Subscription
         Insert: Omit<Subscription, 'id'>
         Update: Partial<Omit<Subscription, 'id'>>
+        Relationships: []
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }

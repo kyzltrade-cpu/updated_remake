@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator,
+} from 'react-native';
 import Animated, {
   FadeIn, FadeInUp,
   useSharedValue, useAnimatedProps, withTiming, Easing,
@@ -10,72 +12,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
+import { analyzeProduct, type ProductScanResult } from '@/lib/api/product-scan';
 
 // ─── Design constants ────────────────────────────────────────────────────────
-const CIRCUMFERENCE = 2 * Math.PI * 50; // r = 50 → ≈ 314.16
+const CIRCUMFERENCE = 2 * Math.PI * 50;
 const SAFE = '#2D7D46';
 const SAFE_BG = '#EDF7F2';
 const WARN = '#C05A30';
 const WARN_BG = '#FFF0EB';
-
-// ─── Mock data (replace with real product + profile lookup) ──────────────────
-const DATA = {
-  score: 87,
-  verdict: 'Great match for you',
-  reason: 'Strong shade alignment and formula fit. One flagged allergen (Parfum) lowers your score.',
-  category: 'Foundation',
-  barcode: '5029178163990',
-  shade: {
-    pct: 94,
-    detected: '#C8956A',
-    product: '#C4885F',
-    name: '8W — Warm Almond',
-    deltaE: 1.4,
-    sub: 'near-perfect warmth',
-    tones: [
-      { label: 'Undertone', value: 'Warm ✓', pct: 96 },
-      { label: 'Depth', value: 'Medium ✓', pct: 91 },
-      { label: 'Saturation', value: 'Balanced ✓', pct: 89 },
-      { label: 'Oxidation', value: 'Low shift', pct: 85 },
-    ],
-  },
-  coverage: [
-    { label: 'Coverage', value: 'Medium–Full' },
-    { label: 'Finish', value: 'Dewy' },
-    { label: 'Wear Time', value: '10–12h' },
-    { label: 'SPF', value: 'None' },
-  ],
-  spf: {
-    level: null as number | null,
-    flashback: false,
-    note: 'No built-in sun protection — apply a dedicated SPF 30+ underneath',
-  },
-  pao: '12M',
-  skinFit: [
-    { icon: 'opacity',     label: 'Dry Skin',      desc: 'Hydrating formula supports moisture barrier',    ok: true },
-    { icon: 'wb-sunny',    label: 'Sensitive Skin', desc: 'Fragrance present — patch test recommended',     ok: false },
-    { icon: 'loop',        label: 'Oily / Combo',   desc: 'Lightweight, non-comedogenic base',              ok: true },
-    { icon: 'verified',    label: 'Acne Safe',      desc: 'Non-comedogenic, low pore-clog risk',           ok: true },
-  ],
-  styleFit: {
-    archetype: 'Coquette Rose',
-    desc: "Dewy finish aligns with your heart-face archetype's signature glow.",
-    palette: ['#D4A096', '#C97E8A', '#E8C4B0', '#F2DDD5', '#B8806A'],
-  },
-  allergy: 'Parfum',
-  ingredients: [
-    { name: 'Water (Aqua)',      func: 'Solvent',     safe: true },
-    { name: 'Hyaluronic Acid',   func: 'Humectant',   safe: true },
-    { name: 'Parfum (Fragrance)', func: 'Allergen',    safe: false },
-    { name: 'Niacinamide',       func: 'Brightening', safe: true },
-    { name: 'Tocopherol',        func: 'Antioxidant', safe: true },
-  ],
-  ethics: [
-    { icon: 'pets',       label: 'Cruelty Free', value: 'Certified'  },
-    { icon: 'eco',        label: 'Vegan',         value: '100%'       },
-    { icon: 'autorenew',  label: 'Eco-Friendly',  value: 'Recyclable' },
-  ],
-};
 
 // ─── Animated score ring ─────────────────────────────────────────────────────
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -170,19 +114,53 @@ function Bar({ pct, h = 4 }: { pct: number; h?: number }) {
 export default function ProductScanResultsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  // barcode: from auto-scan, uri: from shutter capture — both route here
   const { barcode, uri } = useLocalSearchParams<{ barcode?: string; uri?: string }>();
+
+  const [data, setData] = useState<ProductScanResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    analyzeProduct({ barcode, uri })
+      .then(result => {
+        setData(result);
+        setLoading(false);
+      })
+      .catch(() => {
+        setFailed(true);
+        setLoading(false);
+      });
+  }, []);
 
   const handleSave = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // TODO: persist scan to Supabase scans table
     router.replace('/(main)/scan');
   };
 
   const handlePaoReminder = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // TODO: schedule local push notification at pao date
   };
+
+  if (loading) {
+    return (
+      <View style={[s.root, s.center, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color={tokens.colors.pinkDeep} />
+        <Text style={s.loadingText}>Analysing product…</Text>
+      </View>
+    );
+  }
+
+  if (failed || !data) {
+    return (
+      <View style={[s.root, s.center, { paddingTop: insets.top }]}>
+        <MaterialIcons name="error-outline" size={40} color={WARN} />
+        <Text style={s.errorText}>Could not analyse product</Text>
+        <Pressable onPress={() => router.back()} style={s.retryBtn}>
+          <Text style={s.retryTxt}>Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={[s.root, { paddingTop: insets.top }]}>
@@ -196,8 +174,8 @@ export default function ProductScanResultsScreen() {
           <Text style={s.headerLabel}>Scan result</Text>
         </View>
         <View style={s.headerRight}>
-          <Text style={s.catTag}>{DATA.category}</Text>
-          <Text style={s.barcode}>{DATA.barcode}</Text>
+          <Text style={s.catTag}>{data.category}</Text>
+          <Text style={s.barcode}>{data.barcode || uri ? (data.barcode || '📷 photo') : ''}</Text>
         </View>
       </View>
 
@@ -206,37 +184,38 @@ export default function ProductScanResultsScreen() {
 
         {/* Score ring */}
         <Animated.View entering={FadeInUp.duration(500)} style={s.scoreSection}>
-          <ScoreRing score={DATA.score} />
-          <Text style={s.verdict}>{DATA.verdict}</Text>
-          <Text style={s.reason}>{DATA.reason}</Text>
+          <ScoreRing score={data.score} />
+          <Text style={s.productTitle}>{data.brand} · {data.productName}</Text>
+          <Text style={s.verdict}>{data.verdict}</Text>
+          <Text style={s.reason}>{data.reason}</Text>
         </Animated.View>
 
         <View style={s.divider} />
 
-        {/* ── Shade & Tone (merged) ── */}
+        {/* ── Shade & Tone ── */}
         <Card delay={60}>
-          <CardHead title="Shade & Tone" badge="94%" safe={true} />
+          <CardHead title="Shade & Tone" badge={`${data.shade.pct}%`} safe={true} />
 
           <View style={s.shadeRow}>
             <View style={s.swatches}>
-              <View style={[s.swatch, { backgroundColor: DATA.shade.detected }]} />
+              <View style={[s.swatch, { backgroundColor: data.shade.detected }]} />
               <MaterialIcons name="swap-horiz" size={14} color={tokens.colors.grayLight} />
-              <View style={[s.swatch, { backgroundColor: DATA.shade.product }]} />
+              <View style={[s.swatch, { backgroundColor: data.shade.product }]} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.shadeName}>{DATA.shade.name}</Text>
-              <Text style={s.shadeSub}>ΔE {DATA.shade.deltaE} · {DATA.shade.sub}</Text>
+              <Text style={s.shadeName}>{data.shade.name}</Text>
+              <Text style={s.shadeSub}>ΔE {data.shade.deltaE} · {data.shade.sub}</Text>
             </View>
           </View>
 
-          <Bar pct={DATA.shade.pct} />
+          <Bar pct={data.shade.pct} />
           <View style={s.barLabels}>
             <Text style={s.barLbl}>Tone alignment</Text>
-            <Text style={s.barLbl}>{DATA.shade.pct} / 100</Text>
+            <Text style={s.barLbl}>{data.shade.pct} / 100</Text>
           </View>
 
           <View style={s.toneGrid}>
-            {DATA.shade.tones.map(t => (
+            {data.shade.tones.map(t => (
               <View key={t.label} style={s.toneItem}>
                 <Text style={s.toneLbl}>{t.label}</Text>
                 <Text style={s.toneVal}>{t.value}</Text>
@@ -246,11 +225,11 @@ export default function ProductScanResultsScreen() {
           </View>
         </Card>
 
-        {/* ── Coverage & Finish (new) ── */}
+        {/* ── Coverage & Finish ── */}
         <Card delay={100}>
           <CardHead title="Coverage & Finish" />
           <View style={s.coverageGrid}>
-            {DATA.coverage.map(item => (
+            {data.coverage.map(item => (
               <View key={item.label} style={s.coverageItem}>
                 <Text style={s.coverageLbl}>{item.label}</Text>
                 <Text style={s.coverageVal}>{item.value}</Text>
@@ -263,18 +242,18 @@ export default function ProductScanResultsScreen() {
         <Card delay={130}>
           <CardHead
             title="SPF Reality Check"
-            badge={DATA.spf.level ? `SPF ${DATA.spf.level}` : 'No SPF'}
-            safe={DATA.spf.level ? DATA.spf.level >= 30 : false}
+            badge={data.spf.level ? `SPF ${data.spf.level}` : 'No SPF'}
+            safe={data.spf.level ? data.spf.level >= 30 : false}
           />
           <View style={s.spfRow}>
             <MaterialIcons
               name="wb-sunny"
               size={20}
-              color={DATA.spf.level && DATA.spf.level >= 30 ? SAFE : WARN}
+              color={data.spf.level && data.spf.level >= 30 ? SAFE : WARN}
             />
-            <Text style={s.spfNote}>{DATA.spf.note}</Text>
+            <Text style={s.spfNote}>{data.spf.note}</Text>
           </View>
-          {DATA.spf.flashback && (
+          {data.spf.flashback && (
             <View style={[s.spfAlert, { backgroundColor: WARN_BG }]}>
               <MaterialIcons name="photo-camera" size={14} color={WARN} />
               <Text style={[s.spfAlertTxt, { color: WARN }]}>May cause flashback (white cast) in photos</Text>
@@ -282,11 +261,11 @@ export default function ProductScanResultsScreen() {
           )}
         </Card>
 
-        {/* ── Skin Compatibility (merged skin fit + acne) ── */}
+        {/* ── Skin Compatibility ── */}
         <Card delay={140}>
           <CardHead title="Skin Compatibility" badge="Compatible" safe={null} />
           <View style={s.skinRows}>
-            {DATA.skinFit.map(item => (
+            {data.skinFit.map(item => (
               <View key={item.label} style={s.skinRow}>
                 <View style={s.skinIcon}>
                   <MaterialIcons name={item.icon as any} size={16} color={tokens.colors.gray} />
@@ -309,11 +288,11 @@ export default function ProductScanResultsScreen() {
         <Card delay={180}>
           <CardHead title="Style Fit" badge="Perfect fit" safe={null} />
           <View style={s.archetypePill}>
-            <Text style={s.archetypeText}>{DATA.styleFit.archetype}</Text>
+            <Text style={s.archetypeText}>{data.styleFit.archetype}</Text>
           </View>
-          <Text style={s.styleDesc}>{DATA.styleFit.desc}</Text>
+          <Text style={s.styleDesc}>{data.styleFit.desc}</Text>
           <View style={s.palette}>
-            {DATA.styleFit.palette.map((c, i) => (
+            {data.styleFit.palette.map((c, i) => (
               <View key={i} style={[s.palDot, { backgroundColor: c }]} />
             ))}
           </View>
@@ -323,21 +302,23 @@ export default function ProductScanResultsScreen() {
         <Card delay={220}>
           <CardHead title="Safety Check" />
 
-          <View style={s.allergyBox}>
-            <MaterialIcons name="warning" size={18} color={WARN} style={{ marginTop: 1 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={s.allergyTitle}>Allergy Alert</Text>
-              <Text style={s.allergyDesc}>
-                Contains <Text style={{ fontWeight: '700' }}>{DATA.allergy}</Text>, which matches your allergy profile.
-              </Text>
+          {data.allergy ? (
+            <View style={s.allergyBox}>
+              <MaterialIcons name="warning" size={18} color={WARN} style={{ marginTop: 1 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.allergyTitle}>Allergy Alert</Text>
+                <Text style={s.allergyDesc}>
+                  Contains <Text style={{ fontWeight: '700' }}>{data.allergy}</Text>, which may affect sensitive users.
+                </Text>
+              </View>
             </View>
-          </View>
+          ) : null}
 
-          <Text style={s.ingHead}>Full Ingredient List</Text>
-          {DATA.ingredients.map((ing, i) => (
+          <Text style={s.ingHead}>Ingredient Analysis</Text>
+          {data.ingredients.map((ing, i) => (
             <View
               key={ing.name}
-              style={[s.ingRow, i < DATA.ingredients.length - 1 && s.ingBorder]}
+              style={[s.ingRow, i < data.ingredients.length - 1 && s.ingBorder]}
             >
               <View style={[s.ingDot, { backgroundColor: ing.safe ? SAFE : WARN }]} />
               <Text style={[s.ingName, !ing.safe && { color: WARN }]}>{ing.name}</Text>
@@ -348,9 +329,9 @@ export default function ProductScanResultsScreen() {
 
         {/* ── Conscious Choice ── */}
         <Card delay={260}>
-          <CardHead title="Conscious Choice" badge="Ethical" safe={true} />
+          <CardHead title="Conscious Choice" badge="Ethics" safe={null} />
           <View style={s.ethicsGrid}>
-            {DATA.ethics.map(e => (
+            {data.ethics.map(e => (
               <View key={e.label} style={s.ethicsCard}>
                 <View style={s.ethicsCheck}>
                   <MaterialIcons name="check" size={10} color="#fff" />
@@ -382,7 +363,7 @@ export default function ProductScanResultsScreen() {
         </Pressable>
         <Pressable onPress={handlePaoReminder} style={s.paoBtn}>
           <MaterialIcons name="notifications-none" size={14} color={tokens.colors.gray} />
-          <Text style={s.paoTxt}>Opens in {DATA.pao} · Set expiry reminder</Text>
+          <Text style={s.paoTxt}>Opens in {data.pao} · Set expiry reminder</Text>
         </Pressable>
       </Animated.View>
 
@@ -393,6 +374,12 @@ export default function ProductScanResultsScreen() {
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: tokens.colors.cream },
+  center: { justifyContent: 'center', alignItems: 'center', gap: 16 },
+
+  loadingText: { fontFamily: tokens.fonts.regular, fontSize: 14, color: tokens.colors.gray, marginTop: 8 },
+  errorText:   { fontFamily: tokens.fonts.regular, fontSize: 14, color: WARN, textAlign: 'center' },
+  retryBtn:    { marginTop: 8, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: tokens.colors.pinkDeep, borderRadius: 12 },
+  retryTxt:    { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '700', color: tokens.colors.white },
 
   // Header
   header: {
@@ -416,7 +403,8 @@ const s = StyleSheet.create({
   scroll: { paddingVertical: 16, gap: 12 },
 
   // Score section
-  scoreSection: { alignItems: 'center', paddingHorizontal: 20, paddingVertical: 8, gap: 8 },
+  scoreSection: { alignItems: 'center', paddingHorizontal: 20, paddingVertical: 8, gap: 6 },
+  productTitle: { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '600', color: tokens.colors.gray, textAlign: 'center', marginTop: 2 },
   verdict: { fontFamily: tokens.fonts.serif, fontSize: 20, fontWeight: '400', color: tokens.colors.text, textAlign: 'center' },
   reason:  { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '300', color: tokens.colors.gray, textAlign: 'center', lineHeight: 18, maxWidth: 280 },
 

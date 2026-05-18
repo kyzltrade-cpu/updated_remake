@@ -18,9 +18,9 @@ export async function uriToBase64(uri: string): Promise<string> {
   return btoa(parts.join(''));
 }
 
-export async function geminiText(prompt: string): Promise<string> {
+export async function geminiText(prompt: string, maxTokens = 200): Promise<string> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
+  const timer = setTimeout(() => controller.abort(), 25000);
   try {
     const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -28,7 +28,7 @@ export async function geminiText(prompt: string): Promise<string> {
       signal: controller.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 200 },
+        generationConfig: { temperature: 0.7, maxOutputTokens: maxTokens },
       }),
     });
     if (!res.ok) throw new Error(`Gemini ${res.status}`);
@@ -36,6 +36,35 @@ export async function geminiText(prompt: string): Promise<string> {
       candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
     };
     return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function geminiTextJson<T>(prompt: string): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
+  try {
+    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 1500,
+          responseMimeType: 'application/json',
+        },
+      }),
+    });
+    if (!res.ok) throw new Error(`Gemini ${res.status}`);
+    const data = await res.json() as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!text) throw new Error('Empty Gemini response');
+    return JSON.parse(text) as T;
   } finally {
     clearTimeout(timer);
   }

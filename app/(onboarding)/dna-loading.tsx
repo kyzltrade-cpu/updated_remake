@@ -11,6 +11,8 @@ import { ONBOARDING_KEY } from '../_layout';
 import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
 import type { PriorityCategory } from '@/lib/onboarding-store';
+import { saveDnaResult } from '@/lib/api/scan-storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LOADING_STEPS = [
   'Reading your face shape...',
@@ -76,6 +78,7 @@ function StepText({ text }: { text: string }) {
 export default function DnaLoadingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ uri?: string }>();
+  const { user } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
@@ -110,6 +113,7 @@ export default function DnaLoadingScreen() {
           priorityCategory: (priorityCategory ?? 'Blending') as PriorityCategory,
         });
         await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
+        if (user?.id) saveDnaResult(user.id, dna).catch(() => null);
         router.replace('/(main)/dna-reveal');
       } catch {
         router.replace('/(main)/dna-reveal');

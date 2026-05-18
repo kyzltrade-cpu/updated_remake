@@ -1,14 +1,21 @@
 import type { GetCoachingRequest, CoachingResult } from './types';
 import { hasGeminiKey, geminiText } from './gemini';
 import { getOnboardingData } from '@/lib/onboarding-store';
+import { loadGloDraft } from '@/lib/glo-profile';
 
 async function buildPrompt(request: GetCoachingRequest): Promise<string> {
   const { diagnosis } = request;
-  const onboarding = await getOnboardingData();
+  const [onboarding, glo] = await Promise.all([getOnboardingData(), loadGloDraft()]);
 
   const categoryLines = diagnosis.categories
     .map(c => `  - ${c.name}: ${c.score}/100${c.isPriority ? ' (priority)' : ''}`)
     .join('\n');
+
+  const skinCtx = [
+    glo.skin_type ? `Skin type: ${glo.skin_type}` : null,
+    glo.allergies?.length ? `Allergies/sensitivities: ${glo.allergies.join(', ')}` : null,
+    glo.foundation_pain ? `Foundation challenge: ${glo.foundation_pain}` : null,
+  ].filter(Boolean).join('\n');
 
   return `
 You are a warm, expert makeup coach. A user just scanned their makeup look.
@@ -16,7 +23,7 @@ You are a warm, expert makeup coach. A user just scanned their makeup look.
 User profile:
 - Skill level: ${onboarding.skillLevel ?? 'unknown'}
 - Practice frequency: ${onboarding.practiceFrequency ?? 'unknown'}
-- Priority focus: ${onboarding.priorityCategory ?? 'unknown'}
+- Priority focus: ${onboarding.priorityCategory ?? 'unknown'}${skinCtx ? `\n${skinCtx}` : ''}
 
 Scan results:
 - Overall score: ${diagnosis.overallScore}/100

@@ -15,7 +15,7 @@ const OPTIONS: { value: PriorityCategory; label: string; desc: string }[] = [
   { value: 'Symmetry',       label: 'Symmetry',         desc: 'Matching both sides — eyes, brows, lips' },
   { value: 'Colour Harmony', label: 'Colour Harmony',   desc: 'Choosing shades that work with my skin tone' },
   { value: 'Coverage',       label: 'Coverage',         desc: 'Even foundation and concealer application' },
-  { value: 'Brow Shaping',   label: 'Brow Shaping',     desc: 'Shape, symmetry, and placement' },
+  { value: 'Brow Framing',   label: 'Brow Framing',     desc: 'Shape, symmetry, and placement' },
 ];
 
 export default function PainPointScreen() {

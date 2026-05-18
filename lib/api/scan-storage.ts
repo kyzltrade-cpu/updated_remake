@@ -16,7 +16,8 @@ export async function saveScan(params: {
   diagnosis: DiagnosisResult;
   coaching: CoachingResult;
 }): Promise<void> {
-  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
   const { error } = await supabase.from('scans').insert({
     user_id: params.userId,
     image_url: params.imageUri,
@@ -30,7 +31,8 @@ export async function saveScan(params: {
 }
 
 export async function getLastScan(userId: string): Promise<ScanRecord | null> {
-  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
   const { data, error } = await supabase
     .from('scans')
     .select('id, overall_score, verdict, coaching_compliment, created_at')
@@ -52,7 +54,8 @@ export async function getLastScan(userId: string): Promise<ScanRecord | null> {
 }
 
 export async function getScanHistory(userId: string, limit = 10): Promise<ScanRecord[]> {
-  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
   const { data, error } = await supabase
     .from('scans')
     .select('id, overall_score, verdict, coaching_compliment, created_at')
@@ -94,7 +97,8 @@ export async function getScanStats(userId: string): Promise<{
   avgScore: number;
   currentStreak: number;
 }> {
-  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
 
   const [scansRes, streakRes] = await Promise.all([
     supabase
@@ -108,9 +112,9 @@ export async function getScanStats(userId: string): Promise<{
       .maybeSingle(),
   ]);
 
-  const scores = scansRes.data?.map(r => r.overall_score as number) ?? [];
+  const scores: number[] = (scansRes.data ?? []).map((r: Record<string, number>) => r.overall_score);
   const avgScore = scores.length > 0
-    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length)
     : 0;
 
   // If we have real data, return it
@@ -131,7 +135,8 @@ export async function getScanStats(userId: string): Promise<{
 }
 
 export async function saveDnaResult(userId: string, dna: DnaResult): Promise<void> {
-  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
   const { error } = await supabase
     .from('profiles')
     .update({ dna_result: dna as unknown as Record<string, unknown> })

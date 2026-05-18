@@ -1,6 +1,7 @@
 import type { PriorityCategory } from '@/lib/onboarding-store';
 import { hasGeminiKey, uriToBase64, geminiVision } from './gemini';
 import { ARCHETYPE_RECS } from './recommendations';
+import { loadGloDraft } from '@/lib/glo-profile';
 
 export type FaceShape = 'Oval' | 'Round' | 'Heart' | 'Square' | 'Oblong';
 export type ColorSeason = 'Warm Spring' | 'Light Spring' | 'Warm Autumn' | 'Deep Autumn' | 'Cool Summer' | 'Light Summer' | 'Deep Winter' | 'Cool Winter';
@@ -16,35 +17,35 @@ export const ARCHETYPES = {
     Symmetry: 'The Classic Glamour',
     'Colour Harmony': 'The Color Curator',
     Coverage: 'The Glazed Canvas',
-    'Brow Shaping': 'The Soft Romantic',
+    'Brow Framing': 'The Soft Romantic',
   },
   Round: {
     Blending: 'The Soft Romantic',
     Symmetry: 'The Power Contour',
     'Colour Harmony': 'The Color Curator',
     Coverage: 'The Radiant Minimalist',
-    'Brow Shaping': 'The Power Contour',
+    'Brow Framing': 'The Power Contour',
   },
   Heart: {
     Blending: 'The Soft Romantic',
     Symmetry: 'The Radiant Minimalist',
     'Colour Harmony': 'The Editorial Eye',
     Coverage: 'The Glazed Canvas',
-    'Brow Shaping': 'The Dark Feminine',
+    'Brow Framing': 'The Dark Feminine',
   },
   Square: {
     Blending: 'The Power Contour',
     Symmetry: 'The Classic Glamour',
     'Colour Harmony': 'The Dark Feminine',
     Coverage: 'The Glazed Canvas',
-    'Brow Shaping': 'The Power Contour',
+    'Brow Framing': 'The Power Contour',
   },
   Oblong: {
     Blending: 'The Glazed Canvas',
     Symmetry: 'The Soft Romantic',
     'Colour Harmony': 'The Color Curator',
     Coverage: 'The Radiant Minimalist',
-    'Brow Shaping': 'The Classic Glamour',
+    'Brow Framing': 'The Classic Glamour',
   },
 } as const;
 
@@ -223,8 +224,13 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
 export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult> {
   if (hasGeminiKey()) {
     try {
-      const imageBase64 = await uriToBase64(request.imageUri);
-      const raw = await geminiVision<GeminiDnaResponse>(imageBase64, DNA_PROMPT);
+      const [imageBase64, glo] = await Promise.all([uriToBase64(request.imageUri), loadGloDraft()]);
+      const hints = [
+        glo.skin_type ? `User self-reported skin type: ${glo.skin_type}` : null,
+        glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
+      ].filter(Boolean).join('\n');
+      const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
+      const raw = await geminiVision<GeminiDnaResponse>(imageBase64, prompt);
 
       const faceShape = VALID_FACE_SHAPES.has(raw.faceShape as FaceShape)
         ? (raw.faceShape as FaceShape)
@@ -259,8 +265,10 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
         energy,
         lipProfile: LIP_BY_SEASON[colorSeason] ?? 'Warm Satin',
         blushProfile: BLUSH_BY_SEASON[colorSeason] ?? 'Peach Flush',
+        foundationShade: FOUNDATION_BY_SEASON[colorSeason] ?? '',
         archetype,
         archetypeDescription: ARCHETYPE_DESCRIPTIONS[archetype] ?? '',
+        recommendations: ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'],
       };
     } catch (e) {
       console.warn('[DNA] Gemini failed, using mock:', e);

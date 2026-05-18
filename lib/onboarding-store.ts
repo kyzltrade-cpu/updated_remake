@@ -9,7 +9,7 @@ export const ONBOARDING_KEYS = {
 } as const;
 
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced';
-export type PriorityCategory = 'Blending' | 'Symmetry' | 'Colour Harmony' | 'Coverage' | 'Brow Shaping';
+export type PriorityCategory = 'Blending' | 'Symmetry' | 'Colour Harmony' | 'Coverage' | 'Brow Framing';
 export type PracticeFrequency = 'daily' | '4-5x' | '2-3x' | 'occasionally';
 
 export interface OnboardingData {
