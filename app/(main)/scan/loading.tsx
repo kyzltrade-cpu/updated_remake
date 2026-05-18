@@ -8,6 +8,7 @@ import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
 import { saveDnaResult } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/settings-context';
 
 function validateImageUri(uri: string | undefined): string | null {
   if (!uri) {
@@ -30,6 +31,7 @@ export default function LoadingPage() {
   const router = useRouter();
   const params = useLocalSearchParams<{ uri?: string }>();
   const { user } = useAuth();
+  const { settings } = useSettings();
 
   useEffect(() => {
     const run = async () => {
@@ -41,11 +43,13 @@ export default function LoadingPage() {
 
       try {
         const { priorityCategory, skillLevel } = await getOnboardingData();
+        const referenceUri = settings.referencePhoto ?? undefined;
         const [diagnosis, dna] = await Promise.all([
           analyzeImage({
             imageUri: validUri,
             priorityCategory: priorityCategory ?? 'Blending',
             skillLevel: skillLevel ?? 'Intermediate',
+            referenceUri,
           }),
           analyzeDna({
             imageUri: validUri,

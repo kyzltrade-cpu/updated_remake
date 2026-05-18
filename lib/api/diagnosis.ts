@@ -1,6 +1,6 @@
 import type { AnalyzeImageRequest, DiagnosisResult, DiagnosisProvider, CategoryAnalysis, SixCategory, Verdict } from './types';
 import { isSafeImageUri } from '@/lib/validation';
-import { hasGeminiKey, uriToBase64, geminiVision } from './gemini';
+import { hasGeminiKey, uriToBase64, geminiVision, geminiVisionDual } from './gemini';
 
 const CATEGORY_WEIGHTS: Record<SixCategory, number> = {
   Blending: 25,
@@ -61,9 +61,9 @@ function weightedScore(categories: CategoryAnalysis[]): number {
   return Math.round(weighted / totalWeight);
 }
 
-const DIAGNOSIS_PROMPT = (priority: string, skill: string) => `
+const DIAGNOSIS_PROMPT = (priority: string, skill: string, hasReference: boolean) => `
 You are an expert makeup artist AI analysing a selfie for makeup quality. The person may or may not be wearing makeup.
-
+${hasReference ? '\nThe FIRST image is the user\'s current look. The SECOND image is their saved reference/goal look. Use the reference to calibrate your scoring — note progress toward or away from it in the tips.\n' : ''}
 User's skill level: ${skill}
 User's priority focus area: ${priority}
 
@@ -98,12 +98,18 @@ interface GeminiDiagnosisResponse {
 async function analyzeWithGemini(request: AnalyzeImageRequest): Promise<DiagnosisResult> {
   const priority = request.priorityCategory ?? 'Blending';
   const skill = request.skillLevel ?? 'Intermediate';
+  const hasReference = !!request.referenceUri && isSafeImageUri(request.referenceUri);
 
   const imageBase64 = await uriToBase64(request.imageUri);
-  const result = await geminiVision<GeminiDiagnosisResponse>(
-    imageBase64,
-    DIAGNOSIS_PROMPT(priority, skill),
-  );
+  const prompt = DIAGNOSIS_PROMPT(priority, skill, hasReference);
+
+  let result: GeminiDiagnosisResponse;
+  if (hasReference) {
+    const refBase64 = await uriToBase64(request.referenceUri!);
+    result = await geminiVisionDual<GeminiDiagnosisResponse>(imageBase64, refBase64, prompt);
+  } else {
+    result = await geminiVision<GeminiDiagnosisResponse>(imageBase64, prompt);
+  }
 
   const categories: CategoryAnalysis[] = (Object.keys(CATEGORY_WEIGHTS) as SixCategory[]).map(name => {
     const found = result.categories.find(c => c.name === name);

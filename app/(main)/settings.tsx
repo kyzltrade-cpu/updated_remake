@@ -64,7 +64,7 @@ export default function SettingsScreen() {
         mediaTypes: ['images'],
         quality: 0.5,
         allowsEditing: true,
-        aspect: [1, 1],
+        aspect: [3, 4],
       });
       if (!result.canceled && result.assets[0]?.uri) {
         updateSettings({ referencePhoto: result.assets[0].uri });
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   toggleThumbOn: { alignSelf: 'flex-end' },
 
   // Reference photo
-  refPhoto: { width: '100%', height: 180, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
+  refPhoto: { width: '100%', aspectRatio: 3 / 4, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
   refHint: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, textAlign: 'center', paddingVertical: 10 },
   refPlaceholder: { alignItems: 'center', paddingVertical: 32, gap: 8 },
   refIconWrap: {

@@ -165,8 +165,8 @@ export default function ResultsScreen() {
         <Animated.View entering={FadeIn.duration(500)} style={styles.hero}>
           <ScoreRing score={overallScore} visible />
 
-          <View style={styles.verdictRow}>
-            <View style={[styles.verdictBadge, isGo ? styles.verdictGo : styles.verdictFix]}>
+          <View style={styles.verdictBadge}>
+            <View style={[styles.verdictInner, isGo ? styles.verdictGo : styles.verdictFix]}>
               <Text style={[styles.verdictText, isGo ? styles.verdictTextGo : styles.verdictTextFix]}>
                 {isGo ? '✓ GO' : '⚠ FIX'}
               </Text>
@@ -229,12 +229,12 @@ const styles = StyleSheet.create({
     color: tokens.colors.text,
   },
   hero: { alignItems: 'center', paddingVertical: 32, gap: 14 },
-  verdictRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-  },
   verdictBadge: {
-    paddingHorizontal: 18, paddingVertical: 7,
-    borderRadius: 20, borderWidth: 1.5,
+    alignItems: 'center', gap: 6,
+  },
+  verdictInner: {
+    paddingHorizontal: 24, paddingVertical: 8,
+    borderRadius: 22, borderWidth: 1.5,
   },
   verdictGo: { backgroundColor: '#EBF7EE', borderColor: '#2D7D46' },
   verdictFix: { backgroundColor: '#FFF4E5', borderColor: '#C47A00' },

@@ -6,6 +6,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { getScanHistory, getScanStats, type ScanRecord } from '@/lib/api/scan-storage';
+import { getOnboardingData } from '@/lib/onboarding-store';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -18,9 +19,14 @@ export default function ProfileScreen() {
   const [history, setHistory] = useState<ScanRecord[]>([]);
   const [stats, setStats] = useState<{ totalScans: number; avgScore: number; currentStreak: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [onboardingName, setOnboardingName] = useState('');
 
-  const fullName: string = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? '';
-  const firstName = fullName.split(' ')[0];
+  useEffect(() => {
+    getOnboardingData().then(data => { if (data.name) setOnboardingName(data.name); });
+  }, []);
+
+  const rawName: string = user?.user_metadata?.full_name ?? onboardingName ?? user?.email?.split('@')[0] ?? '';
+  const firstName = rawName.split(' ')[0];
 
   const handleViewDna = () => {
     router.push('/(main)/dna-reveal');

@@ -70,6 +70,37 @@ export async function geminiTextJson<T>(prompt: string): Promise<T> {
   }
 }
 
+export async function geminiVisionDual<T>(image1Base64: string, image2Base64: string, prompt: string): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 28000);
+  try {
+    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: 'image/jpeg', data: image1Base64 } },
+            { inline_data: { mime_type: 'image/jpeg', data: image2Base64 } },
+            { text: prompt },
+          ],
+        }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1500, responseMimeType: 'application/json' },
+      }),
+    });
+    if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text()}`);
+    const data = await res.json() as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!text) throw new Error('Empty Gemini response');
+    return JSON.parse(text) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function geminiVision<T>(imageBase64: string, prompt: string): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 28000);

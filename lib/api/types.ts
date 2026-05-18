@@ -36,6 +36,7 @@ export interface AnalyzeImageRequest {
   userId?: string;
   priorityCategory?: string;
   skillLevel?: string;
+  referenceUri?: string;
 }
 
 export interface GetCoachingRequest {
