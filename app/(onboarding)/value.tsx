@@ -13,10 +13,11 @@ const DNA_SLIDES = [
   { glyph: '—', label: 'Brow\nBlueprint' },
   { glyph: '✦', label: 'Lash\nProfile' },
   { glyph: '◉', label: 'Energy\nType' },
+  { glyph: '♡', label: 'Archetype' },
   { glyph: '♡', label: 'Lip\nProfile' },
   { glyph: '◉', label: 'Blush\nProfile' },
-  { glyph: '✦', label: 'Beauty\nArchetype' },
-  { glyph: '♡', label: 'Beauty\nWrapped' },
+  { glyph: '✦', label: 'Product\nKit' },
+  { glyph: '◈', label: 'Beauty\nWrapped' },
 ];
 
 export default function ValueScreen() {
@@ -26,31 +27,26 @@ export default function ValueScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 40 }]}>
 
-      {/* Decorative score */}
       <Animated.Text entering={FadeIn.duration(900)} style={styles.scoreDecor}>
         78
       </Animated.Text>
 
-      {/* Brand wordmark */}
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.eyebrowRow}>
         <Text style={styles.eyebrow}>REMAKE</Text>
       </Animated.View>
 
-      {/* Headline */}
       <Animated.View entering={FadeInUp.delay(220).duration(600)} style={styles.headlineBlock}>
         <Text style={styles.headline}>See your makeup{'\n'}the way the{'\n'}camera does.</Text>
       </Animated.View>
 
-      {/* Body */}
       <Animated.View entering={FadeInUp.delay(360).duration(500)} style={styles.body}>
         <Text style={styles.bodyText}>
-          One photo. Ten personalised results — built around your exact face.
+          One photo. Eleven personalised results — built around your exact face.
         </Text>
       </Animated.View>
 
-      {/* DNA slides preview — 4×2 grid */}
       <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.dnaGrid}>
-        {DNA_SLIDES.map((slide, i) => (
+        {DNA_SLIDES.map((slide) => (
           <View key={slide.label} style={styles.dnaCell}>
             <Text style={styles.dnaCellGlyph}>{slide.glyph}</Text>
             <Text style={styles.dnaCellLabel}>{slide.label}</Text>
@@ -60,7 +56,6 @@ export default function ValueScreen() {
 
       <View style={styles.spacer} />
 
-      {/* CTA */}
       <Animated.View entering={FadeInUp.delay(540).duration(500)} style={styles.bottom}>
         <Pressable
           onPress={() => {
@@ -124,8 +119,6 @@ const styles = StyleSheet.create({
     color: tokens.colors.gray,
     lineHeight: 22,
   },
-
-  // DNA slide preview grid
   dnaGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -158,7 +151,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     lineHeight: 13,
   },
-
   spacer: { flex: 1, minHeight: 16 },
   bottom: { alignItems: 'center', gap: 14 },
   cta: {

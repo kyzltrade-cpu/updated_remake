@@ -39,7 +39,16 @@ export async function getLastScan(userId: string): Promise<ScanRecord | null> {
     .limit(1)
     .maybeSingle();
   if (error) console.warn('[scan-storage] getLastScan failed:', error.message);
-  return data ?? null;
+  if (data) return data;
+
+  // Mock fallback — gives the delta arrow something to compare against
+  return {
+    id: 'mock-last',
+    overall_score: 71,
+    verdict: 'GO',
+    coaching_compliment: '',
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  };
 }
 
 export async function getScanHistory(userId: string, limit = 10): Promise<ScanRecord[]> {

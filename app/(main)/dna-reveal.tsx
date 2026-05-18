@@ -399,20 +399,16 @@ function SlideKit({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
         <Text style={styles.slideTitle}>What to Reach For</Text>
         {isLocked ? (
           <>
-            <View style={[styles.kitCard, { opacity: 0.3 }]}>
-              <View style={styles.kitCardTop}>
-                <View style={styles.kitCatBadge}><Text style={styles.kitCatText}>BASE</Text></View>
-                <Text style={styles.kitPrice}>●●●</Text>
+            {['BASE', 'BLUSH', 'LIP', 'MASCARA'].map((cat, i) => (
+              <View key={cat} style={styles.kitCard}>
+                <View style={styles.kitCardTop}>
+                  <View style={styles.kitCatBadge}><Text style={styles.kitCatText}>{cat}</Text></View>
+                  <Text style={styles.kitPrice}>{'●'.repeat(3 - (i % 2))}</Text>
+                </View>
+                <LockedValue size="md" />
+                <BlurView intensity={60} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 14 }]} />
               </View>
-              <LockedValue size="md" />
-            </View>
-            <View style={[styles.kitCard, { opacity: 0.18 }]}>
-              <View style={styles.kitCardTop}>
-                <View style={styles.kitCatBadge}><Text style={styles.kitCatText}>LIP</Text></View>
-                <Text style={styles.kitPrice}>●●</Text>
-              </View>
-              <LockedValue size="md" />
-            </View>
+            ))}
             <Text style={styles.slideText}>
               Your archetype-matched kit is waiting. Unlock to see the exact products curated for your DNA.
             </Text>

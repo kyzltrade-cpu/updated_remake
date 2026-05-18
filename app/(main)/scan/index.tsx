@@ -306,7 +306,7 @@ export default function ScanScreen() {
         <Animated.View entering={FadeIn.delay(150)} style={styles.topBar}>
           {/* Profile */}
           <Pressable
-            onPress={() => router.push('/(main)/settings')}
+            onPress={() => router.push('/(main)/profile')}
             style={({ pressed }) => [styles.topBtn, pressed && { opacity: 0.65 }]}
           >
             {profilePhoto

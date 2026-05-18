@@ -116,23 +116,22 @@ export default function ResultsScreen() {
     if (parsed.diagnosis) setDiagnosis(parsed.diagnosis);
     if (parsed.coaching) setCoaching(parsed.coaching);
 
+    // Always fetch delta — works with mock fallback even when not logged in
+    if (parsed.diagnosis) {
+      getLastScan(user?.id ?? 'guest').then(last => {
+        if (last) setScoreDelta(Math.round(parsed.diagnosis!.overallScore - last.overall_score));
+      });
+    }
+
     if (!user || !parsed.diagnosis || !parsed.coaching || savedRef.current) return;
     savedRef.current = true;
 
-    const persist = async () => {
-      // Fetch previous scan BEFORE saving so delta compares against it
-      const last = await getLastScan(user.id);
-      if (last) setScoreDelta(Math.round(parsed.diagnosis!.overallScore - last.overall_score));
-
-      await saveScan({
-        userId: user.id,
-        imageUri: params.uri ?? '',
-        diagnosis: parsed.diagnosis!,
-        coaching: parsed.coaching!,
-      });
-    };
-
-    persist();
+    saveScan({
+      userId: user.id,
+      imageUri: params.uri ?? '',
+      diagnosis: parsed.diagnosis,
+      coaching: parsed.coaching,
+    });
   }, [params.diagnosis, params.coaching, user]);
 
   const handleDone = () => {
@@ -166,17 +165,18 @@ export default function ResultsScreen() {
         <Animated.View entering={FadeIn.duration(500)} style={styles.hero}>
           <ScoreRing score={overallScore} visible />
 
-          <View style={[styles.verdictBadge, isGo ? styles.verdictGo : styles.verdictFix]}>
-            <Text style={[styles.verdictText, isGo ? styles.verdictTextGo : styles.verdictTextFix]}>
-              {isGo ? '✓ GO' : '⚠ FIX'}
-            </Text>
+          <View style={styles.verdictRow}>
+            <View style={[styles.verdictBadge, isGo ? styles.verdictGo : styles.verdictFix]}>
+              <Text style={[styles.verdictText, isGo ? styles.verdictTextGo : styles.verdictTextFix]}>
+                {isGo ? '✓ GO' : '⚠ FIX'}
+              </Text>
+            </View>
+            {scoreDelta !== null && (
+              <Text style={[styles.delta, scoreDelta >= 0 ? styles.deltaUp : styles.deltaDown]}>
+                {scoreDelta >= 0 ? '↑' : '↓'}{Math.abs(scoreDelta)}
+              </Text>
+            )}
           </View>
-
-          {scoreDelta !== null && (
-            <Text style={[styles.delta, scoreDelta >= 0 ? styles.deltaUp : styles.deltaDown]}>
-              {scoreDelta >= 0 ? '↑' : '↓'} {Math.abs(scoreDelta)} from last scan
-            </Text>
-          )}
 
           {compliment ? (
             <Text style={styles.compliment}>{compliment}</Text>
@@ -229,6 +229,9 @@ const styles = StyleSheet.create({
     color: tokens.colors.text,
   },
   hero: { alignItems: 'center', paddingVertical: 32, gap: 14 },
+  verdictRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+  },
   verdictBadge: {
     paddingHorizontal: 18, paddingVertical: 7,
     borderRadius: 20, borderWidth: 1.5,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +18,9 @@ export default function ProfileScreen() {
   const [history, setHistory] = useState<ScanRecord[]>([]);
   const [stats, setStats] = useState<{ totalScans: number; avgScore: number; currentStreak: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const fullName: string = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? '';
+  const firstName = fullName.split(' ')[0];
 
   const handleViewDna = () => {
     router.push('/(main)/dna-reveal');
@@ -50,22 +54,14 @@ export default function ProfileScreen() {
         <Pressable onPress={() => router.back()}>
           <Text style={styles.back}>‹</Text>
         </Pressable>
-        <Text style={styles.title}>Profile</Text>
-        <View style={styles.spacer} />
+        <Text style={styles.title}>Hi, {firstName} ✨</Text>
+        <Pressable onPress={() => router.push('/(main)/settings')} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
+          <MaterialIcons name="settings" size={22} color={tokens.colors.text} />
+        </Pressable>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>◎</Text>
-          </View>
-          <Text style={styles.email}>{user?.email ?? '—'}</Text>
-          <Text style={styles.memberSince}>
-            {user?.created_at ? `Member since ${formatDate(user.created_at)}` : 'Member'}
-          </Text>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.statsRow}>
+        <Animated.View entering={FadeInUp.delay(200).duration(600)} style={[styles.statsRow, { marginTop: 16 }]}>
           {displayStats.map(([val, label]) => (
             <View key={label} style={styles.stat}>
               <Text style={styles.statVal}>{val}</Text>
@@ -142,8 +138,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20,
   },
   back: { fontSize: 28, color: tokens.colors.text },
-  title: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '500', color: tokens.colors.text },
-  spacer: { width: 28 },
+  title: { fontFamily: tokens.fonts.serif, fontSize: 22, fontWeight: '400', color: tokens.colors.text },
+  spacer: { width: 22 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 28, paddingBottom: 50 },
 
