@@ -1,5 +1,6 @@
 import type { PriorityCategory } from '@/lib/onboarding-store';
 import { hasGeminiKey, uriToBase64, geminiVision } from './gemini';
+import { ARCHETYPE_RECS } from './recommendations';
 
 export type FaceShape = 'Oval' | 'Round' | 'Heart' | 'Square' | 'Oblong';
 export type ColorSeason = 'Warm Spring' | 'Light Spring' | 'Warm Autumn' | 'Deep Autumn' | 'Cool Summer' | 'Light Summer' | 'Deep Winter' | 'Cool Winter';
@@ -80,6 +81,14 @@ export const SEASON_PALETTES: Record<ColorSeason, string[]> = {
   'Cool Winter':  ['#780060', '#2840A0', '#007060', '#483060', '#C8C8D8', '#5068B0'],
 };
 
+export interface ProductRecommendation {
+  category: string;
+  brand: string;
+  product: string;
+  why: string;
+  price: '$' | '$$' | '$$$';
+}
+
 export interface DnaResult {
   faceShape: FaceShape;
   skinToneHex: string;
@@ -92,6 +101,8 @@ export interface DnaResult {
   archetypeDescription: string;
   lipProfile?: string;
   blushProfile?: string;
+  foundationShade?: string;
+  recommendations?: ProductRecommendation[];
 }
 
 export interface DnaAnalysisRequest {
@@ -164,6 +175,17 @@ const BLUSH_BY_SEASON: Record<ColorSeason, string> = {
   'Deep Winter': 'Berry Flush', 'Cool Winter': 'Cool Berry',
 };
 
+const FOUNDATION_BY_SEASON: Record<ColorSeason, string> = {
+  'Warm Spring': 'Fenty Beauty Pro Filt\'r 145N — warm golden undertones',
+  'Light Spring': 'MAC Face & Body C2 — light, fresh, golden',
+  'Warm Autumn': 'Armani Luminous Silk 5.5 — warm, earthy',
+  'Deep Autumn': 'NARS All Day Luminous Weightless 12 — deep warm',
+  'Cool Summer': 'MAC Face & Body N4 — cool, muted mauve undertone',
+  'Light Summer': 'Charlotte Tilbury Beautiful Skin 2 — soft cool pink',
+  'Deep Winter': 'Estée Lauder Double Wear 2C1 Macadamia — cool deep',
+  'Cool Winter': 'MAC Pro Longwear NC20 — crisp cool undertone',
+};
+
 function randomFrom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -179,6 +201,7 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
   };
 
   const archetype = (ARCHETYPES[faceShape] as Record<string, string>)[request.priorityCategory] ?? 'The Glazed Canvas';
+  const recommendations = ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'];
 
   return {
     faceShape,
@@ -190,8 +213,10 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
     energy: randomFrom<EnergyType>(['Soft', 'Sharp', 'Balanced']),
     lipProfile: LIP_BY_SEASON[colorSeason],
     blushProfile: BLUSH_BY_SEASON[colorSeason],
+    foundationShade: FOUNDATION_BY_SEASON[colorSeason],
     archetype,
     archetypeDescription: ARCHETYPE_DESCRIPTIONS[archetype] ?? '',
+    recommendations,
   };
 }
 
