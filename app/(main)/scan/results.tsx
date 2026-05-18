@@ -99,6 +99,10 @@ export default function ResultsScreen() {
   // For now always Pro (paywall not yet wired)
   const isPro = true;
 
+  const handleBack = () => {
+    router.back();
+  };
+
   useEffect(() => {
     let parsed: { diagnosis: DiagnosisResult | null; coaching: CoachingResult | null } = {
       diagnosis: null, coaching: null,
@@ -131,19 +135,9 @@ export default function ResultsScreen() {
     persist();
   }, [params.diagnosis, params.coaching, user]);
 
-  const handleRetake = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace('/(main)/scan');
-  };
-
   const handleDone = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.replace('/(main)/home');
-  };
-
-  const handleViewDna = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(main)/dna-reveal');
   };
 
   const overallScore = diagnosis?.overallScore ?? 0;
@@ -161,7 +155,7 @@ export default function ResultsScreen() {
       >
         {/* Top bar */}
         <View style={styles.topBar}>
-          <Pressable style={styles.backBtn} onPress={handleRetake}>
+          <Pressable style={styles.backBtn} onPress={handleBack}>
             <Text style={styles.backIcon}>‹</Text>
           </Pressable>
           <Text style={styles.brand}>REMAKE</Text>
@@ -198,24 +192,8 @@ export default function ResultsScreen() {
           <CategoryCard key={cat.name} cat={cat} isPro={isPro} delay={180 + i * 70} />
         ))}
 
-        {/* DNA Reveal button */}
-        <Animated.View entering={FadeIn.delay(600).duration(300)} style={styles.dnaButtonWrap}>
-          <Pressable
-            style={({ pressed }) => [styles.dnaBtn, pressed && { opacity: 0.85 }]}
-            onPress={handleViewDna}
-          >
-            <Text style={styles.dnaBtnText}>View Your Beauty DNA ✨</Text>
-          </Pressable>
-        </Animated.View>
-
-        {/* Action buttons */}
-        <Animated.View entering={FadeIn.delay(700).duration(300)} style={styles.actions}>
-          <Pressable
-            style={({ pressed }) => [styles.retakeBtn, pressed && { opacity: 0.75 }]}
-            onPress={handleRetake}
-          >
-            <Text style={styles.retakeText}>Re-check</Text>
-          </Pressable>
+        {/* Action button */}
+        <Animated.View entering={FadeIn.delay(700).duration(300)} style={styles.actionWrap}>
           <Pressable
             style={({ pressed }) => [styles.doneBtn, pressed && { opacity: 0.82 }]}
             onPress={handleDone}
@@ -336,29 +314,9 @@ const styles = StyleSheet.create({
     fontFamily: tokens.fonts.regular, fontSize: 12,
     color: tokens.colors.gray, textAlign: 'center',
   },
-  dnaButtonWrap: { marginTop: 24, marginBottom: 12 },
-  dnaBtn: {
-    width: '100%', paddingVertical: 16, borderRadius: 50,
-    backgroundColor: '#D9956A', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12, shadowRadius: 8, elevation: 3,
-  },
-  dnaBtnText: {
-    fontFamily: tokens.fonts.regular, fontSize: 14,
-    fontWeight: '700', color: '#FFF9F7', letterSpacing: 0.5,
-  },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  retakeBtn: {
-    flex: 1, paddingVertical: 15, borderRadius: 50,
-    borderWidth: 1.5, borderColor: tokens.colors.border,
-    alignItems: 'center',
-  },
-  retakeText: {
-    fontFamily: tokens.fonts.regular, fontSize: 13,
-    fontWeight: '500', color: tokens.colors.text,
-  },
+  actionWrap: { marginTop: 24 },
   doneBtn: {
-    flex: 1, paddingVertical: 15, borderRadius: 50,
+    width: '100%', paddingVertical: 16, borderRadius: 50,
     backgroundColor: tokens.colors.accent, alignItems: 'center',
   },
   doneText: {

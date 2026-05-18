@@ -18,6 +18,10 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState<{ totalScans: number; avgScore: number; currentStreak: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const handleViewDna = () => {
+    router.push('/(main)/dna-reveal');
+  };
+
   useEffect(() => {
     if (!user) { setIsLoading(false); return; }
 
@@ -68,6 +72,15 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>{label}</Text>
             </View>
           ))}
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.delay(250).duration(600)} style={styles.dnaButtonWrap}>
+          <Pressable
+            style={({ pressed }) => [styles.dnaButton, pressed && { opacity: 0.85 }]}
+            onPress={handleViewDna}
+          >
+            <Text style={styles.dnaButtonText}>View Your Beauty DNA ✨</Text>
+          </Pressable>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(300).duration(600)} style={styles.historySection}>
@@ -145,13 +158,25 @@ const styles = StyleSheet.create({
   email: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: tokens.colors.text },
   memberSince: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.grayLight },
 
-  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 32 },
+  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   stat: {
     flex: 1, backgroundColor: tokens.colors.white, borderRadius: 16, padding: 16,
     alignItems: 'center', borderWidth: 1, borderColor: tokens.colors.border,
   },
   statVal: { fontFamily: tokens.fonts.serif, fontSize: 24, color: tokens.colors.pinkDeep, marginBottom: 4 },
   statLabel: { fontFamily: tokens.fonts.regular, fontSize: 11, color: tokens.colors.gray },
+
+  dnaButtonWrap: { marginBottom: 32 },
+  dnaButton: {
+    width: '100%', paddingVertical: 16, borderRadius: 18,
+    backgroundColor: tokens.colors.accent, alignItems: 'center',
+    shadowColor: tokens.colors.pinkDeep, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15, shadowRadius: 8, elevation: 3,
+  },
+  dnaButtonText: {
+    fontFamily: tokens.fonts.serif, fontSize: 16, fontWeight: '600',
+    color: tokens.colors.white, letterSpacing: 0.5,
+  },
 
   historySection: { gap: 10 },
   sectionHeader: {
