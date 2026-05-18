@@ -31,6 +31,8 @@ const PLACEHOLDER_DNA: DnaResult = {
   energy: 'Balanced',
   archetype: 'The Natural',
   archetypeDescription: '',
+  lipProfile: 'Warm Satin',
+  blushProfile: 'Bronze Flush',
 };
 
 // ── Lock placeholder ──────────────────────────────────────────────────────────
@@ -296,6 +298,78 @@ function SlideArchetype({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean 
   );
 }
 
+function SlideLips({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+  const LIP_COLORS: Record<string, string> = {
+    'Peach Gloss': '#E8A885',
+    'Nude Gloss': '#D9A9A0',
+    'Warm Satin': '#E8936A',
+    'Berry Stain': '#B87080',
+    'Mauve Satin': '#D9A8B8',
+    'Sheer Pink': '#E8A8B8',
+    'Deep Matte': '#8B3A3A',
+    'Nude Matte': '#C9A89A',
+  };
+  const lipHex = dna.lipProfile ? (LIP_COLORS[dna.lipProfile] ?? '#E8A885') : '#E8A885';
+  return (
+    <View style={styles.page}>
+      <LinearGradient colors={['#0A0807', '#1A0F14', '#0A0807']} style={StyleSheet.absoluteFill} />
+      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.body}>
+        <Text style={styles.slideEyebrow}>LIP TONE</Text>
+        <View style={[styles.lipSwatch, { backgroundColor: lipHex, shadowColor: isLocked ? 'transparent' : lipHex }]}>
+          {isLocked && (
+            <BlurView intensity={92} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />
+          )}
+        </View>
+        <Text style={styles.slideTitle}>Your Lip Tone</Text>
+        {isLocked
+          ? <LockedValue size="lg" />
+          : <Text style={styles.bigValue}>{dna.lipProfile || '—'}</Text>}
+        <Text style={styles.slideText}>
+          {isLocked
+            ? 'The lip shade that makes your face glow and completes your archetype. Unlock to discover yours.'
+            : `${dna.lipProfile} — the exact formula that harmonizes with your season and energy.`}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+function SlideBlush({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+  const BLUSH_COLORS: Record<string, string> = {
+    'Warm Coral': '#F0A882',
+    'Soft Peach': '#F0B899',
+    'Bronze Flush': '#C8956A',
+    'Bronze Warmth': '#D9956A',
+    'Cool Rose': '#E8A0AA',
+    'Soft Pink': '#E8B0B8',
+    'Berry Flush': '#D98A96',
+    'Cool Berry': '#D985A0',
+  };
+  const blushHex = dna.blushProfile ? (BLUSH_COLORS[dna.blushProfile] ?? '#F0A882') : '#F0A882';
+  return (
+    <View style={styles.page}>
+      <LinearGradient colors={['#0A0807', '#140F14', '#0A0807']} style={StyleSheet.absoluteFill} />
+      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.body}>
+        <Text style={styles.slideEyebrow}>BLUSH</Text>
+        <View style={[styles.blushSwatch, { backgroundColor: blushHex, shadowColor: isLocked ? 'transparent' : blushHex }]}>
+          {isLocked && (
+            <BlurView intensity={92} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />
+          )}
+        </View>
+        <Text style={styles.slideTitle}>Your Blush</Text>
+        {isLocked
+          ? <LockedValue size="lg" />
+          : <Text style={styles.bigValue}>{dna.blushProfile || '—'}</Text>}
+        <Text style={styles.slideText}>
+          {isLocked
+            ? 'The blush that brings dimension and life to your face. Unlock your perfect flush.'
+            : `${dna.blushProfile} — placement and intensity tuned to your face shape and energy.`}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
+
 function KitCard({ rec }: { rec: ProductRec }) {
   const priceDots = rec.price === '$' ? '●' : rec.price === '$$' ? '●●' : '●●●';
   return (
@@ -358,6 +432,8 @@ function SlideSummary({ dna, isLocked, onShare }: { dna: DnaResult; isLocked?: b
     { label: 'Face Shape', value: dna.faceShape },
     { label: 'Brow Shape', value: dna.browShape },
     { label: 'Lash Profile', value: dna.lashProfile },
+    { label: 'Lip Tone', value: dna.lipProfile || '—' },
+    { label: 'Blush', value: dna.blushProfile || '—' },
     { label: 'Archetype', value: dna.archetype },
   ];
   return (
@@ -391,7 +467,7 @@ function SlideSummary({ dna, isLocked, onShare }: { dna: DnaResult; isLocked?: b
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-const SLIDE_COUNT = 9;
+const SLIDE_COUNT = 11;
 
 export default function DnaRevealScreen() {
   const router = useRouter();
@@ -460,6 +536,8 @@ export default function DnaRevealScreen() {
         <SlideLashes dna={displayDna} isLocked={locked} />
         <SlideEnergy dna={displayDna} isLocked={locked} />
         <SlideArchetype dna={displayDna} isLocked={locked} />
+        <SlideLips dna={displayDna} isLocked={locked} />
+        <SlideBlush dna={displayDna} isLocked={locked} />
         <SlideKit dna={displayDna} isLocked={locked} />
         <SlideSummary dna={displayDna} isLocked={locked} onShare={handleShare} />
       </ScrollView>
@@ -726,6 +804,18 @@ const styles = StyleSheet.create({
   archetypeHero: {
     fontFamily: 'Playfair Display', fontSize: 56, color: '#C8A882',
     textAlign: 'center', lineHeight: 64,
+  },
+
+  // Lips
+  lipSwatch: {
+    width: 140, height: 140, borderRadius: 70, overflow: 'hidden',
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 24,
+  },
+
+  // Blush
+  blushSwatch: {
+    width: 140, height: 140, borderRadius: 70, overflow: 'hidden',
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 24,
   },
 
   // Summary

@@ -6,6 +6,8 @@ export type ColorSeason = 'Warm Spring' | 'Light Spring' | 'Warm Autumn' | 'Deep
 export type LashProfile = 'Long & Sparse' | 'Short & Full' | 'Long & Full' | 'Short & Sparse' | 'Curly' | 'Straight & Dense';
 export type BrowShape = 'Soft Arch' | 'High Arch' | 'Flat' | 'S-Curve' | 'Tapered';
 export type EnergyType = 'Sharp' | 'Soft' | 'Balanced';
+export type LipColor = 'Warm Rose' | 'Cool Berry' | 'Nude' | 'Bold Red' | 'Coral';
+export type BlushColor = 'Peach' | 'Rose' | 'Mauve' | 'Berry' | 'Warm Rust';
 
 export const ARCHETYPES = {
   Oval: {
