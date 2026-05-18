@@ -1,30 +1,61 @@
-import type { GetCoachingRequest, CoachingResult, CoachingProvider } from './types';
+import type { GetCoachingRequest, CoachingResult } from './types';
+import { hasGeminiKey, geminiText } from './gemini';
+import { getOnboardingData } from '@/lib/onboarding-store';
 
-class CoachingProviderImpl implements CoachingProvider {
-  async getSuggestions(request: GetCoachingRequest): Promise<CoachingResult> {
-    const { diagnosis } = request;
-    const { verdict, overallScore } = diagnosis;
+async function buildPrompt(request: GetCoachingRequest): Promise<string> {
+  const { diagnosis } = request;
+  const onboarding = await getOnboardingData();
 
-    const compliment =
-      overallScore >= 90
-        ? 'Impeccable. Every category is working together — this is camera-ready.'
-        : overallScore >= 80
-          ? 'Beautiful technique. A few small refinements will take this to flawless.'
-          : overallScore >= 70
-            ? 'Solid foundation. Focus on the highlighted areas and you\'ll see a big shift.'
-            : 'Good effort — the improvements below will make a noticeable difference today.';
+  const categoryLines = diagnosis.categories
+    .map(c => `  - ${c.name}: ${c.score}/100${c.isPriority ? ' (priority)' : ''}`)
+    .join('\n');
 
-    return { compliment, verdict };
-  }
+  return `
+You are a warm, expert makeup coach. A user just scanned their makeup look.
+
+User profile:
+- Skill level: ${onboarding.skillLevel ?? 'unknown'}
+- Practice frequency: ${onboarding.practiceFrequency ?? 'unknown'}
+- Priority focus: ${onboarding.priorityCategory ?? 'unknown'}
+
+Scan results:
+- Overall score: ${diagnosis.overallScore}/100
+- Verdict: ${diagnosis.verdict}
+- Category scores:
+${categoryLines}
+
+Write a single short coaching compliment (1-2 sentences max). Rules:
+- Warm, encouraging, expert tone — like a personal beauty editor
+- Reference their specific scores or focus area if relevant
+- Calibrate language to skill level (gentler for Beginner, more technical for Advanced)
+- Never generic. Make it feel personal.
+- Return ONLY the compliment text, no JSON, no quotes, no extra text.
+`.trim();
 }
 
-let provider: CoachingProvider | null = null;
-
-export function getCoachingProvider(): CoachingProvider {
-  if (!provider) provider = new CoachingProviderImpl();
-  return provider;
+function fallbackCompliment(score: number): string {
+  if (score >= 90) return 'Impeccable. Every category is working together — this is camera-ready.';
+  if (score >= 80) return 'Beautiful technique. A few small refinements will take this to flawless.';
+  if (score >= 70) return 'Solid foundation. Focus on the highlighted areas and you\'ll see a big shift.';
+  return 'Good effort — the improvements below will make a noticeable difference today.';
 }
 
 export async function getCoaching(request: GetCoachingRequest): Promise<CoachingResult> {
-  return getCoachingProvider().getSuggestions(request);
+  if (hasGeminiKey()) {
+    try {
+      const prompt = await buildPrompt(request);
+      const compliment = await geminiText(prompt);
+      return {
+        compliment: typeof compliment === 'string' ? compliment.trim() : fallbackCompliment(request.diagnosis.overallScore),
+        verdict: request.diagnosis.verdict,
+      };
+    } catch (e) {
+      console.warn('[Coaching] Gemini failed, using fallback:', e);
+    }
+  }
+
+  return {
+    compliment: fallbackCompliment(request.diagnosis.overallScore),
+    verdict: request.diagnosis.verdict,
+  };
 }
