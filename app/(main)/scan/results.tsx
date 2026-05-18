@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Linking,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { ScoreRing } from '@/components/score-ring';
 import * as Haptics from 'expo-haptics';
 import type { DiagnosisResult, CoachingResult, CategoryAnalysis } from '@/lib/api/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { saveScan, getLastScan } from '@/lib/api/scan-storage';
 
 const CATEGORY_ICONS: Record<string, string> = {
   Blending: '✦',
@@ -92,26 +93,43 @@ export default function ResultsScreen() {
   const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [coaching, setCoaching] = useState<CoachingResult | null>(null);
   const [scoreDelta, setScoreDelta] = useState<number | null>(null);
+  const { user } = useAuth();
+  const savedRef = useRef(false);
 
+  // For now always Pro (paywall not yet wired)
   const isPro = true;
 
   useEffect(() => {
+    let parsed: { diagnosis: DiagnosisResult | null; coaching: CoachingResult | null } = {
+      diagnosis: null, coaching: null,
+    };
     if (params.diagnosis) {
-      try { setDiagnosis(JSON.parse(params.diagnosis) as DiagnosisResult); } catch { /* ignore */ }
+      try { parsed.diagnosis = JSON.parse(params.diagnosis) as DiagnosisResult; } catch { /* ignore */ }
     }
     if (params.coaching) {
-      try { setCoaching(JSON.parse(params.coaching) as CoachingResult); } catch { /* ignore */ }
+      try { parsed.coaching = JSON.parse(params.coaching) as CoachingResult; } catch { /* ignore */ }
     }
-  }, [params.diagnosis, params.coaching]);
+    if (parsed.diagnosis) setDiagnosis(parsed.diagnosis);
+    if (parsed.coaching) setCoaching(parsed.coaching);
 
-  useEffect(() => {
-    if (!diagnosis) return;
-    const score = diagnosis.overallScore;
-    AsyncStorage.getItem('last_scan_score').then(prev => {
-      if (prev !== null) setScoreDelta(score - parseInt(prev, 10));
-      AsyncStorage.setItem('last_scan_score', String(score));
-    });
-  }, [diagnosis]);
+    if (!user || !parsed.diagnosis || !parsed.coaching || savedRef.current) return;
+    savedRef.current = true;
+
+    const persist = async () => {
+      // Fetch previous scan BEFORE saving so delta compares against it
+      const last = await getLastScan(user.id);
+      if (last) setScoreDelta(Math.round(parsed.diagnosis!.overallScore - last.overall_score));
+
+      await saveScan({
+        userId: user.id,
+        imageUri: params.uri ?? '',
+        diagnosis: parsed.diagnosis!,
+        coaching: parsed.coaching!,
+      });
+    };
+
+    persist();
+  }, [params.diagnosis, params.coaching, user]);
 
   const handleRetake = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -127,6 +145,7 @@ export default function ResultsScreen() {
   const verdict = diagnosis?.verdict ?? 'GO';
   const categories = diagnosis?.categories ?? [];
   const compliment = coaching?.compliment ?? '';
+
   const isGo = verdict === 'GO';
 
   return (
@@ -155,18 +174,9 @@ export default function ResultsScreen() {
           </View>
 
           {scoreDelta !== null && (
-            <Animated.View
-              entering={FadeIn.delay(400).duration(400)}
-              style={[styles.deltaBadge, scoreDelta > 0 ? styles.deltaBadgeUp : styles.deltaBadgeFlat]}
-            >
-              <Text style={[styles.deltaText, scoreDelta > 0 ? styles.deltaTextUp : styles.deltaTextFlat]}>
-                {scoreDelta > 0
-                  ? `▲ +${scoreDelta} from last scan`
-                  : scoreDelta === 0
-                  ? 'Holding steady ✦'
-                  : `▼ ${scoreDelta} from last scan`}
-              </Text>
-            </Animated.View>
+            <Text style={[styles.delta, scoreDelta >= 0 ? styles.deltaUp : styles.deltaDown]}>
+              {scoreDelta >= 0 ? '↑' : '↓'} {Math.abs(scoreDelta)} from last scan
+            </Text>
           )}
 
           {compliment ? (
@@ -174,7 +184,7 @@ export default function ResultsScreen() {
           ) : null}
         </Animated.View>
 
-        {/* Category breakdown */}
+        {/* Category cards */}
         <Animated.View entering={FadeIn.delay(200).duration(300)}>
           <Text style={styles.sectionLabel}>Breakdown</Text>
         </Animated.View>
@@ -183,8 +193,14 @@ export default function ResultsScreen() {
           <CategoryCard key={cat.name} cat={cat} isPro={isPro} delay={180 + i * 70} />
         ))}
 
-        {/* Actions */}
+        {/* Action buttons */}
         <Animated.View entering={FadeIn.delay(700).duration(300)} style={styles.actions}>
+          <Pressable
+            style={({ pressed }) => [styles.retakeBtn, pressed && { opacity: 0.75 }]}
+            onPress={handleRetake}
+          >
+            <Text style={styles.retakeText}>Re-check</Text>
+          </Pressable>
           <Pressable
             style={({ pressed }) => [styles.doneBtn, pressed && { opacity: 0.82 }]}
             onPress={handleDone}
@@ -200,10 +216,12 @@ export default function ResultsScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: tokens.colors.white },
   content: { paddingHorizontal: 20 },
-
   topBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 14, paddingHorizontal: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 4,
   },
   backBtn: {
     width: 34, height: 34, borderRadius: 17,
@@ -213,42 +231,44 @@ const styles = StyleSheet.create({
   },
   backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
   brand: {
-    fontFamily: tokens.fonts.serif, fontSize: 18, fontWeight: '400',
-    letterSpacing: 0.12, color: tokens.colors.text,
+    fontFamily: tokens.fonts.serif,
+    fontSize: 18, fontWeight: '400', letterSpacing: 0.12,
+    color: tokens.colors.text,
   },
-
   hero: { alignItems: 'center', paddingVertical: 32, gap: 14 },
-  verdictBadge: { paddingHorizontal: 18, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
+  verdictBadge: {
+    paddingHorizontal: 18, paddingVertical: 7,
+    borderRadius: 20, borderWidth: 1.5,
+  },
   verdictGo: { backgroundColor: '#EBF7EE', borderColor: '#2D7D46' },
   verdictFix: { backgroundColor: '#FFF4E5', borderColor: '#C47A00' },
-  verdictText: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '700', letterSpacing: 1.5 },
+  verdictText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13, fontWeight: '700', letterSpacing: 1.5,
+  },
   verdictTextGo: { color: '#2D7D46' },
   verdictTextFix: { color: '#C47A00' },
-  deltaBadge: {
-    paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20,
+  delta: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12, fontWeight: '600', letterSpacing: 0.3,
   },
-  deltaBadgeUp: { backgroundColor: '#EBF7EE' },
-  deltaBadgeFlat: { backgroundColor: tokens.colors.cream },
-  deltaText: {
-    fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '500', letterSpacing: 0.2,
-  },
-  deltaTextUp: { color: '#2D7D46' },
-  deltaTextFlat: { color: tokens.colors.grayLight },
-
+  deltaUp: { color: '#2D7D46' },
+  deltaDown: { color: '#B94040' },
   compliment: {
-    fontFamily: tokens.fonts.serif, fontSize: 15, fontStyle: 'italic',
+    fontFamily: tokens.fonts.serif,
+    fontSize: 15, fontStyle: 'italic',
     color: tokens.colors.text, textAlign: 'center',
     lineHeight: 23, paddingHorizontal: 16,
   },
-
   sectionLabel: {
-    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '600',
-    letterSpacing: 1.8, textTransform: 'uppercase', color: tokens.colors.grayLight,
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11, fontWeight: '600', letterSpacing: 1.8,
+    textTransform: 'uppercase', color: tokens.colors.grayLight,
     marginTop: 4, marginBottom: 12,
   },
-
   card: {
-    backgroundColor: tokens.colors.white, borderRadius: 16, padding: 18,
+    backgroundColor: tokens.colors.white,
+    borderRadius: 16, padding: 18,
     borderWidth: 1, borderColor: tokens.colors.border,
     marginBottom: 10, gap: 10,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
@@ -257,7 +277,10 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardIcon: { fontSize: 14, color: tokens.colors.pinkDeep },
-  cardName: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '600', color: tokens.colors.text },
+  cardName: {
+    fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '600',
+    color: tokens.colors.text,
+  },
   priorityBadge: {
     backgroundColor: tokens.colors.blush, borderRadius: 6,
     paddingHorizontal: 7, paddingVertical: 2,
@@ -266,27 +289,54 @@ const styles = StyleSheet.create({
     fontFamily: tokens.fonts.regular, fontSize: 10,
     fontWeight: '600', color: tokens.colors.pinkDeep, letterSpacing: 0.5,
   },
-  cardScore: { fontFamily: tokens.fonts.regular, fontSize: 22, fontWeight: '700' },
-  barTrack: { height: 4, borderRadius: 2, backgroundColor: tokens.colors.border, overflow: 'hidden' },
-  barFill: { height: '100%', borderRadius: 2, backgroundColor: tokens.colors.pinkDeep },
+  cardScore: {
+    fontFamily: tokens.fonts.regular, fontSize: 22, fontWeight: '700',
+  },
+  barTrack: {
+    height: 4, borderRadius: 2, backgroundColor: tokens.colors.border, overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%', borderRadius: 2, backgroundColor: tokens.colors.pinkDeep,
+  },
   barFillPriority: { backgroundColor: tokens.colors.pinkRich },
   barFillLow: { backgroundColor: '#C44' },
-  cardTip: { fontFamily: tokens.fonts.regular, fontSize: 13, color: tokens.colors.text, lineHeight: 20 },
+  cardTip: {
+    fontFamily: tokens.fonts.regular, fontSize: 13,
+    color: tokens.colors.text, lineHeight: 20,
+  },
   tutorialBtn: {
-    alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 14,
-    borderRadius: 20, borderWidth: 1, borderColor: tokens.colors.pinkDeep,
+    alignSelf: 'flex-start',
+    paddingVertical: 6, paddingHorizontal: 14,
+    borderRadius: 20, borderWidth: 1,
+    borderColor: tokens.colors.pinkDeep,
   },
-  tutorialText: { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '600', color: tokens.colors.pinkDeep },
-  proLock: { backgroundColor: tokens.colors.cream, borderRadius: 8, padding: 10 },
-  proLockText: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, textAlign: 'center' },
-
-  actions: { marginTop: 16 },
+  tutorialText: {
+    fontFamily: tokens.fonts.regular, fontSize: 12,
+    fontWeight: '600', color: tokens.colors.pinkDeep,
+  },
+  proLock: {
+    backgroundColor: tokens.colors.cream, borderRadius: 8, padding: 10,
+  },
+  proLockText: {
+    fontFamily: tokens.fonts.regular, fontSize: 12,
+    color: tokens.colors.gray, textAlign: 'center',
+  },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  retakeBtn: {
+    flex: 1, paddingVertical: 15, borderRadius: 50,
+    borderWidth: 1.5, borderColor: tokens.colors.border,
+    alignItems: 'center',
+  },
+  retakeText: {
+    fontFamily: tokens.fonts.regular, fontSize: 13,
+    fontWeight: '500', color: tokens.colors.text,
+  },
   doneBtn: {
-    paddingVertical: 15, borderRadius: 50,
-    backgroundColor: tokens.colors.pinkDeep, alignItems: 'center',
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25, shadowRadius: 12, elevation: 5,
+    flex: 1, paddingVertical: 15, borderRadius: 50,
+    backgroundColor: tokens.colors.accent, alignItems: 'center',
   },
-  doneText: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '600', color: '#FFF9F7' },
+  doneText: {
+    fontFamily: tokens.fonts.regular, fontSize: 13,
+    fontWeight: '600', color: '#FFF9F7',
+  },
 });

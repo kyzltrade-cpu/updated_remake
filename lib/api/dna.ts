@@ -67,6 +67,17 @@ export const SEASON_DESCRIPTIONS: Record<ColorSeason, string> = {
   'Cool Winter': 'Crisp and precise. Icy hues and true cool tones create your sharp signature.',
 };
 
+export const SEASON_PALETTES: Record<ColorSeason, string[]> = {
+  'Warm Spring':  ['#E8744A', '#F0A882', '#F5C86A', '#C86430', '#F5DDB0', '#F2E4D0'],
+  'Light Spring': ['#F4A090', '#F9C8A8', '#F4D878', '#E8906A', '#FBE8D0', '#FDE8D8'],
+  'Warm Autumn':  ['#B84C20', '#C8774A', '#8B6914', '#6B3A1F', '#C8956A', '#D4AA78'],
+  'Deep Autumn':  ['#8B2810', '#A84020', '#5C3418', '#3A1C0C', '#C87840', '#8B5828'],
+  'Cool Summer':  ['#C49098', '#A8B0C8', '#B898C0', '#786880', '#E8D0D8', '#C8C0D0'],
+  'Light Summer': ['#E8B0BC', '#C8D4E0', '#D8C0E0', '#A09098', '#F0DDE4', '#E8DCE8'],
+  'Deep Winter':  ['#8C0028', '#1A2B70', '#1A5C38', '#500080', '#C0B090', '#0A2A58'],
+  'Cool Winter':  ['#780060', '#2840A0', '#007060', '#483060', '#C8C8D8', '#5068B0'],
+};
+
 export interface DnaResult {
   faceShape: FaceShape;
   skinToneHex: string;

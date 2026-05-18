@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   View, Text, StyleSheet, Pressable, Dimensions, ScrollView,
@@ -9,10 +9,15 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import * as Sharing from 'expo-sharing';
+import { captureRef } from 'react-native-view-shot';
 import type { DnaResult } from '@/lib/api/dna';
-import { SEASON_DESCRIPTIONS, ARCHETYPE_DESCRIPTIONS } from '@/lib/api/dna';
+import { SEASON_DESCRIPTIONS, ARCHETYPE_DESCRIPTIONS, SEASON_PALETTES } from '@/lib/api/dna';
 import { useSubscription } from '@/contexts/subscription-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { DnaShareCard, CARD_W, CARD_H } from '@/components/dna-share-card';
+import { findShades } from '@/lib/api/shades';
+import { getRecsForDna, type ProductRec } from '@/lib/api/recommendations';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -24,8 +29,6 @@ const PLACEHOLDER_DNA: DnaResult = {
   browSymmetryPct: 84,
   lashProfile: 'Long & Full',
   energy: 'Balanced',
-  lipProfile: 'Warm Satin',
-  blushProfile: 'Bronze Flush',
   archetype: 'The Natural',
   archetypeDescription: '',
 };
@@ -48,13 +51,13 @@ function LockedValue({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 // ── Slide renderers ───────────────────────────────────────────────────────────
 
 function SlideCanvas({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+  const shades = isLocked ? null : findShades(dna.skinToneHex);
   return (
     <View style={styles.page}>
       <LinearGradient
         colors={['#0A0807', dna.skinToneHex + '45', '#0A0807']}
         style={StyleSheet.absoluteFill}
       />
-      {/* Ambient glow behind swatch */}
       {!isLocked && (
         <View style={[styles.canvasGlow, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }]} />
       )}
@@ -72,6 +75,27 @@ function SlideCanvas({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) 
           ? <LockedValue size="lg" />
           : <Text style={styles.hexCode}>{dna.skinToneHex.toUpperCase()}</Text>}
         <Text style={styles.slideTitle}>Foundation Shade</Text>
+        {shades && (
+          <View style={styles.shadesCard}>
+            <View style={styles.shadesRow}>
+              <Text style={styles.shadeBrand}>Fenty</Text>
+              <Text style={styles.shadeName}>{shades.Fenty}</Text>
+              <Text style={styles.shadeSep}>·</Text>
+              <Text style={styles.shadeBrand}>MAC</Text>
+              <Text style={styles.shadeName}>{shades.MAC}</Text>
+              <Text style={styles.shadeSep}>·</Text>
+              <Text style={styles.shadeBrand}>Maybelline</Text>
+              <Text style={styles.shadeName}>{shades.Maybelline}</Text>
+            </View>
+            <View style={styles.shadesRow}>
+              <Text style={styles.shadeBrand}>L'Oréal</Text>
+              <Text style={styles.shadeName}>{shades["L'Oréal"]}</Text>
+              <Text style={styles.shadeSep}>·</Text>
+              <Text style={styles.shadeBrand}>NARS</Text>
+              <Text style={styles.shadeName}>{shades.NARS}</Text>
+            </View>
+          </View>
+        )}
         <Text style={styles.slideText}>
           Your perfect foundation match — the shade that makes your skin glow instead of fight.
         </Text>
@@ -109,13 +133,25 @@ function SlideSeason({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) 
           })}
         </View>
 
-        {isLocked
-          ? <LockedValue size="md" />
-          : <Text style={styles.slideText}>
+        {isLocked ? (
+          <LockedValue size="md" />
+        ) : (
+          <>
+            <View style={styles.paletteRow}>
+              {SEASON_PALETTES[dna.colorSeason].map((hex, i) => (
+                <View
+                  key={i}
+                  style={[styles.paletteDot, { backgroundColor: hex, shadowColor: hex }]}
+                />
+              ))}
+            </View>
+            <Text style={styles.slideText}>
               You are a{' '}
               <Text style={[styles.accent, { color: SWATCH[userSeason] }]}>{dna.colorSeason}</Text>.
               {'\n'}{SEASON_DESCRIPTIONS[dna.colorSeason]}
-            </Text>}
+            </Text>
+          </>
+        )}
       </Animated.View>
     </View>
   );
@@ -260,43 +296,56 @@ function SlideArchetype({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean 
   );
 }
 
-function SlideLip({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+function KitCard({ rec }: { rec: ProductRec }) {
+  const priceDots = rec.price === '$' ? '●' : rec.price === '$$' ? '●●' : '●●●';
   return (
-    <View style={styles.page}>
-      <LinearGradient colors={['#0A0807', '#1A0E12', '#0A0807']} style={StyleSheet.absoluteFill} />
-      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.body}>
-        <Text style={styles.slideEyebrow}>LIP PROFILE</Text>
-        <Text style={[styles.lashGlyph, isLocked && { opacity: 0.15 }]}>♡</Text>
-        <Text style={styles.slideTitle}>Your Lips</Text>
-        {isLocked
-          ? <LockedValue size="lg" />
-          : <Text style={styles.bigValue}>{dna.lipProfile}</Text>}
-        <Text style={styles.slideText}>
-          {isLocked
-            ? 'Your natural lip tone shapes the finish that looks most alive on you. Unlock your profile.'
-            : `${dna.lipProfile} — the finish that works with your natural lip tone, not against it.`}
-        </Text>
-      </Animated.View>
+    <View style={styles.kitCard}>
+      <View style={styles.kitCardTop}>
+        <View style={styles.kitCatBadge}>
+          <Text style={styles.kitCatText}>{rec.category.toUpperCase()}</Text>
+        </View>
+        <Text style={styles.kitPrice}>{priceDots}</Text>
+      </View>
+      <Text style={styles.kitProduct}>
+        <Text style={styles.kitBrand}>{rec.brand} </Text>
+        {rec.product}
+      </Text>
+      <Text style={styles.kitWhy} numberOfLines={2}>{rec.why}</Text>
     </View>
   );
 }
 
-function SlideBlush({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+function SlideKit({ dna, isLocked }: { dna: DnaResult; isLocked?: boolean }) {
+  const recs = getRecsForDna(dna.archetype);
   return (
     <View style={styles.page}>
-      <LinearGradient colors={['#0A0807', '#180D0E', '#0A0807']} style={StyleSheet.absoluteFill} />
-      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.body}>
-        <Text style={styles.slideEyebrow}>BLUSH PROFILE</Text>
-        <Text style={[styles.lashGlyph, isLocked && { opacity: 0.15 }]}>◉</Text>
-        <Text style={styles.slideTitle}>Your Blush</Text>
-        {isLocked
-          ? <LockedValue size="lg" />
-          : <Text style={styles.bigValue}>{dna.blushProfile}</Text>}
-        <Text style={styles.slideText}>
-          {isLocked
-            ? 'Blush placed wrong reads heavy or invisible. The right tone for your face changes everything. Unlock yours.'
-            : `${dna.blushProfile} — your exact tone reads like a natural flush, nothing more.`}
-        </Text>
+      <LinearGradient colors={['#0A0807', '#1A1008', '#0A0807']} style={StyleSheet.absoluteFill} />
+      <Animated.View entering={FadeInUp.delay(100).duration(500)} style={[styles.body, styles.kitBody]}>
+        <Text style={styles.slideEyebrow}>YOUR KIT</Text>
+        <Text style={styles.slideTitle}>What to Reach For</Text>
+        {isLocked ? (
+          <>
+            <View style={[styles.kitCard, { opacity: 0.3 }]}>
+              <View style={styles.kitCardTop}>
+                <View style={styles.kitCatBadge}><Text style={styles.kitCatText}>BASE</Text></View>
+                <Text style={styles.kitPrice}>●●●</Text>
+              </View>
+              <LockedValue size="md" />
+            </View>
+            <View style={[styles.kitCard, { opacity: 0.18 }]}>
+              <View style={styles.kitCardTop}>
+                <View style={styles.kitCatBadge}><Text style={styles.kitCatText}>LIP</Text></View>
+                <Text style={styles.kitPrice}>●●</Text>
+              </View>
+              <LockedValue size="md" />
+            </View>
+            <Text style={styles.slideText}>
+              Your archetype-matched kit is waiting. Unlock to see the exact products curated for your DNA.
+            </Text>
+          </>
+        ) : (
+          recs.map((rec) => <KitCard key={rec.product} rec={rec} />)
+        )}
       </Animated.View>
     </View>
   );
@@ -309,8 +358,6 @@ function SlideSummary({ dna, isLocked, onShare }: { dna: DnaResult; isLocked?: b
     { label: 'Face Shape', value: dna.faceShape },
     { label: 'Brow Shape', value: dna.browShape },
     { label: 'Lash Profile', value: dna.lashProfile },
-    { label: 'Lip Profile', value: dna.lipProfile },
-    { label: 'Blush Profile', value: dna.blushProfile },
     { label: 'Archetype', value: dna.archetype },
   ];
   return (
@@ -344,7 +391,7 @@ function SlideSummary({ dna, isLocked, onShare }: { dna: DnaResult; isLocked?: b
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-const SLIDE_COUNT = 10;
+const SLIDE_COUNT = 9;
 
 export default function DnaRevealScreen() {
   const router = useRouter();
@@ -352,6 +399,7 @@ export default function DnaRevealScreen() {
   const params = useLocalSearchParams<{ dna?: string; bypass?: string }>();
   const [dna, setDna] = useState<DnaResult | null>(null);
   const [current, setCurrent] = useState(0);
+  const shareCardRef = useRef<View>(null);
   const { subscription } = useSubscription();
   const isPro = subscription?.plan === 'pro' || (__DEV__ && params.bypass === '1');
 
@@ -372,7 +420,18 @@ export default function DnaRevealScreen() {
     }
   };
 
-  const handleShare = () => { /* TODO: react-native-view-shot + expo-sharing */ };
+  const handleShare = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const uri = await captureRef(shareCardRef, { format: 'png', quality: 0.95 });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share your Beauty DNA' });
+      }
+    } catch (e) {
+      console.warn('[Share] capture failed:', e);
+    }
+  };
   const handleClose = () => router.replace('/(main)/home');
   const handleUnlock = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -400,9 +459,8 @@ export default function DnaRevealScreen() {
         <SlideBrows dna={displayDna} isLocked={locked} />
         <SlideLashes dna={displayDna} isLocked={locked} />
         <SlideEnergy dna={displayDna} isLocked={locked} />
-        <SlideLip dna={displayDna} isLocked={locked} />
-        <SlideBlush dna={displayDna} isLocked={locked} />
         <SlideArchetype dna={displayDna} isLocked={locked} />
+        <SlideKit dna={displayDna} isLocked={locked} />
         <SlideSummary dna={displayDna} isLocked={locked} onShare={handleShare} />
       </ScrollView>
 
@@ -454,6 +512,13 @@ export default function DnaRevealScreen() {
           <Text style={styles.counterTxt}>{current + 1} / {SLIDE_COUNT}</Text>
         </View>
       )}
+
+      {/* Off-screen card for share capture — opacity 0, pointer-events none */}
+      <View pointerEvents="none" style={styles.shareCardHost}>
+        <View ref={shareCardRef} collapsable={false} style={{ width: CARD_W, height: CARD_H }}>
+          <DnaShareCard dna={displayDna} />
+        </View>
+      </View>
     </View>
   );
 }
@@ -461,6 +526,7 @@ export default function DnaRevealScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0A0807' },
+  shareCardHost: { position: 'absolute', opacity: 0, top: 0, left: 0 },
 
   page: { width: W, flex: 1, justifyContent: 'center', alignItems: 'center' },
   body: {
@@ -562,8 +628,34 @@ const styles = StyleSheet.create({
   hexCode: {
     fontFamily: 'Playfair Display', fontSize: 36, color: '#FFF9F7', letterSpacing: 3,
   },
+  shadesCard: {
+    borderWidth: 1, borderColor: 'rgba(200,168,130,0.15)',
+    borderRadius: 14, paddingVertical: 12, paddingHorizontal: 18,
+    backgroundColor: 'rgba(255,255,255,0.04)', gap: 8,
+    width: '100%',
+  },
+  shadesRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5 },
+  shadeBrand: {
+    fontFamily: 'Inter', fontSize: 10, fontWeight: '700',
+    letterSpacing: 0.5, color: 'rgba(200,168,130,0.55)',
+  },
+  shadeName: {
+    fontFamily: 'Inter', fontSize: 11, fontWeight: '600', color: '#FFF9F7',
+  },
+  shadeSep: {
+    fontFamily: 'Inter', fontSize: 11, color: 'rgba(255,249,247,0.2)',
+  },
 
   // Season
+  paletteRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  paletteDot: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+  },
   seasonGrid: { flexDirection: 'row', gap: 10, marginVertical: 4 },
   seasonCard: {
     alignItems: 'center', gap: 10, paddingVertical: 18, paddingHorizontal: 10,
@@ -659,4 +751,38 @@ const styles = StyleSheet.create({
     borderRadius: 50, backgroundColor: '#C8A882',
   },
   shareBtnText: { fontFamily: 'Inter', fontSize: 14, fontWeight: '700', color: '#1A1715' },
+
+  // Kit slide
+  kitBody: { paddingBottom: 180, gap: 12 },
+  kitCard: {
+    width: '100%',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(200,168,130,0.14)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingVertical: 12, paddingHorizontal: 16,
+    gap: 5,
+  },
+  kitCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  kitCatBadge: {
+    paddingHorizontal: 7, paddingVertical: 2,
+    borderRadius: 5,
+    backgroundColor: 'rgba(200,168,130,0.12)',
+  },
+  kitCatText: {
+    fontFamily: 'Inter', fontSize: 9, fontWeight: '700',
+    letterSpacing: 1.2, color: 'rgba(200,168,130,0.7)',
+  },
+  kitPrice: {
+    fontFamily: 'Inter', fontSize: 10,
+    color: 'rgba(200,168,130,0.45)', letterSpacing: 1,
+  },
+  kitProduct: {
+    fontFamily: 'Inter', fontSize: 13, fontWeight: '500', color: '#FFF9F7',
+  },
+  kitBrand: { fontWeight: '700', color: '#C8A882' },
+  kitWhy: {
+    fontFamily: 'Inter', fontSize: 11,
+    color: 'rgba(255,249,247,0.45)', lineHeight: 16,
+  },
 });
