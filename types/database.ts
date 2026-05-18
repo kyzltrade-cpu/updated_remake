@@ -5,6 +5,7 @@ export interface Profile {
   full_name: string | null
   avatar_url: string | null
   face_setup_completed: boolean
+  dna_result?: Record<string, unknown>
   created_at: string
   updated_at: string
 }
@@ -17,6 +18,8 @@ export interface Scan {
   overall_score: number
   category_scores: CategoryScores
   suggestions: string[]
+  verdict?: 'GO' | 'FIX'
+  coaching_compliment?: string
   created_at: string
 }
 

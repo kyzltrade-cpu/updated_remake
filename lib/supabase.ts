@@ -1,14 +1,15 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import type { Database } from '@/types/database'
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
 
-let _client: ReturnType<typeof createSupabaseClient> | null = null
+let _client: ReturnType<typeof createSupabaseClient<Database>> | null = null
 
 export function createClient() {
   if (!_client) {
-    _client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    _client = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         storage: AsyncStorage,
         autoRefreshToken: true,

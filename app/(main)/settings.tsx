@@ -158,16 +158,10 @@ export default function SettingsScreen() {
         <Section title="Subscription" delay={260}>
           <Row
             label="Plan"
-            sub={
-              subscription?.interval === 'week' ? 'Weekly'
-              : subscription?.interval === 'year' ? 'Yearly'
-              : 'Monthly'
-            }
+            sub={subscription?.plan === 'pro' ? 'Pro' : 'Free'}
           >
             <Text style={styles.rowValue}>
-              {subscription?.interval === 'week' ? '$4.99 / wk'
-              : subscription?.interval === 'year' ? '$39.99 / yr'
-              : '$14.99 / mo'}
+              {subscription?.plan === 'pro' ? '$39.99 / year' : 'Free (1 scan)'}
             </Text>
           </Row>
           <View style={styles.divider} />
