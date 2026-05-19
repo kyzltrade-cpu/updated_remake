@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, Pressable,
 } from 'react-native';
 import Animated, {
   FadeIn, FadeInUp,
-  useSharedValue, useAnimatedProps, withTiming, Easing,
+  useSharedValue, useAnimatedProps, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing,
 } from 'react-native-reanimated';
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
 import { analyzeProduct, type ProductScanResult } from '@/lib/api/product-scan';
+import { useSettings } from '@/contexts/settings-context';
 
 // ─── Design constants ────────────────────────────────────────────────────────
 const CIRCUMFERENCE = 2 * Math.PI * 50;
@@ -74,6 +75,156 @@ const rs = StyleSheet.create({
   num:   { fontFamily: tokens.fonts.regular, fontSize: 40, fontWeight: '700', color: tokens.colors.text, letterSpacing: -2 },
 });
 
+// ─── Skeleton ────────────────────────────────────────────────────────────────
+
+function usePulse() {
+  const op = useSharedValue(0.45);
+  useEffect(() => {
+    op.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 750 }),
+        withTiming(0.45, { duration: 750 }),
+      ),
+      -1,
+    );
+  }, []);
+  return op;
+}
+
+type SharedNum = ReturnType<typeof useSharedValue<number>>;
+function Skel({ op, w = '100%', h, r = 8, style }: { op: SharedNum; w?: number | string; h: number; r?: number; style?: object }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const anim = useAnimatedStyle(() => ({ opacity: op.value }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <Animated.View style={[{ width: w as any, height: h, borderRadius: r, backgroundColor: '#E8DDD8' }, style, anim]} />;
+}
+
+function ResultsSkeleton({ insetTop }: { insetTop: number }) {
+  const op = usePulse();
+  return (
+    <View style={[s.root, { paddingTop: insetTop }]}>
+      {/* Header */}
+      <View style={sk.header}>
+        <View style={sk.headerLeft}>
+          <Skel op={op} w={32} h={32} r={16} />
+          <Skel op={op} w={60} h={12} style={{ marginLeft: 10 }} />
+        </View>
+        <Skel op={op} w={60} h={10} />
+      </View>
+      <ScrollView contentContainerStyle={sk.scroll} showsVerticalScrollIndicator={false}>
+        {/* Score ring */}
+        <View style={sk.scoreSection}>
+          <Skel op={op} w={120} h={120} r={60} />
+          <Skel op={op} w={180} h={13} style={{ marginTop: 14 }} />
+          <Skel op={op} w={130} h={20} r={6} style={{ marginTop: 8 }} />
+          <Skel op={op} w={240} h={10} style={{ marginTop: 6 }} />
+          <Skel op={op} w={200} h={10} style={{ marginTop: 4 }} />
+        </View>
+        <Skel op={op} w="100%" h={1} r={0} style={{ marginHorizontal: 16 }} />
+        {/* Shade & Tone card */}
+        <View style={sk.card}>
+          <View style={sk.cardHead}><Skel op={op} w={100} h={10} /><Skel op={op} w={40} h={20} r={10} /></View>
+          <View style={sk.row}><Skel op={op} w={28} h={28} r={14} /><Skel op={op} w={16} h={12} style={{ marginHorizontal: 6 }} /><Skel op={op} w={28} h={28} r={14} /><View style={{ flex: 1, marginLeft: 12 }}><Skel op={op} w="80%" h={14} /><Skel op={op} w="60%" h={10} style={{ marginTop: 4 }} /></View></View>
+          <Skel op={op} w="100%" h={4} style={{ marginVertical: 8 }} />
+          <View style={sk.toneGrid}>
+            {[0,1,2,3].map(i => <View key={i} style={sk.toneItem}><Skel op={op} w="70%" h={9} /><Skel op={op} w="90%" h={13} style={{ marginTop: 4 }} /><Skel op={op} w="100%" h={3} r={1} style={{ marginTop: 4 }} /></View>)}
+          </View>
+        </View>
+        {/* Coverage card */}
+        <View style={sk.card}>
+          <View style={sk.cardHead}><Skel op={op} w={130} h={10} /></View>
+          <View style={sk.coverageGrid}>
+            {[0,1,2,3].map(i => <View key={i} style={sk.coverageItem}><Skel op={op} w="60%" h={9} /><Skel op={op} w="80%" h={15} style={{ marginTop: 6 }} /></View>)}
+          </View>
+        </View>
+        {/* SPF card */}
+        <View style={sk.card}>
+          <View style={sk.cardHead}><Skel op={op} w={130} h={10} /><Skel op={op} w={55} h={20} r={10} /></View>
+          <View style={sk.row}><Skel op={op} w={20} h={20} r={4} /><View style={{ flex: 1, marginLeft: 10 }}><Skel op={op} w="100%" h={10} /><Skel op={op} w="80%" h={10} style={{ marginTop: 5 }} /></View></View>
+        </View>
+        {/* Skin Compatibility card */}
+        <View style={sk.card}>
+          <View style={sk.cardHead}><Skel op={op} w={150} h={10} /></View>
+          {[0,1,2,3].map(i => (
+            <View key={i} style={[sk.row, { marginTop: i > 0 ? 10 : 0 }]}>
+              <Skel op={op} w={30} h={30} r={8} />
+              <View style={{ flex: 1, marginLeft: 10 }}><Skel op={op} w="70%" h={13} /><Skel op={op} w="90%" h={10} style={{ marginTop: 4 }} /></View>
+              <Skel op={op} w={52} h={22} r={11} />
+            </View>
+          ))}
+        </View>
+        {/* Style Fit card */}
+        <View style={sk.card}>
+          <View style={sk.cardHead}><Skel op={op} w={80} h={10} /></View>
+          <Skel op={op} w={120} h={28} r={14} style={{ marginBottom: 8 }} />
+          <Skel op={op} w="100%" h={10} /><Skel op={op} w="70%" h={10} style={{ marginTop: 4 }} />
+          <View style={sk.row}>{[0,1,2,3,4].map(i => <Skel key={i} op={op} w={20} h={20} r={10} style={{ marginRight: 6, marginTop: 10 }} />)}</View>
+        </View>
+        {/* Safety Check card */}
+        <View style={sk.card}>
+          <View style={sk.cardHead}><Skel op={op} w={100} h={10} /></View>
+          {[0,1,2,3,4,5,6,7].map(i => (
+            <View key={i} style={[sk.row, { marginTop: 9 }]}>
+              <Skel op={op} w={8} h={8} r={4} />
+              <Skel op={op} w="50%" h={12} style={{ marginLeft: 10, flex: 1 }} />
+              <Skel op={op} w={60} h={10} />
+            </View>
+          ))}
+        </View>
+        {/* Ethics card */}
+        <View style={sk.card}>
+          <View style={sk.cardHead}><Skel op={op} w={130} h={10} /></View>
+          <View style={sk.row}>
+            {[0,1,2].map(i => (
+              <View key={i} style={sk.ethicsItem}>
+                <Skel op={op} w={34} h={34} r={17} />
+                <Skel op={op} w="80%" h={9} style={{ marginTop: 6 }} />
+                <Skel op={op} w="60%" h={11} style={{ marginTop: 4 }} />
+              </View>
+            ))}
+          </View>
+        </View>
+        <View style={{ height: 100 }} />
+      </ScrollView>
+      {/* Save bar placeholder */}
+      <View style={sk.saveBar}>
+        <Skel op={op} w="100%" h={44} r={14} />
+        <Skel op={op} w="70%" h={12} r={6} style={{ marginTop: 6, alignSelf: 'center' }} />
+      </View>
+    </View>
+  );
+}
+
+const sk = StyleSheet.create({
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: tokens.colors.border,
+  },
+  headerLeft: { flexDirection: 'row', alignItems: 'center' },
+  scroll: { paddingVertical: 16, gap: 12 },
+  scoreSection: { alignItems: 'center', paddingHorizontal: 20, paddingVertical: 8 },
+  card: {
+    backgroundColor: tokens.colors.white, borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: tokens.colors.border, marginHorizontal: 16,
+  },
+  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  row: { flexDirection: 'row', alignItems: 'center' },
+  toneGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 },
+  toneItem: { width: '44%' },
+  coverageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  coverageItem: {
+    width: '47%', backgroundColor: tokens.colors.beige, borderRadius: 12, padding: 12,
+  },
+  ethicsItem: { flex: 1, alignItems: 'center', gap: 2, padding: 8 },
+  saveBar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    paddingHorizontal: 16, paddingTop: 10, paddingBottom: 28,
+    backgroundColor: tokens.colors.cream,
+    borderTopWidth: 1, borderTopColor: tokens.colors.border,
+  },
+});
+
 // ─── Card shell ───────────────────────────────────────────────────────────────
 function Card({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
@@ -115,13 +266,18 @@ export default function ProductScanResultsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { barcode, uri } = useLocalSearchParams<{ barcode?: string; uri?: string }>();
+  const { settings } = useSettings();
 
   const [data, setData] = useState<ProductScanResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    analyzeProduct({ barcode, uri })
+    analyzeProduct({
+      barcode,
+      uri,
+      referenceUri: settings.referencePhoto ?? undefined,
+    })
       .then(result => {
         setData(result);
         setLoading(false);
@@ -142,12 +298,7 @@ export default function ProductScanResultsScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={[s.root, s.center, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={tokens.colors.pinkDeep} />
-        <Text style={s.loadingText}>Analysing product…</Text>
-      </View>
-    );
+    return <ResultsSkeleton insetTop={insets.top} />;
   }
 
   if (failed || !data) {
@@ -359,7 +510,7 @@ export default function ProductScanResultsScreen() {
           style={({ pressed }) => [s.saveBtn, pressed && { opacity: 0.85 }]}
         >
           <MaterialIcons name="bookmark-border" size={16} color={tokens.colors.white} />
-          <Text style={s.saveTxt}>Save to history</Text>
+          <Text style={s.saveTxt}>Save</Text>
         </Pressable>
         <Pressable onPress={handlePaoReminder} style={s.paoBtn}>
           <MaterialIcons name="notifications-none" size={14} color={tokens.colors.gray} />
@@ -520,6 +671,7 @@ const s = StyleSheet.create({
   saveBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: tokens.colors.text, borderRadius: 14, paddingVertical: 14,
+    marginBottom: 6,
   },
   saveTxt: { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '700', color: tokens.colors.white, letterSpacing: 1, textTransform: 'uppercase' },
 });

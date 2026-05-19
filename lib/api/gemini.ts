@@ -41,9 +41,9 @@ export async function geminiText(prompt: string, maxTokens = 200): Promise<strin
   }
 }
 
-export async function geminiTextJson<T>(prompt: string): Promise<T> {
+export async function geminiTextJson<T>(prompt: string, maxTokens = 3000): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 25000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -53,17 +53,22 @@ export async function geminiTextJson<T>(prompt: string): Promise<T> {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.4,
-          maxOutputTokens: 1500,
+          maxOutputTokens: maxTokens,
           responseMimeType: 'application/json',
         },
       }),
     });
-    if (!res.ok) throw new Error(`Gemini ${res.status}`);
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Gemini ${res.status}: ${errText}`);
+    }
     const data = await res.json() as {
       candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
     };
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    if (!text) throw new Error('Empty Gemini response');
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!raw) throw new Error('Empty Gemini response');
+    // Strip markdown fences if present
+    const text = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
     return JSON.parse(text) as T;
   } finally {
     clearTimeout(timer);

@@ -120,31 +120,8 @@ export default function SettingsScreen() {
           </Row>
         </Section>
 
-        {/* Reference Photo */}
-        <Section title="Reference Photo" delay={120}>
-          {settings.referencePhoto ? (
-            <>
-              <Pressable onPress={pickReference}>
-                <Image source={{ uri: settings.referencePhoto }} style={styles.refPhoto} />
-                <Text style={styles.refHint}>Tap to change</Text>
-              </Pressable>
-              <Pressable style={styles.clearBtn} onPress={clearReference}>
-                <Text style={styles.clearBtnText}>Remove</Text>
-              </Pressable>
-            </>
-          ) : (
-            <Pressable style={styles.refPlaceholder} onPress={pickReference}>
-              <View style={styles.refIconWrap}>
-                <MaterialIcons name="add-photo-alternate" size={22} color={tokens.colors.pinkDeep} />
-              </View>
-              <Text style={styles.refPlaceholderText}>Add reference photo</Text>
-              <Text style={styles.refPlaceholderSub}>Compare scan-to-scan progress over time</Text>
-            </Pressable>
-          )}
-        </Section>
-
         {/* Notifications */}
-        <Section title="Notifications" delay={190}>
+        <Section title="Notifications" delay={120}>
           <Row label="Push notifications" sub="Scan results & tips">
             <Toggle value={settings.notificationsEnabled} onValueChange={() => toggleSetting('notificationsEnabled')} />
           </Row>
@@ -155,7 +132,7 @@ export default function SettingsScreen() {
         </Section>
 
         {/* Subscription */}
-        <Section title="Subscription" delay={260}>
+        <Section title="Subscription" delay={190}>
           <Row
             label="Plan"
             sub={subscription?.plan === 'pro' ? 'Pro' : 'Free'}
@@ -178,7 +155,7 @@ export default function SettingsScreen() {
         </Section>
 
         {/* About */}
-        <Section title="About" delay={330}>
+        <Section title="About" delay={260}>
           <Row label="Version">
             <Text style={styles.rowValue}>1.0.0</Text>
           </Row>
@@ -187,6 +164,29 @@ export default function SettingsScreen() {
               <View style={styles.divider} />
               <Row label="Account" sub={user?.email ?? ''} />
             </>
+          )}
+        </Section>
+
+        {/* Reference Photo */}
+        <Section title="Reference Photo" delay={330}>
+          {settings.referencePhoto ? (
+            <>
+              <Pressable onPress={pickReference}>
+                <Image source={{ uri: settings.referencePhoto }} style={styles.refPhoto} />
+                <Text style={styles.refHint}>Tap to change</Text>
+              </Pressable>
+              <Pressable style={styles.clearBtn} onPress={clearReference}>
+                <Text style={styles.clearBtnText}>Remove</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Pressable style={styles.refPlaceholder} onPress={pickReference}>
+              <View style={styles.refIconWrap}>
+                <MaterialIcons name="add-photo-alternate" size={22} color={tokens.colors.pinkDeep} />
+              </View>
+              <Text style={styles.refPlaceholderText}>Add reference photo</Text>
+              <Text style={styles.refPlaceholderSub}>Compare scan-to-scan progress over time</Text>
+            </Pressable>
           )}
         </Section>
 

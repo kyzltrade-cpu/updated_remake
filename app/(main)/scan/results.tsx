@@ -10,6 +10,7 @@ import { ScoreRing } from '@/components/score-ring';
 import * as Haptics from 'expo-haptics';
 import type { DiagnosisResult, CoachingResult, CategoryAnalysis } from '@/lib/api/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/subscription-context';
 import { saveScan, getLastScan } from '@/lib/api/scan-storage';
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -94,10 +95,10 @@ export default function ResultsScreen() {
   const [coaching, setCoaching] = useState<CoachingResult | null>(null);
   const [scoreDelta, setScoreDelta] = useState<number | null>(null);
   const { user } = useAuth();
+  const { subscription } = useSubscription();
   const savedRef = useRef(false);
 
-  // For now always Pro (paywall not yet wired)
-  const isPro = true;
+  const isPro = subscription?.plan === 'pro';
 
   const handleBack = () => {
     router.back();

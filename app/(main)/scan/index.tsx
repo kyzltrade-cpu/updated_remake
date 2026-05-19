@@ -236,7 +236,7 @@ export default function ScanScreen() {
     if (comparing) {
       if (!compareFirst) {
         setCompareFirst({ barcode: data });
-        setTimeout(() => setScanned(false), 800);
+        setTimeout(() => setScanned(false), 2500);
       } else {
         router.push({ pathname: '/(main)/product-scan/compare', params: { barcode1: compareFirst.barcode, barcode2: data } });
       }

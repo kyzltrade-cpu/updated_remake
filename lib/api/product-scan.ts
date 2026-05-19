@@ -1,4 +1,4 @@
-import { geminiVision, geminiTextJson, hasGeminiKey, uriToBase64 } from './gemini';
+import { geminiVision, geminiVisionDual, geminiTextJson, hasGeminiKey, uriToBase64 } from './gemini';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DnaResult } from './dna';
 import { loadGloDraft } from '@/lib/glo-profile';
@@ -183,11 +183,97 @@ Return ONLY this JSON:
 }
 `.trim();
 
+// ── Dual-vision prompt (product photo + skin reference) ─────────────────────
+
+function buildDualVisionPrompt(
+  productInfo: string,
+  dna: DnaResult | null,
+  userAllergies: string[],
+): string {
+  const allergyNote = userAllergies.length
+    ? `User known allergens: ${userAllergies.join(', ')}. Flag any of these as safe: false and set "allergy" to the ingredient name.`
+    : '';
+  const dnaCtx = dna
+    ? `User beauty DNA: colour season ${dna.colorSeason}, archetype ${dna.archetype}, face shape ${dna.faceShape}, energy ${dna.energy}`
+    : 'User beauty DNA: not available';
+  return `
+You are a professional beauty analyst. Image 1 shows the cosmetic product packaging. Image 2 shows the user's face and skin tone for direct visual comparison.
+
+${dnaCtx}
+
+Product information (from database/photo extraction):
+${productInfo}
+
+Using the visual skin tone in Image 2, assess how well this product's shade matches the user's actual skin. Set deltaE based on the visual difference (0 = perfect, 1–3 = excellent, 4–7 = moderate, 8+ = poor match).
+
+Return ONLY valid JSON (no markdown, no extra text):
+{
+  "score": 84,
+  "verdict": "Great match for you",
+  "reason": "One sentence explaining the score based on visual shade match, formula, and user DNA.",
+  "category": "Foundation",
+  "productName": "Pro Filt'r Soft Matte",
+  "brand": "Fenty Beauty",
+  "shade": {
+    "pct": 92,
+    "product": "#C4885F",
+    "name": "220N — warm almond",
+    "deltaE": 1.8,
+    "sub": "near-perfect warmth",
+    "tones": [
+      { "label": "Undertone", "value": "Warm ✓", "pct": 95 },
+      { "label": "Depth", "value": "Medium ✓", "pct": 90 },
+      { "label": "Saturation", "value": "Balanced ✓", "pct": 88 },
+      { "label": "Oxidation", "value": "Low shift", "pct": 84 }
+    ]
+  },
+  "coverage": [
+    { "label": "Coverage", "value": "Full" },
+    { "label": "Finish", "value": "Matte" },
+    { "label": "Wear Time", "value": "12–16h" },
+    { "label": "SPF", "value": "None" }
+  ],
+  "spf": { "level": null, "flashback": false, "note": "No SPF — layer SPF 30+ underneath." },
+  "pao": "12M",
+  "skinFit": [
+    { "icon": "opacity",  "label": "Dry Skin",      "desc": "One sentence.", "ok": true },
+    { "icon": "wb-sunny", "label": "Sensitive Skin", "desc": "One sentence.", "ok": true },
+    { "icon": "loop",     "label": "Oily / Combo",   "desc": "One sentence.", "ok": true },
+    { "icon": "verified", "label": "Acne Safe",      "desc": "One sentence.", "ok": true }
+  ],
+  "styleFit": {
+    "archetype": "${dna?.archetype ?? 'Your Archetype'}",
+    "desc": "One sentence linking product finish to user archetype.",
+    "palette": ["#D4A096", "#C97E8A", "#E8C4B0", "#F2DDD5", "#B8806A"]
+  },
+  "allergy": null,
+  "ingredients": [
+    { "name": "Water (Aqua)", "func": "Solvent", "safe": true },
+    { "name": "Parfum (Fragrance)", "func": "Allergen", "safe": false }
+  ],
+  "ethics": [
+    { "icon": "pets", "label": "Cruelty Free", "value": "Certified" },
+    { "icon": "eco",  "label": "Vegan",        "value": "Unknown" }
+  ]
+}
+
+Rules:
+- deltaE: base this on your VISUAL comparison of the product shade (image 1) vs the user's skin (image 2)
+- score: 0–100 considering shade match, ingredient safety, formula fit for user DNA
+- allergy: specific ingredient name if found, or null
+- pao: period-after-opening if visible, else "—"
+- ethics: only mark Certified/100% if label data supports it, otherwise "Unknown"
+- Return up to 8 real ingredients; flag Parfum, Limonene, Linalool, Methylparaben, Propylparaben as safe: false
+${allergyNote}
+`.trim();
+}
+
 // ── Main export ─────────────────────────────────────────────────────────────
 
 export async function analyzeProduct(params: {
   barcode?: string;
   uri?: string;
+  referenceUri?: string;
 }): Promise<ProductScanResult> {
   const [dna, glo] = await Promise.all([loadDna(), loadGloDraft()]);
   const userAllergies: string[] = glo.allergies ?? [];
@@ -233,8 +319,21 @@ export async function analyzeProduct(params: {
   if (!hasGeminiKey()) return mockResult(dna, detectedBarcode);
 
   try {
-    const prompt = buildAnalysisPrompt(productInfo, dna, userAllergies);
-    const parsed = await geminiTextJson<ProductScanResult>(prompt);
+    let parsed: ProductScanResult;
+
+    if (params.uri && params.referenceUri) {
+      // Visual comparison: send product photo + skin reference photo to Gemini
+      const [productB64, skinB64] = await Promise.all([
+        uriToBase64(params.uri),
+        uriToBase64(params.referenceUri),
+      ]);
+      const dualPrompt = buildDualVisionPrompt(productInfo, dna, userAllergies);
+      parsed = await geminiVisionDual<ProductScanResult>(productB64, skinB64, dualPrompt);
+    } else {
+      const prompt = buildAnalysisPrompt(productInfo, dna, userAllergies);
+      parsed = await geminiTextJson<ProductScanResult>(prompt);
+    }
+
     parsed.barcode = detectedBarcode;
     parsed.shade.detected = dna?.skinToneHex ?? '#C9956A';
     return parsed;

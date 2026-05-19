@@ -1,178 +1,68 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import {
-  View, Text, StyleSheet, Pressable, Alert, Dimensions,
+  View, Text, StyleSheet, Pressable, Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as Brightness from 'expo-brightness';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  FadeIn, FadeInUp,
-  useSharedValue, useAnimatedStyle, withTiming, withSequence, Easing,
-} from 'react-native-reanimated';
+import * as ImagePicker from 'expo-image-picker';
+import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
+import { FaceCorners } from '@/components/face-corners';
+import { EdgeFlashOverlay } from '@/components/edge-flash';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-const OVAL_W = SCREEN_W * 0.68;
-const OVAL_H = OVAL_W * 1.32;
-const RING_INSET_W = SCREEN_W * 0.22;
-const RING_INSET_H = SCREEN_H * 0.18;
-
-// EV < 1.5 ≈ darker than a dim indoor scene
 const LOW_LIGHT_EV_THRESHOLD = 1.5;
-
-function OvalGuide() {
-  const pulse = useSharedValue(0.6);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      pulse.value = withSequence(
-        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.6, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-      );
-    }, 2400);
-    return () => clearInterval(interval);
-  }, []);
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: pulse.value,
-  }));
-
-  return (
-    <View style={[styles.ovalContainer, { width: OVAL_W, height: OVAL_H }]}>
-      <Animated.View
-        style={[
-          styles.ovalGlow,
-          { width: OVAL_W + 24, height: OVAL_H + 24, borderRadius: (OVAL_W + 24) / 2 },
-          glowStyle,
-        ]}
-      />
-      <View style={[styles.ovalBorder, { width: OVAL_W, height: OVAL_H, borderRadius: OVAL_W / 2 }]} />
-    </View>
-  );
-}
-
-function RingFlash({ visible }: { visible: boolean }) {
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      opacity.value = withSequence(
-        withTiming(1, { duration: 60 }),
-        withTiming(0, { duration: 280 }),
-      );
-    }
-  }, [visible]);
-
-  const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, animStyle]}>
-      {/* Top edge — white fades inward */}
-      <LinearGradient
-        colors={['rgba(255,255,255,0.96)', 'rgba(255,255,255,0)']}
-        style={[styles.ringEdge, { top: 0, left: 0, right: 0, height: RING_INSET_H }]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-      />
-      {/* Bottom edge */}
-      <LinearGradient
-        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.96)']}
-        style={[styles.ringEdge, { bottom: 0, left: 0, right: 0, height: RING_INSET_H }]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-      />
-      {/* Left edge */}
-      <LinearGradient
-        colors={['rgba(255,255,255,0.96)', 'rgba(255,255,255,0)']}
-        style={[styles.ringEdge, { top: 0, bottom: 0, left: 0, width: RING_INSET_W }]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-      />
-      {/* Right edge */}
-      <LinearGradient
-        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.96)']}
-        style={[styles.ringEdge, { top: 0, bottom: 0, right: 0, width: RING_INSET_W }]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-      />
-    </Animated.View>
-  );
-}
 
 export default function FirstScanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
-  const [flashing, setFlashing] = useState(false);
+  const [flash, setFlash] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [showLowLight, setShowLowLight] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
     if (!permission?.granted) requestPermission();
   }, []);
 
-  const handleCapture = async () => {
+  const proceed = async (uri: string) => {
+    await AsyncStorage.setItem('@remake_pending_dna_uri', uri);
+    router.push('/(onboarding)/create-account');
+  };
+
+  const takePhoto = async () => {
     if (capturing || !cameraRef.current) return;
     setCapturing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-    // Boost screen brightness to max for the ring flash
-    let prevBrightness = 0.5;
     try {
-      prevBrightness = await Brightness.getBrightnessAsync();
-      await Brightness.setBrightnessAsync(1.0);
-    } catch { /* brightness API unavailable on this device */ }
-
-    setFlashing(true);
-    setTimeout(async () => {
-      setFlashing(false);
-      try { await Brightness.setBrightnessAsync(prevBrightness); } catch {}
-    }, 300);
-
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.85,
-        exif: true,
-      });
-
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85, exif: true });
       if (!photo?.uri) throw new Error('no uri');
 
-      // Check EXIF brightness value — EV in APEX units
       const rawEv = photo.exif?.BrightnessValue;
-      const ev = typeof rawEv === 'number'
-        ? rawEv
-        : typeof rawEv === 'string'
-        ? parseFloat(rawEv)
+      const ev = typeof rawEv === 'number' ? rawEv
+        : typeof rawEv === 'string' ? parseFloat(rawEv)
         : null;
-
       const isDark = ev !== null && ev < LOW_LIGHT_EV_THRESHOLD;
 
       if (isDark) {
+        setShowLowLight(true);
+        setTimeout(() => setShowLowLight(false), 3500);
         Alert.alert(
           'Too dark for a good read',
           'Move closer to a window or turn on more lights, then try again.',
           [
-            {
-              text: 'Retake',
-              style: 'cancel',
-              onPress: () => setCapturing(false),
-            },
-            {
-              text: 'Continue anyway',
-              onPress: async () => {
-                await AsyncStorage.setItem('@remake_pending_dna_uri', photo.uri);
-                router.push('/(onboarding)/create-account');
-              },
-            },
+            { text: 'Retake', style: 'cancel', onPress: () => setCapturing(false) },
+            { text: 'Continue anyway', onPress: () => proceed(photo.uri) },
           ],
         );
       } else {
-        await AsyncStorage.setItem('@remake_pending_dna_uri', photo.uri);
-        router.push('/(onboarding)/create-account');
+        await proceed(photo.uri);
       }
     } catch {
       Alert.alert('Camera error', 'Could not take photo. Please try again.');
@@ -180,211 +70,228 @@ export default function FirstScanScreen() {
     }
   };
 
-  if (!permission) return <View style={styles.root} />;
+  const pickImage = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+      allowsEditing: true,
+    });
+    if (!result.canceled && result.assets[0]?.uri) {
+      await proceed(result.assets[0].uri);
+    }
+  };
+
+  const toggleFlash = () => {
+    Haptics.selectionAsync();
+    setFlash(f => !f);
+  };
+
+  if (!permission) return <View style={styles.container} />;
 
   if (!permission.granted) {
     return (
-      <View style={[styles.root, styles.permissionContainer]}>
-        <Text style={styles.permissionTitle}>Camera Access Needed</Text>
-        <Text style={styles.permissionSub}>
-          We need your camera to analyse your face shape and skin tone for your Beauty DNA.
+      <View style={styles.permissionScreen}>
+        <View style={styles.permissionIconWrap}>
+          <MaterialIcons name="camera-alt" size={30} color={tokens.colors.pinkDeep} />
+        </View>
+        <Text style={styles.permissionTitle}>Allow Camera Access</Text>
+        <Text style={styles.permissionText}>
+          ReMake needs your camera to analyse your face shape and skin tone for your Beauty DNA.
         </Text>
         <Pressable style={styles.permissionBtn} onPress={requestPermission}>
-          <Text style={styles.permissionBtnText}>Allow Camera</Text>
+          <Text style={styles.permissionBtnText}>Allow Access</Text>
         </Pressable>
       </View>
     );
   }
 
   return (
-    <View style={styles.root}>
+    <View style={styles.container}>
       <CameraView
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
         facing="front"
+        flash={flash ? 'on' : 'off'}
         mode="picture"
       />
 
-      {/* Dark vignette overlay */}
-      <View style={styles.vignette} pointerEvents="none" />
-
-      {/* Oval guide */}
-      <View style={styles.ovalWrapper} pointerEvents="none">
-        <OvalGuide />
+      {/* Face guide */}
+      <View style={styles.viewfinder} pointerEvents="none">
+        <FaceCorners size={210} color="rgba(238,62,100,0.60)" />
+        <Text style={styles.hint}>Align your face</Text>
       </View>
 
-      {/* Ring flash */}
-      <RingFlash visible={flashing} />
-
-      {/* Top header */}
-      <Animated.View
-        entering={FadeInUp.duration(600)}
-        style={[styles.header, { paddingTop: insets.top + 20 }]}
+      {/* Top gradient — wordmark */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.72)', 'rgba(0,0,0,0.28)', 'transparent']}
+        locations={[0, 0.5, 1]}
+        style={[styles.topGradient, { paddingTop: insets.top + 12 }]}
+        pointerEvents="none"
       >
-        <Text style={styles.eyebrow}>BEAUTY DNA</Text>
-        <Text style={styles.title}>Your face,{'\n'}decoded.</Text>
-        <Text style={styles.hint}>Centre your face in the oval and hold still</Text>
-      </Animated.View>
+        <Animated.View entering={FadeIn.delay(150)} style={styles.topBar}>
+          <Text style={styles.wordmark}>REMAKE</Text>
+        </Animated.View>
+      </LinearGradient>
 
-      {/* Bottom shutter */}
-      <Animated.View
-        entering={FadeIn.delay(400).duration(500)}
-        style={[styles.controls, { paddingBottom: insets.bottom + 40 }]}
+      {/* Bottom gradient + controls */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.42)', 'rgba(0,0,0,0.82)']}
+        locations={[0, 0.35, 1]}
+        style={[styles.bottomGradient, { paddingBottom: insets.bottom + 28 }]}
+        pointerEvents="box-none"
       >
-        <Text style={styles.shutterLabel}>
-          {capturing ? 'Capturing...' : 'Tap to scan'}
-        </Text>
-        <Pressable
-          onPress={handleCapture}
-          disabled={capturing}
-          style={({ pressed }) => [
-            styles.shutter,
-            pressed && styles.shutterPressed,
-            capturing && styles.shutterDisabled,
-          ]}
+        <Animated.View entering={FadeIn.delay(250)} style={styles.controls}>
+          <Pressable
+            onPress={pickImage}
+            style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
+          >
+            <View style={styles.sideBtnInner}>
+              <MaterialIcons name="photo-library" size={21} color="rgba(255,255,255,0.88)" />
+            </View>
+          </Pressable>
+
+          <Pressable
+            onPress={takePhoto}
+            disabled={capturing}
+            style={({ pressed }) => [styles.shutterWrap, pressed && { transform: [{ scale: 0.94 }] }, capturing && { opacity: 0.5 }]}
+          >
+            <View style={styles.shutterRing}>
+              <View style={styles.shutterInner} />
+            </View>
+          </Pressable>
+
+          <Pressable
+            onPress={toggleFlash}
+            style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
+          >
+            <View style={[styles.sideBtnInner, flash && styles.sideBtnFlashOn]}>
+              <MaterialIcons
+                name={flash ? 'flash-on' : 'flash-off'}
+                size={21}
+                color={flash ? '#FFD700' : 'rgba(255,255,255,0.88)'}
+              />
+            </View>
+          </Pressable>
+        </Animated.View>
+      </LinearGradient>
+
+      {/* Low-light warning */}
+      {showLowLight && (
+        <Animated.View
+          entering={FadeInDown.springify().damping(18)}
+          exiting={FadeOut.duration(200)}
+          style={[styles.lowLightBanner, { top: insets.top + 80 }]}
+          pointerEvents="none"
         >
-          <View style={styles.shutterRing}>
-            <View style={styles.shutterInner} />
-          </View>
-        </Pressable>
-      </Animated.View>
+          <Text style={styles.lowLightIcon}>✦</Text>
+          <Text style={styles.lowLightText}>Move to brighter light</Text>
+        </Animated.View>
+      )}
+
+      <EdgeFlashOverlay visible={flash} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0A0A0A' },
+  container: { flex: 1, backgroundColor: '#000' },
 
-  vignette: {
+  viewfinder: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-
-  ovalWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 60,
-  },
-  ovalContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ovalGlow: {
-    position: 'absolute',
-    borderWidth: 1.5,
-    borderColor: 'rgba(200,168,130,0.3)',
-    shadowColor: '#C8A882',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-  },
-  ovalBorder: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(200,168,130,0.85)',
-  },
-
-  ringEdge: { position: 'absolute' },
-
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 28,
-    gap: 6,
-    zIndex: 10,
-  },
-  eyebrow: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2.5,
-    color: '#C8A882',
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 30,
-    color: '#FFF9F7',
-    lineHeight: 38,
+    justifyContent: 'center', alignItems: 'center',
+    zIndex: 5, paddingBottom: 40,
   },
   hint: {
+    marginTop: 18,
     fontFamily: tokens.fonts.regular,
-    fontSize: 13,
-    color: 'rgba(255,249,247,0.55)',
-    marginTop: 4,
+    fontSize: 11, letterSpacing: 0.5,
+    color: 'rgba(255,255,255,0.30)',
   },
 
+  topGradient: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    zIndex: 10, paddingHorizontal: 20, paddingBottom: 20,
+  },
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+  },
+  wordmark: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 17, fontWeight: '400',
+    color: 'rgba(255,255,255,0.82)',
+    letterSpacing: 0.12,
+  },
+
+  bottomGradient: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    zIndex: 10, paddingTop: 80, alignItems: 'center',
+  },
   controls: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    gap: 16,
-    zIndex: 10,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: 28,
   },
-  shutterLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 12,
-    color: 'rgba(255,249,247,0.5)',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+  sideBtn: { width: 52, height: 52, justifyContent: 'center', alignItems: 'center' },
+  sideBtnInner: {
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  shutter: { justifyContent: 'center', alignItems: 'center' },
-  shutterPressed: { transform: [{ scale: 0.93 }] },
-  shutterDisabled: { opacity: 0.5 },
+  sideBtnFlashOn: {
+    backgroundColor: 'rgba(255,210,0,0.14)',
+    borderColor: 'rgba(255,210,0,0.4)',
+  },
+  shutterWrap: { justifyContent: 'center', alignItems: 'center' },
   shutterRing: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
-    borderColor: '#C8A882',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 80, height: 80, borderRadius: 40,
+    borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.82)',
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5, shadowRadius: 14, elevation: 10,
   },
   shutterInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#FFF9F7',
+    width: 63, height: 63, borderRadius: 32, backgroundColor: '#fff',
   },
 
-  permissionContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    gap: 16,
+  lowLightBanner: {
+    position: 'absolute', alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(12,3,8,0.84)',
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 20, zIndex: 20,
+    borderWidth: 1, borderColor: 'rgba(232,57,154,0.35)',
+  },
+  lowLightIcon: { fontSize: 9, color: tokens.colors.pinkDeep },
+  lowLightText: {
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500',
+    color: 'rgba(255,210,235,0.92)', letterSpacing: 0.3,
+  },
+
+  permissionScreen: {
+    flex: 1, backgroundColor: tokens.colors.beige,
+    justifyContent: 'center', alignItems: 'center',
+    paddingHorizontal: 40, gap: 14,
+  },
+  permissionIconWrap: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: 'rgba(232,57,154,0.08)',
+    borderWidth: 1, borderColor: tokens.colors.border,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 6,
   },
   permissionTitle: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 26,
-    color: '#FFF9F7',
-    textAlign: 'center',
+    fontFamily: tokens.fonts.serif, fontSize: 24, color: tokens.colors.text, textAlign: 'center',
   },
-  permissionSub: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 15,
-    color: 'rgba(255,249,247,0.65)',
-    textAlign: 'center',
-    lineHeight: 23,
+  permissionText: {
+    fontFamily: tokens.fonts.regular, fontSize: 14,
+    color: tokens.colors.gray, textAlign: 'center', lineHeight: 22,
   },
   permissionBtn: {
-    marginTop: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 36,
-    borderRadius: 30,
-    backgroundColor: tokens.colors.pinkDeep,
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 14,
+    marginTop: 10, backgroundColor: tokens.colors.pinkDeep,
+    paddingHorizontal: 32, paddingVertical: 14, borderRadius: 24,
   },
   permissionBtnText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#fff',
+    fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '600', color: '#fff',
   },
 });

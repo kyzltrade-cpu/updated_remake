@@ -12,6 +12,7 @@ import { isValidEmail, isValidPassword, sanitizeEmail } from '@/lib/validation';
 import { clearGloDraft } from '@/lib/glo-profile';
 import * as Haptics from 'expo-haptics';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { tokens } from '@/components/theme';
 
 const DNA_CHIPS = [
   { glyph: '◯', label: 'Foundation Shade' },
@@ -83,14 +84,16 @@ export default function CreateAccountScreen() {
 
   return (
     <View style={styles.root}>
+      {/* Warm ivory-to-blush background */}
       <LinearGradient
-        colors={['#0A0807', '#1C1310', '#0A0807']}
+        colors={['#FFF5F2', '#FBE8E3', '#FAD8DD']}
+        locations={[0, 0.55, 1]}
         style={StyleSheet.absoluteFill}
       />
 
       {/* Back */}
       <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
-        <Text style={styles.backIcon}>‹</Text>
+        <MaterialIcons name="chevron-left" size={26} color={tokens.colors.pinkRich} />
       </Pressable>
 
       <KeyboardAvoidingView
@@ -107,13 +110,13 @@ export default function CreateAccountScreen() {
 
           {/* DNA chip grid */}
           <Animated.View entering={FadeIn.delay(180).duration(700)} style={styles.chipSection}>
-            <Text style={styles.chipSectionLabel}>10 RESULTS · LOCKED</Text>
+            <Text style={styles.chipSectionLabel}>10 results · locked</Text>
             <View style={styles.chipGrid}>
               {DNA_CHIPS.map((chip) => (
                 <View key={chip.label} style={styles.chip}>
                   <Text style={styles.chipGlyph}>{chip.glyph}</Text>
                   <Text style={styles.chipLabel}>{chip.label}</Text>
-                  <MaterialIcons name="lock" size={8} color="rgba(200,168,130,0.35)" />
+                  <MaterialIcons name="lock" size={8} color={tokens.colors.pinkMid} />
                 </View>
               ))}
             </View>
@@ -129,7 +132,7 @@ export default function CreateAccountScreen() {
               <TextInput
                 style={[styles.input, emailError ? styles.inputError : null]}
                 placeholder="you@example.com"
-                placeholderTextColor="rgba(255,249,247,0.22)"
+                placeholderTextColor="rgba(61,53,50,0.28)"
                 value={email}
                 onChangeText={t => { setEmail(t); if (emailError) setEmailError(''); }}
                 keyboardType="email-address"
@@ -146,7 +149,7 @@ export default function CreateAccountScreen() {
                 <TextInput
                   style={[styles.input, styles.inputFlex, passwordError ? styles.inputError : null]}
                   placeholder="Min. 8 chars, 1 letter, 1 number"
-                  placeholderTextColor="rgba(255,249,247,0.22)"
+                  placeholderTextColor="rgba(61,53,50,0.28)"
                   value={password}
                   onChangeText={t => { setPassword(t); if (passwordError) setPasswordError(''); }}
                   secureTextEntry={!showPassword}
@@ -157,7 +160,7 @@ export default function CreateAccountScreen() {
                   <MaterialIcons
                     name={showPassword ? 'visibility-off' : 'visibility'}
                     size={20}
-                    color="rgba(255,249,247,0.3)"
+                    color={tokens.colors.gray}
                   />
                 </Pressable>
               </View>
@@ -172,12 +175,19 @@ export default function CreateAccountScreen() {
             <Pressable
               onPress={handleCreate}
               disabled={loading}
-              style={({ pressed }) => [styles.cta, pressed && { opacity: 0.88 }, loading && { opacity: 0.5 }]}
+              style={({ pressed }) => [styles.cta, pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }, loading && { opacity: 0.55 }]}
             >
-              <Text style={styles.ctaText}>
-                {loading ? 'Creating account…' : 'Reveal My Beauty DNA'}
-              </Text>
-              {!loading && <MaterialIcons name="arrow-forward" size={16} color="#1A1715" />}
+              <LinearGradient
+                colors={[tokens.colors.pinkDeep, tokens.colors.pinkRich]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.ctaGradient}
+              >
+                <Text style={styles.ctaText}>
+                  {loading ? 'Creating account…' : 'Reveal My Beauty DNA'}
+                </Text>
+                {!loading && <MaterialIcons name="arrow-forward" size={16} color="#fff" />}
+              </LinearGradient>
             </Pressable>
             <Text style={styles.legal}>
               By continuing you agree to our Terms of Service and Privacy Policy.
@@ -194,7 +204,7 @@ export default function CreateAccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0A0807' },
+  root: { flex: 1, backgroundColor: tokens.colors.ivory },
   kav: { flex: 1 },
   inner: {
     flex: 1,
@@ -204,30 +214,30 @@ const styles = StyleSheet.create({
   // Header
   header: { marginBottom: 24 },
   eyebrow: {
-    fontFamily: 'Inter',
+    fontFamily: tokens.fonts.regular,
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 3.5,
+    letterSpacing: 3.2,
     textTransform: 'uppercase',
-    color: '#C8A882',
+    color: tokens.colors.pinkDeep,
     marginBottom: 8,
   },
   title: {
-    fontFamily: 'Playfair Display',
-    fontSize: 34,
+    fontFamily: tokens.fonts.serif,
+    fontSize: 36,
     fontWeight: '400',
-    color: '#FFF9F7',
-    lineHeight: 44,
+    color: tokens.colors.text,
+    lineHeight: 46,
   },
 
   // Chip grid
   chipSection: { marginBottom: 20 },
   chipSectionLabel: {
-    fontFamily: 'Inter',
+    fontFamily: tokens.fonts.regular,
     fontSize: 9,
     fontWeight: '700',
-    letterSpacing: 2.5,
-    color: 'rgba(200,168,130,0.45)',
+    letterSpacing: 2.2,
+    color: tokens.colors.pinkMid,
     textTransform: 'uppercase',
     marginBottom: 10,
   },
@@ -243,27 +253,27 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.72)',
     borderWidth: 1,
-    borderColor: 'rgba(200,168,130,0.14)',
+    borderColor: tokens.colors.border,
   },
   chipGlyph: {
-    fontFamily: 'Playfair Display',
+    fontFamily: tokens.fonts.serif,
     fontSize: 10,
-    color: 'rgba(200,168,130,0.6)',
+    color: tokens.colors.pinkDeep,
     lineHeight: 14,
   },
   chipLabel: {
-    fontFamily: 'Inter',
+    fontFamily: tokens.fonts.regular,
     fontSize: 10,
     fontWeight: '500',
-    color: 'rgba(255,249,247,0.48)',
+    color: tokens.colors.gray,
     letterSpacing: 0.1,
   },
 
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: tokens.colors.border,
     marginBottom: 20,
   },
 
@@ -271,28 +281,33 @@ const styles = StyleSheet.create({
   form: { gap: 12 },
   field: { gap: 6 },
   fieldLabel: {
-    fontFamily: 'Inter',
+    fontFamily: tokens.fonts.regular,
     fontSize: 10,
     fontWeight: '700',
-    color: 'rgba(255,249,247,0.38)',
+    color: tokens.colors.gray,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.85)',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 13,
-    fontFamily: 'Inter',
+    fontFamily: tokens.fonts.regular,
     fontSize: 15,
-    color: '#FFF9F7',
+    color: tokens.colors.text,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.09)',
+    borderColor: tokens.colors.border,
   },
   inputFlex: { flex: 1 },
-  inputError: { borderColor: '#C8A882' },
+  inputError: { borderColor: tokens.colors.pinkDeep },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  errorText: { fontFamily: 'Inter', fontSize: 11, color: '#C8A882', marginTop: 2 },
+  errorText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    color: tokens.colors.pinkDeep,
+    marginTop: 2,
+  },
 
   spacer: { flex: 1, minHeight: 20 },
 
@@ -300,43 +315,49 @@ const styles = StyleSheet.create({
   actions: { alignItems: 'center', gap: 10 },
   cta: {
     width: '100%',
+    borderRadius: 50,
+    overflow: 'hidden',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  ctaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#C8A882',
-    borderRadius: 50,
     paddingVertical: 16,
-    shadowColor: '#C8A882',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 6,
+    paddingHorizontal: 28,
   },
   ctaText: {
-    fontFamily: 'Inter',
+    fontFamily: tokens.fonts.regular,
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A1715',
+    color: '#fff',
     letterSpacing: 0.2,
   },
   legal: {
-    fontFamily: 'Inter',
+    fontFamily: tokens.fonts.regular,
     fontSize: 11,
-    color: 'rgba(255,249,247,0.2)',
+    color: 'rgba(61,53,50,0.38)',
     textAlign: 'center',
     lineHeight: 17,
   },
   skipBtn: { paddingVertical: 4 },
-  skipText: { fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,249,247,0.28)' },
+  skipText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    color: tokens.colors.gray,
+  },
   backBtn: {
     position: 'absolute',
-    left: 20,
+    left: 16,
     zIndex: 10,
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backIcon: { fontSize: 24, color: 'rgba(255,249,247,0.4)', lineHeight: 26 },
 });

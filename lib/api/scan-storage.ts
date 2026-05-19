@@ -41,16 +41,7 @@ export async function getLastScan(userId: string): Promise<ScanRecord | null> {
     .limit(1)
     .maybeSingle();
   if (error) console.warn('[scan-storage] getLastScan failed:', error.message);
-  if (data) return data;
-
-  // Mock fallback — gives the delta arrow something to compare against
-  return {
-    id: 'mock-last',
-    overall_score: 71,
-    verdict: 'GO',
-    coaching_compliment: '',
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  };
+  return data ?? null;
 }
 
 export async function getScanHistory(userId: string, limit = 10): Promise<ScanRecord[]> {
@@ -63,33 +54,7 @@ export async function getScanHistory(userId: string, limit = 10): Promise<ScanRe
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) console.warn('[scan-storage] getScanHistory failed:', error.message);
-
-  // Return real data if exists, otherwise return mock data
-  if (data && data.length > 0) return data;
-
-  // Mock data for demo
-  const now = new Date();
-  const mockScans: ScanRecord[] = [];
-  const compliments = [
-    'Beautiful technique. A few small refinements will take this to flawless.',
-    'Solid foundation. Focus on the highlighted areas and you\'ll see a big shift.',
-    'Impeccable. Every category is working together — this is camera-ready.',
-    'Good effort — the improvements below will make a noticeable difference today.',
-  ];
-
-  for (let i = 0; i < 5; i++) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - (i * 3));
-    mockScans.push({
-      id: `mock-scan-${i}`,
-      overall_score: 72 + Math.floor(Math.random() * 22),
-      verdict: Math.random() > 0.3 ? 'GO' : 'FIX',
-      coaching_compliment: compliments[Math.floor(Math.random() * compliments.length)],
-      created_at: date.toISOString(),
-    });
-  }
-
-  return mockScans;
+  return data ?? [];
 }
 
 export async function getScanStats(userId: string): Promise<{
@@ -117,20 +82,10 @@ export async function getScanStats(userId: string): Promise<{
     ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length)
     : 0;
 
-  // If we have real data, return it
-  if ((scansRes.count ?? 0) > 0) {
-    return {
-      totalScans: scansRes.count ?? 0,
-      avgScore,
-      currentStreak: streakRes.data?.current_streak ?? 0,
-    };
-  }
-
-  // Mock data for demo
   return {
-    totalScans: 5,
-    avgScore: 82,
-    currentStreak: 3,
+    totalScans: scansRes.count ?? 0,
+    avgScore,
+    currentStreak: streakRes.data?.current_streak ?? 0,
   };
 }
 
