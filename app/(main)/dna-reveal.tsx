@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useReducer } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   FadeIn, FadeInUp,
@@ -46,6 +47,17 @@ const PLACEHOLDER_DNA: DnaResult = {
   lipProfile: 'Warm Satin',
   blushProfile: 'Bronze Flush',
 };
+
+const MUSIC_TRACKS = [
+  require('../../assets/sounds/tc.mp3'),
+  require('../../assets/sounds/tf.mp3'),
+  require('../../assets/sounds/te.mp3'),
+  require('../../assets/sounds/t2.mp3'),
+  require('../../assets/sounds/t3.mp3'),
+  require('../../assets/sounds/t4.mp3'),
+  require('../../assets/sounds/t5.mp3'),
+];
+const MUSIC_SWITCH_MS = 15000;
 
 // ── Sparkles ──────────────────────────────────────────────────────────────────
 
@@ -127,8 +139,8 @@ const SLIDE_COLORS: SlideColors[] = [
   { gradientTop: '#E88878', gradientBot: '#B83840', blobA: '#F0ACA0', blobB: '#E08078', text: '#FFF4F0', muted: 'rgba(255,244,240,0.62)', eyebrow: 'rgba(255,244,240,0.45)', accent: '#FFCAB8' },
   // 9 — Kit: warm mocha/sienna
   { gradientTop: '#906050', gradientBot: '#402010', blobA: '#C08860', blobB: '#A06840', text: '#FFF4EE', muted: 'rgba(255,244,238,0.62)', eyebrow: 'rgba(255,244,238,0.45)', accent: '#D0A888' },
-  // 10 — Summary: midnight wine
-  { gradientTop: '#4A1830', gradientBot: '#180408', blobA: '#A840B0', blobB: '#FF60A8', text: '#FFE8F4', muted: 'rgba(255,232,244,0.62)', eyebrow: 'rgba(255,232,244,0.45)', accent: '#FFB0D8' },
+  // 10 — Summary: deep midnight gold (finale)
+  { gradientTop: '#1C0838', gradientBot: '#060108', blobA: '#D4AF37', blobB: '#C8906A', text: '#FFEEDD', muted: 'rgba(255,238,221,0.6)', eyebrow: 'rgba(255,238,221,0.4)', accent: '#D4AF37' },
 ];
 
 // ── Grain overlay (iOS renders, Android gracefully skips) ─────────────────────
@@ -255,10 +267,10 @@ function ConfettiPiece({ angle, dist, delay, color, char }: {
   return <Animated.Text style={[{ position: 'absolute', fontSize: 16, color }, sty]}>{char}</Animated.Text>;
 }
 
-function ConfettiBurst() {
+function ConfettiBurst({ count = 20 }: { count?: number }) {
   const [pieces] = useState(() =>
-    Array.from({ length: 20 }, (_, i) => ({
-      angle: (i / 20) * Math.PI * 2,
+    Array.from({ length: count }, (_, i) => ({
+      angle: (i / count) * Math.PI * 2,
       dist: 80 + Math.random() * 80,
       delay: Math.floor(Math.random() * 200),
       color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
@@ -347,50 +359,90 @@ function ProgressSeg({ i, current, progress }: { i: number; current: number; pro
   );
 }
 
+// ── Sequential reveal helpers — Spotify Wrapped build-up ─────────────────────
+
+// lift=true → text starts from screen center and springs up to its layout position
+function RevealItem({ delay, fast = false, children }: { delay: number; fast?: boolean; children: React.ReactNode }) {
+  const op = useSharedValue(0);
+  const ty = useSharedValue(fast ? 0 : 24);
+  const sc = useSharedValue(fast ? 1 : 0.7);
+  useEffect(() => {
+    if (fast) {
+      op.value = withDelay(delay, withTiming(1, { duration: 110 }));
+    } else {
+      op.value = withDelay(delay, withTiming(1, { duration: 180 }));
+      ty.value = withDelay(delay, withSpring(0, { damping: 200, stiffness: 280 }));
+      sc.value = withDelay(delay, withSpring(1, { damping: 200, stiffness: 280 }));
+    }
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ translateY: ty.value }, { scale: sc.value }] }));
+  return <Animated.View style={sty}>{children}</Animated.View>;
+}
+
+function RevealPop({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const op = useSharedValue(0);
+  const sc = useSharedValue(0.55);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 300 }));
+    sc.value = withDelay(delay, withSpring(1, { damping: 9, stiffness: 100 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ scale: sc.value }] }));
+  return <Animated.View style={sty}>{children}</Animated.View>;
+}
+
 // ── Slide: Canvas ─────────────────────────────────────────────────────────────
 
 function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const sc = useSharedValue(0.55);
   const glAl = useSharedValue(0.1);
   const shades = isLocked ? null : findShades(dna.skinToneHex);
   useEffect(() => {
-    sc.value = withSpring(1, { damping: 10, stiffness: 88 });
     glAl.value = withRepeat(
       withSequence(withTiming(0.18, { duration: 1200 }), withTiming(0.06, { duration: 1200 })),
       -1, true,
     );
   }, []);
-  const swSty = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
   const glSty = useAnimatedStyle(() => ({ opacity: glAl.value }));
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <Animated.View style={[ds.canvasGlow, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }, glSty]} />
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR CANVAS</Text>
-        <Animated.View style={[ds.canvasSwatch, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }, swSty]}>
-          {isLocked && <BlurView intensity={28} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 110 }]} />}
-        </Animated.View>
-        {isLocked ? <LockedValue size="lg" color={colors.muted} /> : <Text style={[ds.hexCode, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text>}
-        <Text style={[ds.title, { color: colors.text }]}>Foundation Shade</Text>
-        {shades && (
-          <View style={[ds.shadesCard, { borderColor: `${colors.text}22`, backgroundColor: 'rgba(0,0,0,0.08)' }]}>
-            <View style={ds.shadesRow}>
-              <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Fenty</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.Fenty}</Text>
-              <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
-              <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>MAC</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.MAC}</Text>
-              <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
-              <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Maybelline</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.Maybelline}</Text>
-            </View>
-            <View style={ds.shadesRow}>
-              <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>L'Oréal</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades["L'Oréal"]}</Text>
-              <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
-              <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>NARS</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.NARS}</Text>
-            </View>
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR CANVAS</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'There are thousands of foundation shades\nout there.'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'Yours is the only one\nthat matters.'}</Text>
+        </RevealItem>
+        <RevealItem delay={2300}>
+          <View style={[ds.canvasSwatch, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }]}>
+            {isLocked && <BlurView intensity={28} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 110 }]} />}
           </View>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={3200}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <RevealPop delay={3200}><Text style={[ds.hexCode, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text></RevealPop>}
+        {shades && (
+          <RevealItem delay={3700}>
+            <View style={[ds.shadesCard, { borderColor: `${colors.text}22`, backgroundColor: 'rgba(0,0,0,0.08)' }]}>
+              <View style={ds.shadesRow}>
+                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Fenty</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.Fenty}</Text>
+                <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
+                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>MAC</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.MAC}</Text>
+                <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
+                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Maybelline</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.Maybelline}</Text>
+              </View>
+              <View style={ds.shadesRow}>
+                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>L'Oréal</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades["L'Oréal"]}</Text>
+                <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
+                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>NARS</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.NARS}</Text>
+              </View>
+            </View>
+          </RevealItem>
         )}
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>Your perfect foundation match — the shade that makes your skin glow instead of fight.</Text>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -406,34 +458,47 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const userSeason = dna.colorSeason.split(' ').pop()!;
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>COLOUR SEASON</Text>
-        <Text style={[ds.title, { color: colors.text }]}>Your Season</Text>
-        <View style={ds.seasonGrid}>
-          {allSeasons.map((s, i) => {
-            const active = !isLocked && s === userSeason;
-            return (
-              <Animated.View key={s} entering={FadeInUp.delay(200 + i * 70).duration(400)} style={[ds.seasonCard, { borderColor: `${colors.text}18`, backgroundColor: 'rgba(0,0,0,0.12)' }, active && { borderColor: colors.text, backgroundColor: 'rgba(255,255,255,0.18)' }]}>
-                <View style={[ds.seasonSwatch, { backgroundColor: isLocked ? SWATCH_SEASON[s] + '55' : SWATCH_SEASON[s] }, active && ds.seasonSwatchActive]} />
-                <Text style={[ds.seasonLabel, { color: colors.muted }, active && { color: colors.text, fontWeight: '700' }]}>{s}</Text>
-              </Animated.View>
-            );
-          })}
-        </View>
-        {isLocked ? <LockedValue size="md" color={colors.muted} /> : (
-          <>
-            <View style={ds.paletteRow}>
-              {SEASON_PALETTES[dna.colorSeason].map((hex, i) => (
-                <Animated.View key={i} entering={FadeIn.delay(450 + i * 60).duration(300)} style={[ds.paletteDot, { backgroundColor: hex, shadowColor: hex }]} />
-              ))}
-            </View>
-            <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-              You are a <Text style={[ds.accent, { color: colors.text }]}>{dna.colorSeason}</Text>.
-              {'\n'}{SEASON_DESCRIPTIONS[dna.colorSeason]}
-            </Text>
-          </>
-        )}
-      </Animated.View>
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>COLOUR SEASON</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Most people spend years wearing\ncolours that fight their face.'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{"You won't anymore."}</Text>
+        </RevealItem>
+        <RevealItem delay={2200}>
+          <View style={ds.seasonGrid}>
+            {allSeasons.map((s) => {
+              const active = !isLocked && s === userSeason;
+              return (
+                <View key={s} style={[ds.seasonCard, { borderColor: `${colors.text}18`, backgroundColor: 'rgba(0,0,0,0.12)' }, active && { borderColor: colors.text, backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+                  <View style={[ds.seasonSwatch, { backgroundColor: isLocked ? SWATCH_SEASON[s] + '55' : SWATCH_SEASON[s] }, active && ds.seasonSwatchActive]} />
+                  <Text style={[ds.seasonLabel, { color: colors.muted }, active && { color: colors.text, fontWeight: '700' }]}>{s}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={2800}><LockedValue size="md" color={colors.muted} /></RevealItem>
+          : <>
+              <RevealItem delay={2800}>
+                <View style={ds.paletteRow}>
+                  {SEASON_PALETTES[dna.colorSeason].map((hex, i) => (
+                    <View key={i} style={[ds.paletteDot, { backgroundColor: hex, shadowColor: hex }]} />
+                  ))}
+                </View>
+              </RevealItem>
+              <RevealItem delay={3000} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your colour season is</Text>
+              </RevealItem>
+              <RevealPop delay={3200}>
+                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.colorSeason}</Text>
+              </RevealPop>
+            </>}
+      </View>
     </View>
   );
 }
@@ -445,31 +510,34 @@ const GLYPHS: Record<string, string> = {
 };
 
 function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const sc = useSharedValue(0.35);
-  const rot = useSharedValue(-12);
-  useEffect(() => {
-    sc.value = withDelay(150, withSpring(1, { damping: 9, stiffness: 80 }));
-    rot.value = withDelay(150, withSpring(0, { damping: 9, stiffness: 80 }));
-  }, []);
-  const glyphSty = useAnimatedStyle(() => ({
-    transform: [{ scale: sc.value }, { rotate: `${rot.value}deg` }],
-  }));
-
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>FACE SHAPE</Text>
-        <Animated.Text style={[ds.shapeGlyph, { color: `${colors.text}99` }, glyphSty]}>
-          {isLocked ? '⬭' : (GLYPHS[dna.faceShape] ?? '⬭')}
-        </Animated.Text>
-        <Text style={[ds.title, { color: colors.text }]}>Your Face Shape</Text>
-        {isLocked ? <LockedValue size="lg" color={colors.muted} /> : <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.faceShape}</Text>}
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-          {isLocked
-            ? 'Your face shape sets every rule — brow placement, highlight zones, contour map. Unlock to see yours.'
-            : `Your ${dna.faceShape.toLowerCase()} face has its own blueprint. Your coaching is built around it.`}
-        </Text>
-      </Animated.View>
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>FACE SHAPE</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Brow arch, highlight zones,\ncontour map —'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'all of it is built\naround this.'}</Text>
+        </RevealItem>
+        <RevealItem delay={2200}>
+          <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>
+            {isLocked ? '⬭' : (GLYPHS[dna.faceShape] ?? '⬭')}
+          </Text>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <>
+              <RevealItem delay={2900} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your face shape is</Text>
+              </RevealItem>
+              <RevealPop delay={3100}>
+                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.faceShape}</Text>
+              </RevealPop>
+            </>}
+      </View>
     </View>
   );
 }
@@ -477,10 +545,8 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 // ── Slide: Brows ──────────────────────────────────────────────────────────────
 
 function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const ringSc = useSharedValue(0);
   const [displayPct, setDisplayPct] = useState(0);
   useEffect(() => {
-    ringSc.value = withSpring(1, { damping: 10, stiffness: 75 });
     if (isLocked) return;
     const target = dna.browSymmetryPct;
     let frame = 0;
@@ -488,33 +554,45 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
       frame++;
       setDisplayPct(Math.round((frame / 30) * target));
       if (frame >= 30) clearInterval(id);
-    }, 33);
+    }, 50);
     return () => clearInterval(id);
-  }, []);
-  const ringSty = useAnimatedStyle(() => ({ transform: [{ scale: ringSc.value }] }));
+  }, [isLocked]);
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BROW BLUEPRINT</Text>
-        <Animated.View style={[ds.browRing, { borderColor: `${colors.text}30`, shadowColor: colors.text }, ringSty]}>
-          <View style={[ds.browRingInner, { borderColor: colors.text, shadowColor: colors.text }]}>
-            {isLocked
-              ? <MaterialIcons name="lock" size={32} color={colors.muted} />
-              : <>
-                  <Text style={[ds.browPct, { color: colors.text }]}>{displayPct}%</Text>
-                  <Text style={[ds.browLabel, { color: colors.muted }]}>symmetry</Text>
-                </>}
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BROW BLUEPRINT</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Nothing rewrites your face\nfaster than your brows.'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{"Here's your blueprint."}</Text>
+        </RevealItem>
+        <RevealItem delay={2200}>
+          <View style={[ds.browRing, { borderColor: `${colors.text}30`, shadowColor: colors.text }]}>
+            <View style={[ds.browRingInner, { borderColor: colors.text, shadowColor: colors.text }]}>
+              {isLocked
+                ? <MaterialIcons name="lock" size={32} color={colors.muted} />
+                : <>
+                    <Text style={[ds.browPct, { color: colors.text }]}>{displayPct}%</Text>
+                    <Text style={[ds.browLabel, { color: colors.muted }]}>symmetry</Text>
+                  </>}
+            </View>
           </View>
-        </Animated.View>
-        <Text style={[ds.title, { color: colors.text }]}>Your Brows</Text>
-        {isLocked ? <LockedValue size="lg" color={colors.muted} /> : <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.browShape}</Text>}
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-          {isLocked
-            ? 'Brow adjustments create the single biggest visible shift in your face. Unlock your blueprint.'
-            : `${dna.browShape} shape — small changes here, massive visible shift.`}
-        </Text>
-      </Animated.View>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <>
+              <RevealItem delay={2900} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your brow shape is</Text>
+              </RevealItem>
+              <RevealPop delay={3100}>
+                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.browShape}</Text>
+              </RevealPop>
+            </>}
+      </View>
     </View>
   );
 }
@@ -522,29 +600,32 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
 // ── Slide: Lashes ─────────────────────────────────────────────────────────────
 
 function SlideLashes({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const sc = useSharedValue(0.5);
-  const rot = useSharedValue(20);
-  useEffect(() => {
-    sc.value = withDelay(120, withSpring(1, { damping: 8, stiffness: 82 }));
-    rot.value = withDelay(120, withSpring(0, { damping: 8, stiffness: 82 }));
-  }, []);
-  const glyphSty = useAnimatedStyle(() => ({
-    transform: [{ scale: sc.value }, { rotate: `${rot.value}deg` }],
-  }));
-
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LASH PROFILE</Text>
-        <Animated.Text style={[ds.lashGlyph, { color: `${colors.text}99` }, glyphSty]}>✦</Animated.Text>
-        <Text style={[ds.title, { color: colors.text }]}>Your Lashes</Text>
-        {isLocked ? <LockedValue size="lg" color={colors.muted} /> : <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lashProfile}</Text>}
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-          {isLocked
-            ? 'The right mascara technique transforms your natural profile into your signature feature. Unlock to find yours.'
-            : `${dna.lashProfile} — the formula and technique that matches your profile exactly.`}
-        </Text>
-      </Animated.View>
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LASH PROFILE</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'The right formula and technique\nturns your natural lashes'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'into your signature.'}</Text>
+        </RevealItem>
+        <RevealItem delay={2200}>
+          <Text style={[ds.lashGlyph, { color: `${colors.text}99` }]}>✦</Text>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <>
+              <RevealItem delay={2900} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lash profile is</Text>
+              </RevealItem>
+              <RevealPop delay={3100}>
+                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lashProfile}</Text>
+              </RevealPop>
+            </>}
+      </View>
     </View>
   );
 }
@@ -557,38 +638,47 @@ function SlideEnergy({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const pos = isLocked ? 0.5 : (POS_MAP[dna.energy] ?? 0.5);
   const dotX = useSharedValue((0.5 - pos) * TRACK_W);
   useEffect(() => {
-    dotX.value = withDelay(300, withSpring(0, { damping: 12, stiffness: 80 }));
+    dotX.value = withDelay(2500, withSpring(0, { damping: 12, stiffness: 80 }));
   }, []);
   const dotSty = useAnimatedStyle(() => ({ transform: [{ translateX: dotX.value }] }));
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>ENERGY TYPE</Text>
-        <Text style={[ds.title, { color: colors.text }]}>Your Energy</Text>
-        <View style={ds.spectrumWrap}>
-          <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Sharp</Text>
-          <View style={[ds.spectrumTrack, { backgroundColor: `${colors.text}22` }]}>
-            <LinearGradient
-              colors={[`${colors.text}15`, `${colors.text}55`, `${colors.text}15`]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <Animated.View style={[ds.spectrumDot, { left: `${pos * 100}%` as `${number}%`, backgroundColor: colors.text, shadowColor: colors.text, borderColor: colors.gradientBot }, dotSty]} />
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>ENERGY TYPE</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Every face leans one of two ways —\nsharp and graphic,'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'or soft and blended.'}</Text>
+        </RevealItem>
+        <RevealItem delay={2200}>
+          <View style={ds.spectrumWrap}>
+            <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Sharp</Text>
+            <View style={[ds.spectrumTrack, { backgroundColor: `${colors.text}22` }]}>
+              <LinearGradient
+                colors={[`${colors.text}15`, `${colors.text}55`, `${colors.text}15`]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Animated.View style={[ds.spectrumDot, { left: `${pos * 100}%` as `${number}%`, backgroundColor: colors.text, shadowColor: colors.text, borderColor: colors.gradientBot }, dotSty]} />
+            </View>
+            <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Soft</Text>
           </View>
-          <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Soft</Text>
-        </View>
-        {isLocked ? <LockedValue size="lg" color={colors.muted} /> : <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.energy}</Text>}
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-          {isLocked
-            ? 'Are you drawn to clean lines or blended warmth? Unlock to find where you fall.'
-            : dna.energy === 'Sharp'
-              ? 'Precision and graphic definition. Clean lines define your signature.'
-              : dna.energy === 'Soft'
-                ? 'Blended warmth. Depth through texture, not graphic edges.'
-                : 'You move between precision and softness — your signature adapts.'}
-        </Text>
-      </Animated.View>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <>
+              <RevealItem delay={2900} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your energy type is</Text>
+              </RevealItem>
+              <RevealPop delay={3100}>
+                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.energy}</Text>
+              </RevealPop>
+            </>}
+      </View>
     </View>
   );
 }
@@ -596,48 +686,55 @@ function SlideEnergy({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
 // ── Slide: Archetype ──────────────────────────────────────────────────────────
 
 function SlideArchetype({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const nameSc = useSharedValue(0.3);
   const glowAl = useSharedValue(0);
   const glowSc = useSharedValue(0.7);
   const [showConfetti, setShowConfetti] = useState(false);
   useEffect(() => {
-    nameSc.value = withDelay(100, withSpring(1, { damping: 5, stiffness: 75 }, (finished) => {
-      if (finished) {
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Heavy);
-        runOnJS(setShowConfetti)(true);
-      }
-    }));
-    glowAl.value = withDelay(350, withRepeat(
+    glowAl.value = withDelay(2400, withRepeat(
       withSequence(withTiming(0.22, { duration: 1000 }), withTiming(0.07, { duration: 1000 })),
       -1, true,
     ));
-    glowSc.value = withDelay(350, withRepeat(
+    glowSc.value = withDelay(2400, withRepeat(
       withSequence(withTiming(1.08, { duration: 1400 }), withTiming(0.92, { duration: 1400 })),
       -1, true,
     ));
   }, []);
-  const nameSty = useAnimatedStyle(() => ({ transform: [{ scale: nameSc.value }] }));
   const glowSty = useAnimatedStyle(() => ({ opacity: glowAl.value, transform: [{ scale: glowSc.value }] }));
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <Animated.View style={[ds.archetypeGlow, { backgroundColor: colors.accent, shadowColor: colors.accent }, glowSty]} />
       {showConfetti && <ConfettiBurst />}
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BEAUTY ARCHETYPE</Text>
-        <Text style={[ds.youAre, { color: colors.muted }]}>You are</Text>
-        <Animated.View style={[ds.archetypeNameWrap, nameSty]}>
-          <Text style={[ds.archetypeHero, { color: colors.accent }]}>{dna.archetype}</Text>
-          {isLocked && (
-            <BlurView intensity={30} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 12 }]} />
-          )}
-        </Animated.View>
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-          {isLocked
-            ? 'Your archetype ties face shape, season, and energy into one identity. It changes how you shop, apply, and express. Unlock yours.'
-            : ARCHETYPE_DESCRIPTIONS[dna.archetype]}
-        </Text>
-      </Animated.View>
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BEAUTY ARCHETYPE</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Your season. Your shape.\nYour energy.'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'They all point to one identity.'}</Text>
+        </RevealItem>
+        <RevealItem delay={2200} fast>
+          <Text style={[ds.youAre, { color: colors.muted }]}>You are</Text>
+        </RevealItem>
+        <RevealPop delay={2400}>
+          <View style={ds.archetypeNameWrap}>
+            {isLocked
+              ? <Text style={[ds.archetypeHero, { color: `${colors.accent}40`, letterSpacing: 8 }]}>{'●●●●●●●'}</Text>
+              : <Text style={[ds.archetypeHero, { color: colors.accent }]}
+                  onLayout={() => { runOnJS(setShowConfetti)(true); runOnJS(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy))(); }}
+                >{dna.archetype}</Text>}
+          </View>
+        </RevealPop>
+        <RevealItem delay={3000}>
+          <Text style={[ds.bodyTxt, { color: colors.muted }]}>
+            {isLocked
+              ? 'Your archetype ties face shape, season, and energy into one identity. It changes how you shop, apply, and express. Unlock yours.'
+              : ARCHETYPE_DESCRIPTIONS[dna.archetype]}
+          </Text>
+        </RevealItem>
+      </View>
     </View>
   );
 }
@@ -651,26 +748,36 @@ const LIP_COLORS: Record<string, string> = {
 };
 
 function SlideLips({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const sc = useSharedValue(0.55);
-  useEffect(() => { sc.value = withSpring(1, { damping: 10, stiffness: 88 }); }, []);
-  const swSty = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
   const lipHex = dna.lipProfile ? (LIP_COLORS[dna.lipProfile] ?? '#E8A885') : '#E8A885';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LIP TONE</Text>
-        <Animated.View style={[ds.lipSwatch, { backgroundColor: lipHex, shadowColor: lipHex }, swSty]}>
-          {isLocked && <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />}
-        </Animated.View>
-        <Text style={[ds.title, { color: colors.text }]}>Your Lip Tone</Text>
-        {isLocked ? <LockedValue size="lg" color={colors.muted} /> : <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lipProfile || '—'}</Text>}
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-          {isLocked
-            ? 'The lip shade that makes your face glow and completes your archetype. Unlock to discover yours.'
-            : `${dna.lipProfile} — the exact formula that harmonizes with your season and energy.`}
-        </Text>
-      </Animated.View>
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LIP TONE</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'There are hundreds of lip shades.\nMost will wash you out.'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{"Yours won't."}</Text>
+        </RevealItem>
+        <RevealItem delay={2200}>
+          <View style={[ds.lipSwatch, { backgroundColor: lipHex, shadowColor: lipHex }]}>
+            {isLocked && <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />}
+          </View>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <>
+              <RevealItem delay={2900} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lip tone is</Text>
+              </RevealItem>
+              <RevealPop delay={3100}>
+                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lipProfile || '—'}</Text>
+              </RevealPop>
+            </>}
+      </View>
     </View>
   );
 }
@@ -684,43 +791,54 @@ const BLUSH_COLORS: Record<string, string> = {
 };
 
 function SlideBlush({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const sc = useSharedValue(0.55);
-  useEffect(() => { sc.value = withSpring(1, { damping: 10, stiffness: 88 }); }, []);
-  const swSty = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
   const blushHex = dna.blushProfile ? (BLUSH_COLORS[dna.blushProfile] ?? '#F0A882') : '#F0A882';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={ds.bodyWrap}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BLUSH</Text>
-        <Animated.View style={[ds.blushSwatch, { backgroundColor: blushHex, shadowColor: blushHex }, swSty]}>
-          {isLocked && <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />}
-        </Animated.View>
-        <Text style={[ds.title, { color: colors.text }]}>Your Blush</Text>
-        {isLocked ? <LockedValue size="lg" color={colors.muted} /> : <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.blushProfile || '—'}</Text>}
-        <Text style={[ds.bodyTxt, { color: colors.muted }]}>
-          {isLocked
-            ? 'The blush that brings dimension and life to your face. Unlock your perfect flush.'
-            : `${dna.blushProfile} — placement and intensity tuned to your face shape and energy.`}
-        </Text>
-      </Animated.View>
+      <View style={ds.bodyWrap}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BLUSH</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Blush in the wrong tone\nfights your face.'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'In the right tone, it lifts everything.'}</Text>
+        </RevealItem>
+        <RevealItem delay={2200}>
+          <View style={[ds.blushSwatch, { backgroundColor: blushHex, shadowColor: blushHex }]}>
+            {isLocked && <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />}
+          </View>
+        </RevealItem>
+        {isLocked
+          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <>
+              <RevealItem delay={2900} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your blush is</Text>
+              </RevealItem>
+              <RevealPop delay={3100}>
+                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.blushProfile || '—'}</Text>
+              </RevealPop>
+            </>}
+      </View>
     </View>
   );
 }
 
 // ── Slide: Kit ────────────────────────────────────────────────────────────────
 
-function KitCard({ rec, index, colors }: { rec: ProductRec; index: number; colors: SlideColors }) {
-  const priceDots = rec.price === '$' ? '●' : rec.price === '$$' ? '●●' : '●●●';
+function KitItem({ rec, index, colors }: { rec: ProductRec; index: number; colors: SlideColors }) {
   return (
-    <Animated.View entering={FadeInUp.delay(200 + index * 100).duration(350)} style={[ds.kitCard, { borderColor: `${colors.text}18`, backgroundColor: 'rgba(0,0,0,0.15)' }]}>
-      <View style={ds.kitCardTop}>
-        <View style={[ds.kitCatBadge, { backgroundColor: `${colors.text}20` }]}><Text style={[ds.kitCatText, { color: colors.eyebrow }]}>{rec.category.toUpperCase()}</Text></View>
-        <Text style={[ds.kitPrice, { color: colors.muted }]}>{priceDots}</Text>
+    <RevealItem delay={2000 + index * 350}>
+      <View style={[ds.kitCard, { borderColor: `${colors.text}18`, backgroundColor: 'rgba(0,0,0,0.15)' }]}>
+        <View style={ds.kitCardTop}>
+          <View style={[ds.kitCatBadge, { backgroundColor: `${colors.text}20` }]}><Text style={[ds.kitCatText, { color: colors.eyebrow }]}>{rec.category.toUpperCase()}</Text></View>
+          <Text style={[ds.kitPrice, { color: colors.muted }]}>{rec.price === '$' ? '●' : rec.price === '$$' ? '●●' : '●●●'}</Text>
+        </View>
+        <Text style={[ds.kitProduct, { color: colors.text }]}><Text style={[ds.kitBrand, { color: colors.accent }]}>{rec.brand} </Text>{rec.product}</Text>
+        <Text style={[ds.kitWhy, { color: colors.muted }]} numberOfLines={2}>{rec.why}</Text>
       </View>
-      <Text style={[ds.kitProduct, { color: colors.text }]}><Text style={[ds.kitBrand, { color: colors.accent }]}>{rec.brand} </Text>{rec.product}</Text>
-      <Text style={[ds.kitWhy, { color: colors.muted }]} numberOfLines={2}>{rec.why}</Text>
-    </Animated.View>
+    </RevealItem>
   );
 }
 
@@ -728,68 +846,165 @@ function SlideKit({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolea
   const recs = getRecsForDna(dna.archetype);
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={[ds.bodyWrap, ds.kitBodyWrap]}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR KIT</Text>
-        <Text style={[ds.title, { color: colors.text }]}>What to Reach For</Text>
+      <View style={[ds.bodyWrap, ds.kitBodyWrap]}>
+        <RevealItem delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR EDIT</Text>
+        </RevealItem>
+        <RevealItem delay={700}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Not a generic haul.'}</Text>
+        </RevealItem>
+        <RevealItem delay={1500}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'Matched to your DNA.'}</Text>
+        </RevealItem>
         {isLocked ? (
           <>
-            {['BASE', 'BLUSH', 'LIP', 'MASCARA'].map((cat, i) => (
-              <View key={cat} style={[ds.kitCard, { borderColor: `${colors.text}18`, backgroundColor: 'rgba(0,0,0,0.15)' }]}>
-                <View style={ds.kitCardTop}>
-                  <View style={[ds.kitCatBadge, { backgroundColor: `${colors.text}20` }]}><Text style={[ds.kitCatText, { color: colors.eyebrow }]}>{cat}</Text></View>
-                  <Text style={[ds.kitPrice, { color: colors.muted }]}>{'●'.repeat(3 - (i % 2))}</Text>
+            {[0, 1, 2, 3].map((i) => (
+              <RevealItem key={i} delay={2000 + i * 300}>
+                <View style={ds.kitCard}>
+                  <Text style={[ds.kitCatText, { color: `${colors.accent}40` }]}>{String(i + 1).padStart(2, '0')}</Text>
+                  <View style={[ds.kitRedactBar, { width: '40%', backgroundColor: `${colors.text}18`, marginBottom: 6 }]} />
+                  <View style={[ds.kitRedactBar, { width: '75%', backgroundColor: `${colors.text}14` }]} />
                 </View>
-                <LockedValue size="md" color={colors.muted} />
-                <BlurView intensity={40} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 14 }]} />
-              </View>
+              </RevealItem>
             ))}
-            <Text style={[ds.bodyTxt, { color: colors.muted }]}>Your archetype-matched kit is waiting. Unlock to see the exact products curated for your DNA.</Text>
+            <RevealItem delay={3200}>
+              <Text style={[ds.bodyTxt, { color: colors.muted }]}>Your archetype-matched edit is ready. Unlock to see the exact products curated for your DNA.</Text>
+            </RevealItem>
           </>
-        ) : recs.map((rec, i) => <KitCard key={rec.product} rec={rec} index={i} colors={colors} />)}
-      </Animated.View>
+        ) : recs.map((rec, i) => <KitItem key={rec.product} rec={rec} index={i} colors={colors} />)}
+      </View>
     </View>
   );
 }
 
 // ── Slide: Summary ────────────────────────────────────────────────────────────
 
+// ── Finale palette bar (stagger up from bottom) ───────────────────────────────
+
+function FinaleBar({ index, hex, isLocked, fallback }: {
+  index: number; hex: string | null; isLocked: boolean; fallback: string;
+}) {
+  const ty = useSharedValue(100);
+  const op = useSharedValue(0);
+  useEffect(() => {
+    ty.value = withDelay(index * 65, withSpring(0, { damping: 14, stiffness: 110 }));
+    op.value = withDelay(index * 65, withTiming(1, { duration: 100 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ transform: [{ translateY: ty.value }], opacity: op.value }));
+  const bg = isLocked || !hex ? `${fallback}1A` : hex;
+  const sc = isLocked || !hex ? 'transparent' : hex;
+  return (
+    <Animated.View style={[ds.fnBar, { backgroundColor: bg, shadowColor: sc }, sty]} />
+  );
+}
+
 function SlideSummary({ dna, isLocked, onShare, colors }: { dna: DnaResult; isLocked?: boolean; onShare: () => void; colors: SlideColors }) {
-  const rows = [
-    { label: 'Foundation Tone', value: dna.skinToneHex.toUpperCase() },
-    { label: 'Colour Season', value: dna.colorSeason },
-    { label: 'Face Shape', value: dna.faceShape },
-    { label: 'Brow Shape', value: dna.browShape },
-    { label: 'Lash Profile', value: dna.lashProfile },
-    { label: 'Lip Tone', value: dna.lipProfile || '—' },
-    { label: 'Blush', value: dna.blushProfile || '—' },
-    { label: 'Archetype', value: dna.archetype },
+  const palette = SEASON_PALETTES[dna.colorSeason] ?? [];
+  const [showConfetti, setShowConfetti] = useState(false);
+  const ctaScale = useSharedValue(1);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowConfetti(true);
+    }, 1500);
+    ctaScale.value = withDelay(4900, withRepeat(
+      withSequence(withTiming(1.025, { duration: 750 }), withTiming(1, { duration: 750 })),
+      -1, true,
+    ));
+    return () => clearTimeout(t);
+  }, []);
+
+  const ctaSty = useAnimatedStyle(() => ({ transform: [{ scale: ctaScale.value }] }));
+
+  const STATS: { label: string; value: string }[] = [
+    { label: 'FACE SHAPE', value: dna.faceShape },
+    { label: 'ENERGY',     value: dna.energy },
+    { label: 'LIP TONE',   value: dna.lipProfile || '—' },
+    { label: 'BLUSH',      value: dna.blushProfile || '—' },
   ];
+
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <Animated.View entering={FadeInUp.delay(80).duration(400)} style={[ds.bodyWrap, ds.summaryBodyWrap]}>
-        <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>ALL RESULTS</Text>
-        <Text style={[ds.title, { color: colors.text }]}>Beauty Wrapped</Text>
-        <Animated.View entering={FadeInUp.delay(250).duration(350)} style={[ds.summaryCard, { borderColor: `${colors.text}15`, backgroundColor: 'rgba(0,0,0,0.18)' }]}>
-          {rows.map((row, i) => (
-            <View key={row.label} style={[ds.summaryRow, { borderBottomColor: `${colors.text}12` }, i === rows.length - 1 && { borderBottomWidth: 0 }]}>
-              <Text style={[ds.summaryLabel, { color: colors.muted }]}>{row.label}</Text>
+      {showConfetti && <ConfettiBurst count={40} />}
+
+      <View style={ds.fnWrap}>
+
+        {/* Symmetric header */}
+        <Animated.View entering={FadeInUp.delay(0).duration(380)} style={ds.fnHeaderRow}>
+          <View style={[ds.fnHairline, { backgroundColor: `${colors.text}35` }]} />
+          <Text style={[ds.fnEyebrow, { color: colors.eyebrow }]}>✦  BEAUTY DNA  ✦</Text>
+          <View style={[ds.fnHairline, { backgroundColor: `${colors.text}35` }]} />
+        </Animated.View>
+
+        {/* Season colour bars — stagger up */}
+        <View style={ds.fnBarsRow}>
+          {(palette.length > 0 ? palette.slice(0, 6) : Array(6).fill(null)).map((hex, i) => (
+            <FinaleBar key={i} index={i} hex={hex as string | null} isLocked={!!isLocked} fallback={colors.text} />
+          ))}
+        </View>
+
+        {/* Season name */}
+        <Animated.View entering={FadeInUp.delay(700).duration(350)}>
+          <Text style={[ds.fnSeasonLabel, { color: colors.muted }]}>
+            {isLocked ? '— · · · —' : `— ${dna.colorSeason} —`}
+          </Text>
+        </Animated.View>
+
+        {/* Archetype — centrepiece */}
+        <View style={ds.fnArchWrap}>
+          <Animated.View entering={FadeInUp.delay(1100).duration(200)}>
+            <Text style={[ds.fnYouAre, { color: colors.muted }]}>YOU ARE</Text>
+          </Animated.View>
+          <Animated.View entering={FadeInUp.delay(1500).duration(300)} style={{ overflow: 'hidden' }}>
+            {isLocked
+              ? <Text style={[ds.fnArchName, { color: `${colors.accent}40`, letterSpacing: 6 }]}>{'● ● ● ●'}</Text>
+              : <Text style={[ds.fnArchName, { color: colors.accent }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{dna.archetype}</Text>}
+          </Animated.View>
+          <Animated.View entering={FadeInUp.delay(2300).duration(350)}>
+            <Text style={[ds.fnArchDesc, { color: colors.muted }]}>
               {isLocked
-                ? <View style={ds.summaryLockedRow}>
-                    <MaterialIcons name="lock" size={9} color={colors.muted} />
-                    <Text style={[ds.summaryLockedDots, { color: colors.muted }]}>●●●●</Text>
-                  </View>
-                : <Text style={[ds.summaryValue, { color: colors.text }]}>{row.value}</Text>}
+                ? 'Unlock to reveal your beauty identity.'
+                : (ARCHETYPE_DESCRIPTIONS[dna.archetype] ?? '')}
+            </Text>
+          </Animated.View>
+        </View>
+
+        {/* Stats card — frosted glass */}
+        <Animated.View entering={FadeInUp.delay(3100).duration(400)} style={[ds.fnCard, { borderColor: `${colors.text}15`, backgroundColor: 'rgba(0,0,0,0.22)' }]}>
+          <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFillObject} />
+          {STATS.map(({ label, value }, i) => (
+            <View key={label} style={[ds.fnStatRow, i < STATS.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: `${colors.text}12` }]}>
+              <Text style={[ds.fnStatLabel, { color: colors.eyebrow }]}>{label}</Text>
+              {isLocked
+                ? <Text style={[ds.fnStatBlocked, { color: `${colors.text}30` }]}>● ● ●</Text>
+                : <Text style={[ds.fnStatValue, { color: colors.text }]}>{value}</Text>}
             </View>
           ))}
+          {!isLocked && (
+            <View style={[ds.fnStatRow, ds.fnFoundRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: `${colors.text}15` }]}>
+              <View style={[ds.fnFoundDot, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }]} />
+              <Text style={[ds.fnStatLabel, { color: colors.eyebrow }]}>FOUNDATION</Text>
+              <Text style={[ds.fnStatValue, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text>
+            </View>
+          )}
         </Animated.View>
-        {!isLocked && (
-          <Animated.View entering={FadeInUp.delay(650).duration(300)} style={{ width: '100%' }}>
-            <Pressable style={[ds.shareBtn, { backgroundColor: colors.text }]} onPress={onShare}>
-              <Text style={[ds.shareBtnText, { color: colors.gradientBot }]}>Share your Beauty Card ↗</Text>
+
+        {/* Share CTA */}
+        <Animated.View entering={FadeInUp.delay(4500).duration(350)} style={{ width: '100%' }}>
+          <Animated.View style={ctaSty}>
+            <Pressable
+              style={({ pressed }) => [ds.fnCta, { backgroundColor: colors.accent }, pressed && { opacity: 0.85 }]}
+              onPress={onShare}
+            >
+              <Text style={[ds.fnCtaTxt, { color: colors.gradientBot }]}>
+                {isLocked ? 'Unlock Everything  ↗' : '✦  Share your Beauty DNA  ✦'}
+              </Text>
             </Pressable>
           </Animated.View>
-        )}
-      </Animated.View>
+        </Animated.View>
+
+      </View>
     </View>
   );
 }
@@ -823,6 +1038,7 @@ export default function DnaRevealScreen() {
   const { current } = slideState;
   const clearOutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shareCardRef = useRef<View>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
   const { subscription } = useSubscription();
   const isPro = subscription?.plan === 'pro' || (__DEV__ && params.bypass === '1');
   const progress = useSharedValue(0);
@@ -840,6 +1056,47 @@ export default function DnaRevealScreen() {
       if (raw) try { setDna(JSON.parse(raw) as DnaResult); } catch { /* ignore */ }
     });
   }, [params.dna]);
+
+  useEffect(() => {
+    let mounted = true;
+    let trackIdx = 0;
+
+    const switchTrack = async (source: number) => {
+      const prev = soundRef.current;
+      soundRef.current = null;
+      try {
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
+        const { sound: next } = await Audio.Sound.createAsync(source, { isLooping: true, volume: 0.35 });
+        if (!mounted) { next.unloadAsync(); return; }
+        soundRef.current = next;
+        await next.playAsync();
+        // Fade out old track in parallel — new track plays immediately, no silence
+        if (prev) {
+          (async () => {
+            for (let i = 1; i <= 14; i++) {
+              try { await prev.setVolumeAsync(0.35 * (1 - i / 14)); } catch { break; }
+              await new Promise<void>(r => setTimeout(r, 60));
+            }
+            try { await prev.unloadAsync(); } catch {}
+          })();
+        }
+      } catch {}
+    };
+
+    switchTrack(MUSIC_TRACKS[0]);
+
+    const id = setInterval(() => {
+      trackIdx = (trackIdx + 1) % MUSIC_TRACKS.length;
+      switchTrack(MUSIC_TRACKS[trackIdx]);
+    }, MUSIC_SWITCH_MS);
+
+    return () => {
+      mounted = false;
+      clearInterval(id);
+      soundRef.current?.unloadAsync().catch(() => {});
+      soundRef.current = null;
+    };
+  }, []);
 
   const navigateTo = useCallback((to: number, from: number) => {
     setBgFrom(from);
@@ -1107,7 +1364,7 @@ const ds = StyleSheet.create({
   kitBrand: { fontWeight: '700' },
   kitWhy: { fontFamily: 'Inter', fontSize: 11, lineHeight: 16 },
 
-  // Summary
+  // Summary (legacy — kept so no existing ref breaks)
   summaryCard: { width: '100%', borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 20, borderBottomWidth: StyleSheet.hairlineWidth },
   summaryLabel: { fontFamily: 'Inter', fontSize: 12, letterSpacing: 0.3 },
@@ -1116,4 +1373,45 @@ const ds = StyleSheet.create({
   summaryLockedDots: { fontFamily: 'Inter', fontSize: 10, letterSpacing: 2 },
   shareBtn: { width: '100%', paddingVertical: 15, alignItems: 'center', borderRadius: 50 },
   shareBtnText: { fontFamily: 'Inter', fontSize: 14, fontWeight: '700' },
+
+  // Final reveal card
+  fnWrap: {
+    flex: 1, width: W, alignItems: 'center',
+    paddingHorizontal: 24, gap: 14,
+    paddingTop: 110, paddingBottom: 108,
+  },
+  fnHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%' },
+  fnHairline: { flex: 1, height: StyleSheet.hairlineWidth },
+  fnEyebrow: { fontFamily: 'Inter', fontSize: 9, fontWeight: '700', letterSpacing: 4, textTransform: 'uppercase' },
+  fnBarsRow: { flexDirection: 'row', gap: 5, width: '100%' },
+  fnBar: { flex: 1, height: 68, borderRadius: 10, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12 },
+  fnSeasonLabel: { fontFamily: 'Playfair Display', fontSize: 13, fontStyle: 'italic', letterSpacing: 2, textAlign: 'center' },
+  fnArchWrap: { alignItems: 'center', gap: 8, width: '100%' },
+  fnYouAre: { fontFamily: 'Inter', fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', marginBottom: -4 },
+  fnArchName: { fontFamily: 'Playfair Display', fontSize: 62, fontStyle: 'italic', textAlign: 'center', lineHeight: 68 },
+  fnArchDesc: { fontFamily: 'Inter', fontSize: 12, fontStyle: 'italic', textAlign: 'center', lineHeight: 18, maxWidth: W - 80 },
+  fnCard: { width: '100%', borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  fnStatRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 },
+  fnFoundRow: { gap: 10 },
+  fnStatLabel: { fontFamily: 'Inter', fontSize: 9, fontWeight: '700', letterSpacing: 1.8, flex: 1 },
+  fnStatValue: { fontFamily: 'Inter', fontSize: 12, fontWeight: '600', letterSpacing: 0.2 },
+  fnStatBlocked: { fontFamily: 'Inter', fontSize: 10, letterSpacing: 3 },
+  fnFoundDot: { width: 14, height: 14, borderRadius: 7, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.65, shadowRadius: 4 },
+  fnCta: { width: '100%', paddingVertical: 16, borderRadius: 50, alignItems: 'center' },
+  fnCtaTxt: { fontFamily: 'Inter', fontSize: 13, fontWeight: '800', letterSpacing: 0.6 },
+
+  // Narrative reveal typography
+  narrativeHook: {
+    fontFamily: 'Inter', fontSize: 20, fontWeight: '400',
+    textAlign: 'center', lineHeight: 28,
+  },
+  narrativePunch: {
+    fontFamily: 'Playfair Display', fontSize: 22, fontStyle: 'italic',
+    textAlign: 'center', lineHeight: 28, marginTop: -4,
+  },
+  revealLabel: {
+    fontFamily: 'Inter', fontSize: 12, fontWeight: '400',
+    textAlign: 'center', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: -8,
+  },
+  kitRedactBar: { height: 10, borderRadius: 5, marginVertical: 2 },
 });

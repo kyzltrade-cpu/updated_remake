@@ -15,7 +15,7 @@ import { EdgeFlashOverlay } from '@/components/edge-flash';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
 
-const LOW_LIGHT_EV_THRESHOLD = 1.5;
+const LOW_LIGHT_EV_THRESHOLD = -0.5;
 
 export default function FirstScanScreen() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function FirstScanScreen() {
       const ev = typeof rawEv === 'number' ? rawEv
         : typeof rawEv === 'string' ? parseFloat(rawEv)
         : null;
-      const isDark = ev !== null && ev < LOW_LIGHT_EV_THRESHOLD;
+      const isDark = !flash && ev !== null && ev < LOW_LIGHT_EV_THRESHOLD;
 
       if (isDark) {
         setShowLowLight(true);

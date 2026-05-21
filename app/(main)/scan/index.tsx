@@ -25,7 +25,7 @@ type ScanMode = 'face' | 'product';
 
 const CAPSULE_WIDTH = 172;
 const PILL_WIDTH = 82;
-const LOW_LIGHT_EV_THRESHOLD = 1.5;
+const LOW_LIGHT_EV_THRESHOLD = -0.5;
 
 const MOCK_UV: UVData = {
   uvIndex: 6,
@@ -170,7 +170,7 @@ export default function ScanScreen() {
       const ev = typeof rawEv === 'number' ? rawEv
         : typeof rawEv === 'string' ? parseFloat(rawEv)
         : null;
-      if (ev !== null && ev < LOW_LIGHT_EV_THRESHOLD) {
+      if (!flash && ev !== null && ev < LOW_LIGHT_EV_THRESHOLD) {
         setShowLowLight(true);
         setTimeout(() => setShowLowLight(false), 3500);
       }
