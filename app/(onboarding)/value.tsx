@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,20 +54,14 @@ export default function ValueScreen() {
         </Text>
       </Animated.View>
 
-      {/* Feature pill strip */}
+      {/* Feature pill grid */}
       <Animated.View entering={FadeInUp.delay(420).duration(500)} style={styles.pillsWrap}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pillsRow}
-        >
-          {PILLS.map(pill => (
-            <View key={pill.label} style={[styles.pill, { borderColor: pill.color + '44' }]}>
-              <View style={[styles.pillDot, { backgroundColor: pill.color }]} />
-              <Text style={styles.pillLabel}>{pill.label}</Text>
-            </View>
-          ))}
-        </ScrollView>
+        {PILLS.map(pill => (
+          <View key={pill.label} style={[styles.pill, { borderColor: pill.color + '44' }]}>
+            <View style={[styles.pillDot, { backgroundColor: pill.color }]} />
+            <Text style={styles.pillLabel}>{pill.label}</Text>
+          </View>
+        ))}
       </Animated.View>
 
       {/* Stats strip */}
@@ -149,11 +143,11 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 24,
   },
-  pillsWrap: { marginHorizontal: -28, marginBottom: 20 },
-  pillsRow: {
-    paddingHorizontal: 28,
+  pillsWrap: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+    marginBottom: 20,
   },
   pill: {
     flexDirection: 'row',
