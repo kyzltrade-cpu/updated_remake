@@ -18,11 +18,6 @@ const PILLS = [
   { label: 'Product Kit',      color: tokens.colors.pinkRich },
 ];
 
-const STATS = [
-  { value: '★ 4.9', label: 'Beta rating' },
-  { value: '2,400+', label: 'Scans run' },
-  { value: '18 days', label: 'Avg. streak' },
-];
 
 export default function ValueScreen() {
   const router = useRouter();
@@ -60,19 +55,6 @@ export default function ValueScreen() {
           <View key={pill.label} style={[styles.pill, { borderColor: pill.color + '44' }]}>
             <View style={[styles.pillDot, { backgroundColor: pill.color }]} />
             <Text style={styles.pillLabel}>{pill.label}</Text>
-          </View>
-        ))}
-      </Animated.View>
-
-      {/* Stats strip */}
-      <Animated.View entering={FadeInUp.delay(480).duration(500)} style={styles.statsRow}>
-        {STATS.map((s, i) => (
-          <View key={s.label} style={styles.statCol}>
-            {i > 0 && <View style={styles.statDivider} />}
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
           </View>
         ))}
       </Animated.View>
@@ -148,6 +130,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 20,
+    justifyContent: 'center',
   },
   pill: {
     flexDirection: 'row',
@@ -170,44 +153,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: tokens.colors.text,
     letterSpacing: 0.1,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    backgroundColor: tokens.colors.white,
-    borderRadius: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    overflow: 'hidden',
-  },
-  statCol: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stat: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: tokens.colors.border,
-  },
-  statValue: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 14,
-    fontWeight: '700',
-    color: tokens.colors.text,
-  },
-  statLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 10,
-    fontWeight: '400',
-    color: tokens.colors.grayLight,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
   },
   spacer: { flex: 1, minHeight: 16 },
   bottom: { alignItems: 'center', gap: 12 },
