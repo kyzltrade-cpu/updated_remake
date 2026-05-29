@@ -10,17 +10,13 @@ import { OnboardingHeader } from '@/components/onboarding-header';
 import { GlassButton } from '@/components/glass-button';
 import { saveGloField } from '@/lib/glo-profile';
 
-// 6 shown by default, rest revealed on expand
-const DEFAULT_PRESETS = [
+const PRESETS = [
   'Fragrance / Parfum',
   'Parabens',
   'Sulfates (SLS / SLES)',
   'Alcohol / Denatured Alcohol',
   'Silicones (Dimethicone)',
   'Nickel',
-];
-
-const EXTRA_PRESETS = [
   'Lanolin',
   'Oxybenzone (Chemical SPF)',
   'Retinol / Vitamin A',
@@ -41,13 +37,8 @@ export default function AllergiesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [toggled, setToggled] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState(false);
   const [custom, setCustom] = useState('');
   const [customList, setCustomList] = useState<string[]>([]);
-
-  const visiblePresets = expanded
-    ? [...DEFAULT_PRESETS, ...EXTRA_PRESETS]
-    : DEFAULT_PRESETS;
 
   const toggle = (item: string) => {
     Haptics.selectionAsync();
@@ -85,7 +76,7 @@ export default function AllergiesScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {[...visiblePresets, ...customList].map(item => {
+        {[...PRESETS, ...customList].map(item => {
           const active = toggled.has(item);
           return (
             <Pressable
@@ -100,13 +91,6 @@ export default function AllergiesScreen() {
             </Pressable>
           );
         })}
-
-        {/* Expand button */}
-        {!expanded && (
-          <Pressable onPress={() => setExpanded(true)} style={styles.expandBtn}>
-            <Text style={styles.expandText}>+ Show all {EXTRA_PRESETS.length} more ingredients</Text>
-          </Pressable>
-        )}
 
         {/* Custom add */}
         <View style={styles.customRow}>
@@ -129,7 +113,7 @@ export default function AllergiesScreen() {
         </View>
       </ScrollView>
 
-      <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.bottom}>
+      <View style={styles.bottom}>
         <GlassButton
           title="Continue"
           onPress={handleContinue}
@@ -139,14 +123,14 @@ export default function AllergiesScreen() {
         <Pressable onPress={handleContinue}>
           <Text style={ob.skipLink}>None of these apply</Text>
         </Pressable>
-      </Animated.View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 16, gap: 2 },
+  scrollContent: { paddingBottom: 16 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,21 +175,12 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.white,
   },
   togThumbActive: { alignSelf: 'flex-end' },
-  expandBtn: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  expandText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 13,
-    fontWeight: '500',
-    color: tokens.colors.pinkDeep,
-  },
   customRow: {
     flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
     marginTop: 4,
+    marginBottom: 8,
   },
   customInput: {
     flex: 1,
