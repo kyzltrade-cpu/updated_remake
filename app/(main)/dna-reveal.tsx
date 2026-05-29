@@ -1585,8 +1585,11 @@ export default function DnaRevealScreen() {
     router.push('/(main)/paywall');
   };
 
-  const displayDna = (isPro ? dna : null) ?? PLACEHOLDER_DNA;
-  const locked = !isPro;
+  // Free users see their real DNA on all analysis slides (0–8).
+  // Product pick slides (9–14) are the hard paywall — locked for free users.
+  const displayDna = dna ?? PLACEHOLDER_DNA;
+  const isProductSlide = (idx: number) => idx >= 9 && idx <= 14;
+  const locked = !isPro && isProductSlide(current);
 
   return (
     <View style={ds.root}>
@@ -1598,7 +1601,7 @@ export default function DnaRevealScreen() {
       {/* Content only — dissolves out then in */}
       {slideState.outgoing && (
         <OutgoingContent key={`out-${slideState.outgoing.uid}`}>
-          {renderSlide(slideState.outgoing.idx, displayDna, locked, handleShare)}
+          {renderSlide(slideState.outgoing.idx, displayDna, !isPro && isProductSlide(slideState.outgoing.idx), handleShare)}
         </OutgoingContent>
       )}
       {slideState.uid === 0 ? (
@@ -1629,8 +1632,8 @@ export default function DnaRevealScreen() {
         </Pressable>
       </View>
 
-      {/* Unlock strip */}
-      {locked && (
+      {/* Unlock strip — only on product pick slides for free users */}
+      {!isPro && isProductSlide(current) && (
         <Animated.View
           entering={FadeIn.delay(400).duration(500)}
           style={[ds.unlockWrap, { paddingBottom: insets.bottom + 20 }]}
