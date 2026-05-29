@@ -10,7 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.remake"
+      "bundleIdentifier": "com.anonymous.remake",
+      "infoPlist": {
+        "NSCameraUsageDescription": "REMAKE analyses your face and beauty products through your camera. Photos are never stored or shared.",
+        "NSPhotoLibraryUsageDescription": "REMAKE lets you scan beauty products from photos in your library.",
+        "NSLocationWhenInUseUsageDescription": "REMAKE reads your local UV index to recommend the right SPF protection for your makeup.",
+        "NSUserNotificationsUsageDescription": "REMAKE sends one daily reminder so you never break your streak.",
+        "NSUserTrackingUsageDescription": "This helps us understand if our ads are working. No face photos or personal data are ever used for tracking."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +28,14 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.remake"
+      "package": "com.anonymous.remake",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "output": "static",
@@ -42,7 +56,16 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#E8399A"
+        }
+      ],
+      "expo-location",
+      "expo-tracking-transparency"
     ],
     "experiments": {
       "typedRoutes": true,
