@@ -60,7 +60,7 @@ export default function CreateAccountScreen() {
       if (DEV_BYPASS) {
         await signInDev();
         await clearGloDraft();
-        router.replace('/(onboarding)/dna-loading');
+        router.replace('/(onboarding)/camera-permission');
         return;
       }
       const { error } = await signUp(sanitizeEmail(email), password);
@@ -68,7 +68,7 @@ export default function CreateAccountScreen() {
         Alert.alert('Sign up failed', error.message);
       } else {
         await clearGloDraft();
-        router.replace('/(onboarding)/dna-loading');
+        router.replace('/(onboarding)/camera-permission');
       }
     } catch {
       Alert.alert('Error', 'Something went wrong. Please try again.');
@@ -79,7 +79,7 @@ export default function CreateAccountScreen() {
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace('/(onboarding)/dna-loading');
+    router.replace('/(onboarding)/camera-permission');
   };
 
   return (

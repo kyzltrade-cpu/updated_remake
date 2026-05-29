@@ -19,7 +19,7 @@ export default function NotificationPermissionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const advance = () => router.push('/(onboarding)/camera-permission');
+  const advance = () => router.push('/(main)/paywall');
 
   const handleAllow = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
