@@ -56,7 +56,7 @@ export function GlassButton({
 
 const styles = StyleSheet.create({
   base: {
-    paddingVertical: 16,
+    paddingVertical: 17,
     paddingHorizontal: 44,
     borderRadius: 50,
     alignItems: 'center',
@@ -65,10 +65,10 @@ const styles = StyleSheet.create({
   primary: {
     backgroundColor: tokens.colors.pinkDeep,
     shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.28,
-    shadowRadius: 14,
-    elevation: 6,
+    shadowRadius: 16,
+    elevation: 7,
   },
   secondary: {
     backgroundColor: tokens.colors.white,
@@ -90,8 +90,8 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: tokens.fonts.regular,
     fontSize: 12,
-    fontWeight: '500',
-    letterSpacing: 0.12,
+    fontWeight: '600',
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
   textPrimary: {

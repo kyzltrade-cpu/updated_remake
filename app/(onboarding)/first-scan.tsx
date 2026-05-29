@@ -32,7 +32,7 @@ export default function FirstScanScreen() {
 
   const proceed = async (uri: string) => {
     await AsyncStorage.setItem('@remake_pending_dna_uri', uri);
-    router.push('/(onboarding)/create-account');
+    router.push('/(onboarding)/dna-loading');
   };
 
   const takePhoto = async () => {
@@ -119,7 +119,7 @@ export default function FirstScanScreen() {
       {/* Face guide */}
       <View style={styles.viewfinder} pointerEvents="none">
         <FaceCorners size={210} color="rgba(238,62,100,0.60)" />
-        <Text style={styles.hint}>Align your face</Text>
+        <Text style={styles.hint}>BARE FACE · NO MAKEUP</Text>
       </View>
 
       {/* Top gradient — wordmark */}

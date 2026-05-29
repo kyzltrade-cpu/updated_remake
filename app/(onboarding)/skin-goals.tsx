@@ -3,20 +3,21 @@ import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { tokens } from '@/components/theme';
+import { ob } from '@/components/onboarding-styles';
 import { OnboardingHeader } from '@/components/onboarding-header';
 import { GlassButton } from '@/components/glass-button';
 import { saveGloField } from '@/lib/glo-profile';
-import * as Haptics from 'expo-haptics';
 
-
+// Makeup-focused goals (not skincare)
 const GOALS = [
-  'Acne Control',
-  'Anti-Redness',
-  'Anti-Aging',
-  'Pore Refining',
-  'Glow Boost',
+  'Full Coverage',
+  'Long-Wear',
+  'Natural Glow',
   'Glass Skin',
+  'SPF Protection',
+  'Buildable Finish',
 ];
 
 export default function SkinGoalsScreen() {
@@ -39,12 +40,12 @@ export default function SkinGoalsScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      <OnboardingHeader step={4} total={11} onBack={() => router.back()} />
+    <View style={[ob.root, { paddingBottom: insets.bottom + 32 }]}>
+      <OnboardingHeader step={5} total={11} onBack={() => router.back()} />
 
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-        <Text style={styles.title}>What does your{'\n'}skin want most?</Text>
-        <Text style={styles.sub}>Pick up to 3 — we prioritise these in your recommendations.</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={ob.header}>
+        <Text style={ob.title}>What does your{'\n'}makeup need to do?</Text>
+        <Text style={ob.sub}>Pick up to 3 — we prioritise these in your recommendations.</Text>
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.chips}>
@@ -55,11 +56,10 @@ export default function SkinGoalsScreen() {
             <Animated.View key={goal} entering={FadeInUp.delay(200 + i * 40).duration(380)}>
               <Pressable
                 onPress={() => !maxed && toggle(goal)}
-                style={({ pressed }) => [
+                style={[
                   styles.chip,
                   active && styles.chipActive,
                   maxed && styles.chipMuted,
-                  pressed && styles.chipPressed,
                 ]}
               >
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{goal}</Text>
@@ -69,9 +69,9 @@ export default function SkinGoalsScreen() {
         })}
       </Animated.View>
 
-      <View style={styles.spacer} />
+      <View style={ob.spacer} />
 
-      <Animated.View entering={FadeInUp.delay(440).duration(500)} style={{ paddingBottom: insets.bottom + 32 }}>
+      <Animated.View entering={FadeInUp.delay(440).duration(500)}>
         <GlassButton
           title="Continue"
           onPress={handleContinue}
@@ -85,18 +85,32 @@ export default function SkinGoalsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
-  header: { marginBottom: 32 },
-  step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
-  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
-  sub: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300', color: tokens.colors.gray },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  chip: { paddingVertical: 13, paddingHorizontal: 22, borderRadius: 50, backgroundColor: tokens.colors.white, borderWidth: 1.5, borderColor: tokens.colors.border },
-  chipActive: { backgroundColor: tokens.colors.pinkDeep, borderColor: tokens.colors.pinkDeep },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  chip: {
+    paddingVertical: 13,
+    paddingHorizontal: 22,
+    borderRadius: 50,
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1.5,
+    borderColor: tokens.colors.border,
+  },
+  chipActive: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderColor: tokens.colors.pinkDeep,
+  },
   chipMuted: { opacity: 0.35 },
-  chipPressed: { opacity: 0.85 },
-  chipText: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '400', color: tokens.colors.text },
-  chipTextActive: { color: tokens.colors.white, fontWeight: '500' },
-  spacer: { flex: 1, minHeight: 24 },
+  chipText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '500',
+    color: tokens.colors.text,
+  },
+  chipTextActive: {
+    color: tokens.colors.white,
+  },
   cta: { width: '100%' },
 });

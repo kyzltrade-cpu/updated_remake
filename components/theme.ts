@@ -29,9 +29,9 @@ export const tokens = {
     gray: '#9A8E8A',
     grayLight: '#B8ADA9',
 
-    // Dark backgrounds (DNA reveal, paywall)
-    darkBg: '#1A1715',
-    darkBgLight: '#2A2522',
+    // Dark backgrounds (DNA reveal, paywall, profile reveal)
+    darkBg: '#1A0D14',
+    darkBgLight: '#2A1A22',
   },
   fonts: {
     regular: 'Inter',

@@ -3,22 +3,24 @@ import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable, TextInput, ScrollView } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { tokens } from '@/components/theme';
+import { ob } from '@/components/onboarding-styles';
 import { OnboardingHeader } from '@/components/onboarding-header';
 import { GlassButton } from '@/components/glass-button';
 import { saveGloField } from '@/lib/glo-profile';
-import * as Haptics from 'expo-haptics';
 
-
-const PRESETS = [
+// 6 shown by default, rest revealed on expand
+const DEFAULT_PRESETS = [
   'Fragrance / Parfum',
   'Parabens',
   'Sulfates (SLS / SLES)',
   'Alcohol / Denatured Alcohol',
   'Silicones (Dimethicone)',
-  'Synthetic Dyes & Colorants',
-  'Propylene Glycol',
   'Nickel',
+];
+
+const EXTRA_PRESETS = [
   'Lanolin',
   'Oxybenzone (Chemical SPF)',
   'Retinol / Vitamin A',
@@ -31,14 +33,21 @@ const PRESETS = [
   'Nut Oils (Almond, Argan)',
   'Carmine (Red Dye)',
   'Gluten / Wheat Protein',
+  'Propylene Glycol',
+  'Synthetic Dyes & Colorants',
 ];
 
 export default function AllergiesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [toggled, setToggled] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState(false);
   const [custom, setCustom] = useState('');
   const [customList, setCustomList] = useState<string[]>([]);
+
+  const visiblePresets = expanded
+    ? [...DEFAULT_PRESETS, ...EXTRA_PRESETS]
+    : DEFAULT_PRESETS;
 
   const toggle = (item: string) => {
     Haptics.selectionAsync();
@@ -62,19 +71,28 @@ export default function AllergiesScreen() {
   };
 
   return (
-    <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingHeader step={6} total={11} onBack={() => router.back()} />
+    <View style={[ob.root, { paddingBottom: insets.bottom + 32 }]}>
+      <OnboardingHeader step={7} total={11} onBack={() => router.back()} />
 
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-        <Text style={styles.title}>Anything your{'\n'}skin hates?</Text>
-        <Text style={styles.sub}>Toggle all that apply — we filter these from every recommendation.</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={ob.header}>
+        <Text style={ob.title}>Anything your{'\n'}skin hates?</Text>
+        <Text style={ob.sub}>Toggle all that apply — we filter these from every recommendation.</Text>
       </Animated.View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {[...PRESETS, ...customList].map((item) => {
-          const active = toggled.has(item) || customList.includes(item);
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {[...visiblePresets, ...customList].map(item => {
+          const active = toggled.has(item);
           return (
-            <Pressable key={item} onPress={() => toggle(item)} style={styles.row}>
+            <Pressable
+              key={item}
+              onPress={() => toggle(item)}
+              style={[styles.row, active && styles.rowActive]}
+            >
               <Text style={[styles.rowLabel, active && styles.rowLabelActive]}>{item}</Text>
               <View style={[styles.tog, active && styles.togActive]}>
                 <View style={[styles.togThumb, active && styles.togThumbActive]} />
@@ -83,49 +101,136 @@ export default function AllergiesScreen() {
           );
         })}
 
-        <View style={styles.addRow}>
+        {/* Expand button */}
+        {!expanded && (
+          <Pressable onPress={() => setExpanded(true)} style={styles.expandBtn}>
+            <Text style={styles.expandText}>+ Show all {EXTRA_PRESETS.length} more ingredients</Text>
+          </Pressable>
+        )}
+
+        {/* Custom add */}
+        <View style={styles.customRow}>
           <TextInput
-            style={styles.addInput}
-            placeholder="Add ingredient..."
+            style={styles.customInput}
+            placeholder="Add your own…"
             placeholderTextColor={tokens.colors.grayLight}
             value={custom}
             onChangeText={setCustom}
             onSubmitEditing={addCustom}
             returnKeyType="done"
+            autoCorrect={false}
             autoCapitalize="words"
-            maxLength={60}
           />
-          <Pressable onPress={addCustom} style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.7 }]}>
-            <Text style={styles.addBtnText}>+</Text>
-          </Pressable>
+          {custom.trim().length > 0 && (
+            <Pressable onPress={addCustom} style={styles.addBtn}>
+              <Text style={styles.addBtnText}>Add</Text>
+            </Pressable>
+          )}
         </View>
       </ScrollView>
 
-      <Animated.View entering={FadeInUp.delay(400).duration(500)}>
-        <GlassButton title="Continue" onPress={handleContinue} variant="primary" style={styles.cta} />
+      <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.bottom}>
+        <GlassButton
+          title="Continue"
+          onPress={handleContinue}
+          variant="primary"
+          style={styles.cta}
+        />
+        <Pressable onPress={handleContinue}>
+          <Text style={ob.skipLink}>None of these apply</Text>
+        </Pressable>
       </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
-  header: { marginBottom: 20 },
-  step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
-  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
-  sub: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300', color: tokens.colors.gray, lineHeight: 22 },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: tokens.colors.border },
-  rowLabel: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '400', color: tokens.colors.gray, flex: 1 },
-  rowLabelActive: { color: tokens.colors.text, fontWeight: '500' },
-  tog: { width: 42, height: 24, borderRadius: 12, backgroundColor: tokens.colors.border, justifyContent: 'center', paddingHorizontal: 2 },
+  scrollContent: { paddingBottom: 16, gap: 2 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    backgroundColor: tokens.colors.white,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: tokens.colors.border,
+    marginBottom: 8,
+  },
+  rowActive: {
+    borderColor: tokens.colors.pinkDeep,
+    backgroundColor: 'rgba(232,57,154,0.04)',
+  },
+  rowLabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '400',
+    color: tokens.colors.text,
+    flex: 1,
+  },
+  rowLabelActive: {
+    color: tokens.colors.pinkDeep,
+    fontWeight: '500',
+  },
+  tog: {
+    width: 42,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: tokens.colors.border,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    flexShrink: 0,
+  },
   togActive: { backgroundColor: tokens.colors.pinkDeep },
-  togThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: tokens.colors.white, alignSelf: 'flex-start' },
+  togThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: tokens.colors.white,
+  },
   togThumbActive: { alignSelf: 'flex-end' },
-  addRow: { flexDirection: 'row', gap: 10, marginTop: 16, alignItems: 'center' },
-  addInput: { flex: 1, backgroundColor: tokens.colors.white, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, fontFamily: tokens.fonts.regular, fontSize: 14, color: tokens.colors.text, borderWidth: 1.5, borderColor: tokens.colors.border },
-  addBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: tokens.colors.pinkDeep, justifyContent: 'center', alignItems: 'center' },
-  addBtnText: { color: tokens.colors.white, fontSize: 22, lineHeight: 24, fontWeight: '300' },
+  expandBtn: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  expandText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    fontWeight: '500',
+    color: tokens.colors.pinkDeep,
+  },
+  customRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  customInput: {
+    flex: 1,
+    backgroundColor: tokens.colors.white,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    color: tokens.colors.text,
+    borderWidth: 1.5,
+    borderColor: tokens.colors.border,
+  },
+  addBtn: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+  },
+  addBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    fontWeight: '600',
+    color: tokens.colors.white,
+  },
+  bottom: { gap: 12, paddingTop: 8 },
   cta: { width: '100%' },
 });

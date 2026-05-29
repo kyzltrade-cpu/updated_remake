@@ -1,23 +1,27 @@
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
+import { tokens } from '@/components/theme';
+import { GlassButton } from '@/components/glass-button';
 
-const DNA_SLIDES = [
-  { glyph: '◯', label: 'Foundation\nShade' },
-  { glyph: '✦', label: 'Colour\nSeason' },
-  { glyph: '⬭', label: 'Face\nShape' },
-  { glyph: '—', label: 'Brow\nBlueprint' },
-  { glyph: '✦', label: 'Lash\nProfile' },
-  { glyph: '◉', label: 'Energy\nType' },
-  { glyph: '♡', label: 'Archetype' },
-  { glyph: '♡', label: 'Lip\nProfile' },
-  { glyph: '◉', label: 'Blush\nProfile' },
-  { glyph: '✦', label: 'Product\nKit' },
-  { glyph: '◈', label: 'Beauty\nWrapped' },
+const PILLS = [
+  { label: 'Shade Match',      color: tokens.colors.pinkDeep },
+  { label: 'Ingredient Safety', color: tokens.colors.pinkRich },
+  { label: 'Skin Fit Score',   color: tokens.colors.gold },
+  { label: 'Allergen Alert',   color: tokens.colors.pinkDeep },
+  { label: 'Beauty DNA',       color: tokens.colors.pinkRich },
+  { label: 'Colour Season',    color: tokens.colors.gold },
+  { label: 'Archetype',        color: tokens.colors.pinkDeep },
+  { label: 'Product Kit',      color: tokens.colors.pinkRich },
+];
+
+const STATS = [
+  { value: '★ 4.9', label: 'Beta rating' },
+  { value: '2,400+', label: 'Scans run' },
+  { value: '18 days', label: 'Avg. streak' },
 ];
 
 export default function ValueScreen() {
@@ -26,51 +30,77 @@ export default function ValueScreen() {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 40 }]}>
-
-      <Animated.Text entering={FadeIn.duration(900)} style={styles.scoreDecor}>
-        78
+      {/* Decorative background number */}
+      <Animated.Text entering={FadeIn.duration(900)} style={styles.decor} pointerEvents="none">
+        97
       </Animated.Text>
 
-      <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.eyebrowRow}>
+      {/* Eyebrow */}
+      <Animated.View entering={FadeInUp.delay(80).duration(600)}>
         <Text style={styles.eyebrow}>REMAKE</Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(220).duration(600)} style={styles.headlineBlock}>
-        <Text style={styles.headline}>See your makeup{'\n'}the way the{'\n'}camera does.</Text>
-      </Animated.View>
-
-      <Animated.View entering={FadeInUp.delay(360).duration(500)} style={styles.body}>
-        <Text style={styles.bodyText}>
-          One photo. Eleven personalised results — built around your exact face.
+      {/* Headline */}
+      <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.headlineBlock}>
+        <Text style={styles.headline}>
+          Scan any beauty{'\n'}product. Know if{'\n'}it's right for you.
         </Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.dnaGrid}>
-        {DNA_SLIDES.map((slide) => (
-          <View key={slide.label} style={styles.dnaCell}>
-            <Text style={styles.dnaCellGlyph}>{slide.glyph}</Text>
-            <Text style={styles.dnaCellLabel}>{slide.label}</Text>
+      {/* Subline */}
+      <Animated.View entering={FadeInUp.delay(320).duration(500)}>
+        <Text style={styles.sub}>
+          Ingredients, shade match, allergen check — in seconds.
+        </Text>
+      </Animated.View>
+
+      {/* Feature pill strip */}
+      <Animated.View entering={FadeInUp.delay(420).duration(500)} style={styles.pillsWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.pillsRow}
+        >
+          {PILLS.map(pill => (
+            <View key={pill.label} style={[styles.pill, { borderColor: pill.color + '44' }]}>
+              <View style={[styles.pillDot, { backgroundColor: pill.color }]} />
+              <Text style={styles.pillLabel}>{pill.label}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </Animated.View>
+
+      {/* Stats strip */}
+      <Animated.View entering={FadeInUp.delay(480).duration(500)} style={styles.statsRow}>
+        {STATS.map((s, i) => (
+          <View key={s.label} style={styles.statCol}>
+            {i > 0 && <View style={styles.statDivider} />}
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{s.value}</Text>
+              <Text style={styles.statLabel}>{s.label}</Text>
+            </View>
           </View>
         ))}
       </Animated.View>
 
       <View style={styles.spacer} />
 
+      {/* CTA */}
       <Animated.View entering={FadeInUp.delay(540).duration(500)} style={styles.bottom}>
-        <Pressable
+        <GlassButton
+          title="Get Started — It's Free"
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             router.push('/(onboarding)/features');
           }}
-          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
-        >
-          <Text style={styles.ctaText}>Start My Analysis</Text>
-        </Pressable>
-        <Text style={styles.footnote}>Free · No card required</Text>
+          variant="primary"
+          style={styles.cta}
+        />
+        <Text style={styles.footnote}>No card required</Text>
       </Animated.View>
 
       <LinearGradient
-        colors={['transparent', 'rgba(10,8,7,0.06)']}
+        colors={['transparent', 'rgba(10,8,7,0.05)']}
         style={styles.bottomGlow}
         pointerEvents="none"
       />
@@ -81,20 +111,19 @@ export default function ValueScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.colors.beige,
+    backgroundColor: tokens.colors.cream,
     paddingHorizontal: 28,
   },
-  scoreDecor: {
+  decor: {
     position: 'absolute',
     top: -10,
-    right: -22,
+    right: -24,
     fontFamily: tokens.fonts.serif,
-    fontSize: 230,
+    fontSize: 220,
     fontWeight: '400',
-    color: 'rgba(232,57,154,0.055)',
-    lineHeight: 230,
+    color: 'rgba(232,57,154,0.045)',
+    lineHeight: 220,
   },
-  eyebrowRow: { marginBottom: 28 },
   eyebrow: {
     fontFamily: tokens.fonts.regular,
     fontSize: 11,
@@ -102,8 +131,9 @@ const styles = StyleSheet.create({
     letterSpacing: 3.5,
     textTransform: 'uppercase',
     color: tokens.colors.pinkDeep,
+    marginBottom: 24,
   },
-  headlineBlock: { marginBottom: 16 },
+  headlineBlock: { marginBottom: 14 },
   headline: {
     fontFamily: tokens.fonts.serif,
     fontSize: 38,
@@ -111,85 +141,93 @@ const styles = StyleSheet.create({
     color: tokens.colors.text,
     lineHeight: 50,
   },
-  body: { marginBottom: 20 },
-  bodyText: {
+  sub: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '300',
     color: tokens.colors.gray,
     lineHeight: 22,
+    marginBottom: 24,
   },
-  dnaGrid: {
+  pillsWrap: { marginHorizontal: -28, marginBottom: 20 },
+  pillsRow: {
+    paddingHorizontal: 28,
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
   },
-  dnaCell: {
-    width: '22%',
-    flexGrow: 1,
+  pill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     backgroundColor: tokens.colors.white,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-  },
-  dnaCellGlyph: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 18,
-    color: tokens.colors.pinkDeep,
-    lineHeight: 22,
-  },
-  dnaCellLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 9,
-    fontWeight: '500',
-    color: tokens.colors.text,
-    textAlign: 'center',
-    letterSpacing: 0.2,
-    lineHeight: 13,
-  },
-  spacer: { flex: 1, minHeight: 16 },
-  bottom: { alignItems: 'center', gap: 14 },
-  cta: {
-    width: '100%',
-    backgroundColor: tokens.colors.pinkDeep,
     borderRadius: 50,
-    paddingVertical: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 7,
+    borderWidth: 1,
   },
-  ctaPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.97 }],
+  pillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  ctaText: {
+  pillLabel: {
     fontFamily: tokens.fonts.regular,
     fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: tokens.colors.white,
+    fontWeight: '500',
+    color: tokens.colors.text,
+    letterSpacing: 0.1,
   },
+  statsRow: {
+    flexDirection: 'row',
+    backgroundColor: tokens.colors.white,
+    borderRadius: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    overflow: 'hidden',
+  },
+  statCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: tokens.colors.border,
+  },
+  statValue: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '700',
+    color: tokens.colors.text,
+  },
+  statLabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    fontWeight: '400',
+    color: tokens.colors.grayLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  spacer: { flex: 1, minHeight: 16 },
+  bottom: { alignItems: 'center', gap: 12 },
+  cta: { width: '100%' },
   footnote: {
     fontFamily: tokens.fonts.regular,
     fontSize: 11,
     color: tokens.colors.grayLight,
-    letterSpacing: 0.3,
   },
   bottomGlow: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 120,
-    pointerEvents: 'none',
+    height: 100,
   },
 });

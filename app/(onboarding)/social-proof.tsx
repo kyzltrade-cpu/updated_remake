@@ -1,51 +1,17 @@
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
+import { tokens } from '@/components/theme';
+import { GlassButton } from '@/components/glass-button';
+import { MarketingNav } from '@/components/marketing-nav';
 
-function MarketingNav({ step, onBack }: { step: number; onBack?: () => void }) {
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[nav.container, { paddingTop: insets.top + 10 }]}>
-      {onBack ? (
-        <Pressable onPress={onBack} hitSlop={8} style={nav.backBtn}>
-          <Text style={nav.backIcon}>‹</Text>
-        </Pressable>
-      ) : (
-        <View style={nav.placeholder} />
-      )}
-      <View style={nav.dotsRow}>
-        {[1, 2, 3].map(i => (
-          <View
-            key={i}
-            style={[
-              nav.dot,
-              i < step  && nav.dotPast,
-              i === step && nav.dotActive,
-              i > step  && nav.dotFuture,
-            ]}
-          />
-        ))}
-      </View>
-      <View style={nav.placeholder} />
-    </View>
-  );
-}
-
-const nav = StyleSheet.create({
-  container: { paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-  placeholder: { width: 36, height: 36 },
-  backIcon: { fontSize: 28, color: tokens.colors.grayLight, lineHeight: 32, includeFontPadding: false },
-  dotsRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dot: { width: 5, height: 5, borderRadius: 2.5 },
-  dotActive: { width: 20, backgroundColor: tokens.colors.pinkDeep },
-  dotPast: { backgroundColor: tokens.colors.pinkDeep, opacity: 0.38 },
-  dotFuture: { backgroundColor: tokens.colors.border },
-});
+const STATS = [
+  { value: '★ 4.9', label: 'Beta rating' },
+  { value: '2,400+', label: 'Scans run' },
+  { value: '18 days', label: 'Avg. streak' },
+];
 
 const TESTIMONIALS = [
   {
@@ -74,37 +40,30 @@ export default function SocialProofScreen() {
 
   return (
     <View style={[styles.root, { paddingBottom: insets.bottom + 40 }]}>
+      <MarketingNav step={2} onBack={() => router.back()} />
 
-      <MarketingNav step={3} onBack={() => router.back()} />
-
-      {/* Header */}
       <Animated.View entering={FadeInUp.delay(80).duration(600)} style={styles.header}>
-        <Text style={styles.eyebrow}>Real Results</Text>
-        <Text style={styles.title}>Women who{'\n'}already see it.</Text>
+        <Text style={styles.eyebrow}>Early Users</Text>
+        <Text style={styles.title}>Women already{'\n'}seeing it.</Text>
       </Animated.View>
 
-      {/* Stats strip */}
+      {/* Stats */}
       <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>★ 4.8</Text>
-          <Text style={styles.statLabel}>App Store</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>12k+</Text>
-          <Text style={styles.statLabel}>Analyses done</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>21 days</Text>
-          <Text style={styles.statLabel}>Avg. streak</Text>
-        </View>
+        {STATS.map((s, i) => (
+          <View key={s.label} style={styles.statCol}>
+            {i > 0 && <View style={styles.statDivider} />}
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{s.value}</Text>
+              <Text style={styles.statLabel}>{s.label}</Text>
+            </View>
+          </View>
+        ))}
       </Animated.View>
 
       {/* Testimonials */}
       <View style={styles.testimonials}>
         {TESTIMONIALS.map((t, i) => (
-          <Animated.View key={t.name} entering={FadeInUp.delay(300 + i * 100).duration(500)}>
+          <Animated.View key={t.name} entering={FadeInUp.delay(300 + i * 90).duration(450)}>
             <View style={styles.card}>
               <View style={styles.cardTop}>
                 <View style={[styles.avatar, { backgroundColor: t.avatarColor }]}>
@@ -114,7 +73,10 @@ export default function SocialProofScreen() {
                   <Text style={styles.name}>{t.name}</Text>
                   <Text style={styles.stars}>★★★★★</Text>
                 </View>
-                <Text style={styles.verified}>Verified</Text>
+                <View style={styles.verified}>
+                  <View style={styles.verifiedDot} />
+                  <Text style={styles.verifiedText}>Verified</Text>
+                </View>
               </View>
               <Text style={styles.quote}>{t.text}</Text>
             </View>
@@ -124,29 +86,18 @@ export default function SocialProofScreen() {
 
       <View style={styles.spacer} />
 
-      {/* CTA */}
-      <Animated.View entering={FadeInUp.delay(600).duration(500)} style={styles.bottom}>
-        <Pressable
+      <Animated.View entering={FadeInUp.delay(580).duration(500)} style={styles.bottom}>
+        <GlassButton
+          title="Build My Profile"
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/name');
+            router.push('/(onboarding)/goal-selection');
           }}
-          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
-        >
-          <Text style={styles.ctaText}>Build My Profile</Text>
-        </Pressable>
+          variant="primary"
+          style={styles.cta}
+        />
         <Text style={styles.footnote}>Takes about 2 minutes</Text>
       </Animated.View>
-
-      {/* Bottom gradient */}
-      <LinearGradient
-        colors={['transparent', 'rgba(10,8,7,0.05)']}
-        style={styles.bottomGlow}
-        pointerEvents="none"
-      />
-
-      {/* Decorative */}
-      <Animated.Text entering={FadeIn.duration(1000)} style={styles.decor}>✦</Animated.Text>
     </View>
   );
 }
@@ -154,7 +105,7 @@ export default function SocialProofScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.colors.beige,
+    backgroundColor: tokens.colors.cream,
     paddingHorizontal: 28,
   },
   header: { marginBottom: 20 },
@@ -165,48 +116,45 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     textTransform: 'uppercase',
     color: tokens.colors.pinkDeep,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   title: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 36,
+    fontSize: 34,
     fontWeight: '400',
     color: tokens.colors.text,
-    lineHeight: 46,
+    lineHeight: 44,
   },
-
   statsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: tokens.colors.white,
     borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: tokens.colors.border,
-    marginBottom: 20,
+    marginBottom: 18,
+    overflow: 'hidden',
   },
-  stat: { flex: 1, alignItems: 'center', gap: 3 },
+  statCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stat: { flex: 1, alignItems: 'center', gap: 2 },
+  statDivider: { width: 1, height: 28, backgroundColor: tokens.colors.border },
   statValue: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: tokens.colors.text,
   },
   statLabel: {
     fontFamily: tokens.fonts.regular,
     fontSize: 10,
-    fontWeight: '400',
     color: tokens.colors.grayLight,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
-  statDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: tokens.colors.border,
-  },
-
   testimonials: { gap: 10 },
   card: {
     backgroundColor: tokens.colors.white,
@@ -214,18 +162,14 @@ const styles = StyleSheet.create({
     padding: 18,
     borderWidth: 1,
     borderColor: tokens.colors.border,
-    gap: 12,
+    gap: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
   },
-  cardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar: {
     width: 32,
     height: 32,
@@ -240,7 +184,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: tokens.colors.white,
   },
-  meta: { flex: 1, gap: 1 },
+  meta: { flex: 1, gap: 2 },
   name: {
     fontFamily: tokens.fonts.regular,
     fontSize: 13,
@@ -248,62 +192,33 @@ const styles = StyleSheet.create({
     color: tokens.colors.text,
   },
   stars: { fontSize: 10, color: tokens.colors.gold, letterSpacing: 1 },
-  verified: {
+  verified: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  verifiedDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#34C759',
+  },
+  verifiedText: {
     fontFamily: tokens.fonts.regular,
     fontSize: 10,
     color: tokens.colors.grayLight,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   quote: {
     fontFamily: tokens.fonts.serif,
     fontSize: 13,
     fontStyle: 'italic',
     color: tokens.colors.text,
-    lineHeight: 21,
+    lineHeight: 20,
   },
-
-  spacer: { flex: 1, minHeight: 20 },
-  bottom: { alignItems: 'center', gap: 12 },
-  cta: {
-    width: '100%',
-    backgroundColor: tokens.colors.pinkDeep,
-    borderRadius: 50,
-    paddingVertical: 17,
-    alignItems: 'center',
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 7,
-  },
-  ctaPressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
-  ctaText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: tokens.colors.white,
-  },
+  spacer: { flex: 1, minHeight: 12 },
+  bottom: { alignItems: 'center', gap: 10 },
+  cta: { width: '100%' },
   footnote: {
     fontFamily: tokens.fonts.regular,
     fontSize: 11,
     color: tokens.colors.grayLight,
-  },
-  bottomGlow: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 100,
-  },
-  decor: {
-    position: 'absolute',
-    bottom: 60,
-    right: 20,
-    fontSize: 80,
-    color: 'rgba(232,57,154,0.04)',
-    pointerEvents: 'none',
   },
 });

@@ -1,26 +1,28 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TextInput } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
+import { ob } from '@/components/onboarding-styles';
 import { OnboardingHeader } from '@/components/onboarding-header';
+import { SelectCard } from '@/components/select-card';
 import { GlassButton } from '@/components/glass-button';
 import { saveGloField } from '@/lib/glo-profile';
-import * as Haptics from 'expo-haptics';
-
 
 const OPTIONS = [
-  { id: 'almost_always', label: 'Almost always',  desc: 'Every other purchase is a miss' },
-  { id: 'sometimes',     label: 'Sometimes',       desc: 'Maybe half the time' },
-  { id: 'rarely',        label: 'Rarely',           desc: 'I usually get it right' },
-  { id: 'i_just_guess',  label: 'I just guess',    desc: 'And hope for the best' },
-];
+  { id: 'almost_always', label: 'Almost always', description: 'Every other purchase is a miss' },
+  { id: 'sometimes',     label: 'Sometimes',      description: 'Maybe half the time' },
+  { id: 'rarely',        label: 'Rarely',          description: 'I usually get it right' },
+  { id: 'i_just_guess',  label: 'I just guess',   description: 'And hope for the best' },
+] as const;
+
+type PainId = (typeof OPTIONS)[number]['id'];
 
 export default function FoundationPainScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<PainId | null>(null);
   const [brand, setBrand] = useState('');
 
   const handleContinue = async () => {
@@ -29,41 +31,35 @@ export default function FoundationPainScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      <OnboardingHeader step={8} total={11} onBack={() => router.back()} />
+    <View style={[ob.root, { paddingBottom: insets.bottom + 32 }]}>
+      <OnboardingHeader step={9} total={11} onBack={() => router.back()} />
 
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-        <Text style={styles.title}>How often do you buy{'\n'}the wrong shade?</Text>
-        <Text style={styles.sub}>Be honest — we're about to fix this.</Text>
+      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={ob.header}>
+        <Text style={ob.title}>How often do you buy{'\n'}the wrong shade?</Text>
+        <Text style={ob.sub}>Be honest — we're about to fix this.</Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.options}>
-        {OPTIONS.map((opt, i) => {
-          const active = selected === opt.id;
-          return (
-            <Animated.View key={opt.id} entering={FadeInUp.delay(200 + i * 50).duration(400)}>
-              <Pressable
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelected(opt.id); }}
-                style={({ pressed }) => [styles.card, active && styles.cardActive, pressed && styles.cardPressed]}
-              >
-                <View style={[styles.radio, active && styles.radioActive]}>
-                  {active && <View style={styles.radioDot} />}
-                </View>
-                <View style={styles.cardBody}>
-                  <Text style={[styles.label, active && styles.labelActive]}>{opt.label}</Text>
-                  <Text style={styles.desc}>{opt.desc}</Text>
-                </View>
-              </Pressable>
-            </Animated.View>
-          );
-        })}
-      </Animated.View>
+      <View style={ob.options}>
+        {OPTIONS.map((opt, i) => (
+          <Animated.View key={opt.id} entering={FadeInUp.delay(160 + i * 55).duration(400)}>
+            <SelectCard
+              label={opt.label}
+              description={opt.description}
+              active={selected === opt.id}
+              onPress={() => setSelected(opt.id)}
+            />
+          </Animated.View>
+        ))}
+      </View>
 
-      <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.brandSection}>
-        <Text style={styles.brandLabel}>What brand do you usually buy? <Text style={styles.optional}>(optional)</Text></Text>
+      <Animated.View entering={FadeInUp.delay(420).duration(500)} style={styles.brandSection}>
+        <Text style={styles.brandLabel}>
+          What brand do you usually buy?{' '}
+          <Text style={styles.optional}>(optional)</Text>
+        </Text>
         <TextInput
           style={styles.brandInput}
-          placeholder="e.g. Fenty Beauty, MAC, Charlotte Tilbury..."
+          placeholder="e.g. Fenty Beauty, MAC, Charlotte Tilbury…"
           placeholderTextColor={tokens.colors.grayLight}
           value={brand}
           onChangeText={setBrand}
@@ -73,36 +69,44 @@ export default function FoundationPainScreen() {
         />
       </Animated.View>
 
-      <View style={styles.spacer} />
+      <View style={ob.spacer} />
 
-      <Animated.View entering={FadeInUp.delay(540).duration(500)} style={{ paddingBottom: insets.bottom + 32 }}>
-        <GlassButton title="Continue" onPress={handleContinue} variant="primary" style={styles.cta} disabled={!selected} />
+      <Animated.View entering={FadeInUp.delay(500).duration(500)}>
+        <GlassButton
+          title="Continue"
+          onPress={handleContinue}
+          variant="primary"
+          style={styles.cta}
+          disabled={!selected}
+        />
       </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: tokens.colors.beige, paddingHorizontal: 28 },
-  header: { marginBottom: 28 },
-  step: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500', letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight, marginBottom: 14 },
-  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
-  sub: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '300', color: tokens.colors.gray, lineHeight: 22 },
-  options: { gap: 10, marginBottom: 24 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: tokens.colors.white, borderRadius: 14, paddingVertical: 16, paddingHorizontal: 18, borderWidth: 1.5, borderColor: tokens.colors.border },
-  cardActive: { borderColor: tokens.colors.pinkDeep, backgroundColor: tokens.colors.pinkLight },
-  cardPressed: { opacity: 0.9 },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: tokens.colors.grayLight, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
-  radioActive: { borderColor: tokens.colors.pinkDeep },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: tokens.colors.pinkDeep },
-  cardBody: { flex: 1, gap: 2 },
-  label: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '500', color: tokens.colors.text },
-  labelActive: { color: tokens.colors.pinkRich },
-  desc: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '300', color: tokens.colors.gray, lineHeight: 18 },
-  brandSection: {},
-  brandLabel: { fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '500', color: tokens.colors.text, marginBottom: 10 },
-  optional: { fontWeight: '300', color: tokens.colors.grayLight },
-  brandInput: { backgroundColor: tokens.colors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontFamily: tokens.fonts.regular, fontSize: 14, color: tokens.colors.text, borderWidth: 1.5, borderColor: tokens.colors.border },
-  spacer: { flex: 1, minHeight: 16 },
+  brandSection: { marginTop: 20 },
+  brandLabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '500',
+    color: tokens.colors.text,
+    marginBottom: 10,
+  },
+  optional: {
+    fontWeight: '300',
+    color: tokens.colors.grayLight,
+  },
+  brandInput: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    color: tokens.colors.text,
+    borderWidth: 1.5,
+    borderColor: tokens.colors.border,
+  },
   cta: { width: '100%' },
 });

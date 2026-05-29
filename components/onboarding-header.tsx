@@ -1,43 +1,62 @@
-import { Pressable, Text, StyleSheet, View } from 'react-native';
-import { tokens } from './theme';
+import { Pressable, Text, StyleSheet, View, useWindowDimensions } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  useEffect,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { tokens } from '@/components/theme';
 
 interface OnboardingHeaderProps {
   step: number;
-  total: number;
+  total: number; // pass 0 for back-arrow-only (permission screens)
   onBack?: () => void;
 }
 
+const H_PADDING = 20;
+const BACK_BTN_WIDTH = 36;
+const GAP = 12;
+
 export function OnboardingHeader({ step, total, onBack }: OnboardingHeaderProps) {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+
+  // Track width = screen - padding both sides - back btn - placeholder - gaps
+  const trackWidth = width - H_PADDING * 2 - BACK_BTN_WIDTH * 2 - GAP * 2;
+
+  const progress = useSharedValue(total > 0 ? step / total : 0);
+
+  useEffect(() => {
+    if (total > 0) {
+      progress.value = withSpring(step / total, {
+        damping: 22,
+        stiffness: 130,
+        mass: 0.6,
+      });
+    }
+  }, [step, total]);
+
+  const animatedFill = useAnimatedStyle(() => ({
+    width: progress.value * trackWidth,
+  }));
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
       <View style={styles.nav}>
         {onBack ? (
-          <Pressable onPress={onBack} hitSlop={8} style={styles.backBtn}>
+          <Pressable onPress={onBack} hitSlop={10} style={styles.backBtn}>
             <Text style={styles.backIcon}>‹</Text>
           </Pressable>
         ) : (
           <View style={styles.placeholder} />
         )}
 
-        <View style={styles.dotsRow}>
-          {Array.from({ length: total }, (_, i) => {
-            const n = i + 1;
-            return (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  n < step  && styles.dotPast,
-                  n === step && styles.dotActive,
-                  n > step  && styles.dotFuture,
-                ]}
-              />
-            );
-          })}
-        </View>
+        {total > 0 && (
+          <View style={[styles.track, { width: trackWidth }]}>
+            <Animated.View style={[styles.fill, animatedFill]} />
+          </View>
+        )}
 
         <View style={styles.placeholder} />
       </View>
@@ -47,46 +66,42 @@ export function OnboardingHeader({ step, total, onBack }: OnboardingHeaderProps)
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingHorizontal: H_PADDING,
+    paddingBottom: 16,
   },
   nav: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: GAP,
   },
   backBtn: {
-    width: 36,
+    width: BACK_BTN_WIDTH,
     height: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    flexShrink: 0,
   },
-  placeholder: { width: 36, height: 36 },
+  placeholder: {
+    width: BACK_BTN_WIDTH,
+    height: 36,
+    flexShrink: 0,
+  },
   backIcon: {
     fontSize: 28,
     color: tokens.colors.grayLight,
     lineHeight: 32,
     includeFontPadding: false,
   },
-  dotsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-  },
-  dotActive: {
-    width: 18,
-    backgroundColor: tokens.colors.pinkDeep,
-  },
-  dotPast: {
-    backgroundColor: tokens.colors.pinkDeep,
-    opacity: 0.38,
-  },
-  dotFuture: {
+  track: {
+    height: 3,
     backgroundColor: tokens.colors.border,
+    borderRadius: 3,
+    overflow: 'hidden',
+    flex: 1,
+  },
+  fill: {
+    height: 3,
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 3,
   },
 });

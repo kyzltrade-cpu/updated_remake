@@ -70,7 +70,8 @@ export default function PaywallScreen() {
   };
 
   const handleClose = () => {
-    router.back();
+    // "Continue with Free" — skip paywall, go straight to account creation
+    router.replace('/(onboarding)/create-account');
   };
 
   const handleDevBypass = () => {

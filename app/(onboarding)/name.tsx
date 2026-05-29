@@ -4,10 +4,11 @@ import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform } fro
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { tokens } from '@/components/theme';
-import { GlassButton } from '@/components/glass-button';
-import { OnboardingHeader } from '@/components/onboarding-header';
 import * as Haptics from 'expo-haptics';
+import { ob } from '@/components/onboarding-styles';
+import { OnboardingHeader } from '@/components/onboarding-header';
+import { GlassButton } from '@/components/glass-button';
+import { tokens } from '@/components/theme';
 
 export default function NameScreen() {
   const router = useRouter();
@@ -20,20 +21,20 @@ export default function NameScreen() {
     if (!clean) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await AsyncStorage.setItem('@remake_user_name', clean);
-    router.push('/(onboarding)/pain-point');
+    router.push('/(onboarding)/frequency');
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.kav}
+      style={[styles.kav]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
+      <View style={[ob.root, { paddingBottom: insets.bottom + 32 }]}>
         <OnboardingHeader step={1} total={11} onBack={() => router.back()} />
 
-        <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-          <Text style={styles.title}>What's your name?</Text>
-          <Text style={styles.sub}>We'll personalise your coaching just for you.</Text>
+        <Animated.View entering={FadeInUp.delay(80).duration(500)} style={ob.header}>
+          <Text style={ob.title}>What should we{'\n'}call you?</Text>
+          <Text style={ob.sub}>We'll personalise your coaching just for you.</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(220).duration(500)}>
@@ -53,7 +54,7 @@ export default function NameScreen() {
           />
         </Animated.View>
 
-        <View style={styles.spacer} />
+        <View style={ob.spacer} />
 
         <Animated.View entering={FadeInUp.delay(380).duration(500)}>
           <GlassButton
@@ -64,34 +65,19 @@ export default function NameScreen() {
             disabled={!name.trim()}
           />
         </Animated.View>
-
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  kav: { flex: 1, backgroundColor: tokens.colors.beige },
-  root: { flex: 1, paddingHorizontal: 28 },
-  header: { marginBottom: 32 },
-  title: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 32,
-    fontWeight: '400',
-    color: tokens.colors.text,
-    lineHeight: 42,
-    marginBottom: 10,
-  },
-  sub: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 15,
-    fontWeight: '300',
-    color: tokens.colors.gray,
-    lineHeight: 22,
+  kav: {
+    flex: 1,
+    backgroundColor: tokens.colors.cream,
   },
   input: {
     backgroundColor: tokens.colors.white,
-    borderRadius: 14,
+    borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 18,
     fontFamily: tokens.fonts.regular,
@@ -100,6 +86,5 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: tokens.colors.border,
   },
-  spacer: { flex: 1, minHeight: 40 },
   cta: { width: '100%' },
 });

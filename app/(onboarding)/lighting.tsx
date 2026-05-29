@@ -3,16 +3,17 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { tokens } from '@/components/theme';
+import { ob } from '@/components/onboarding-styles';
 import { GlassButton } from '@/components/glass-button';
 import { OnboardingHeader } from '@/components/onboarding-header';
-import * as Haptics from 'expo-haptics';
 
 const TIPS = [
   {
     num: '01',
     head: 'Face the window',
-    desc: 'Natural light in front of you — never behind. Side or back lighting skews your colour read.',
+    desc: 'Natural light in front of you — never behind. Back lighting skews your colour read.',
   },
   {
     num: '02',
@@ -31,18 +32,18 @@ export default function LightingScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.root, { paddingBottom: insets.bottom + 36 }]}>
-      <OnboardingHeader step={11} total={11} onBack={() => router.back()} />
+    <View style={[ob.root, { paddingBottom: insets.bottom + 36 }]}>
+      <OnboardingHeader step={0} total={0} onBack={() => router.back()} />
 
-      {/* Header */}
       <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-        <Text style={styles.eyebrow}>Profile built ✦</Text>
-        <Text style={styles.title}>One last thing{'\n'}before your reveal.</Text>
-        <Text style={styles.sub}>Set the scene for the most accurate read of your face — 30 seconds, then you're in.</Text>
+        <Text style={ob.eyebrow}>Your Reveal Starts Now</Text>
+        <Text style={ob.title}>Set the scene for{'\n'}the clearest read.</Text>
+        <Text style={ob.sub}>
+          30 seconds of setup for the most accurate result — then you're in.
+        </Text>
       </Animated.View>
 
-      {/* Tips — editorial numbered style, no white cards */}
-      <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.tips}>
+      <Animated.View entering={FadeInUp.delay(200).duration(500)}>
         {TIPS.map((tip, i) => (
           <Animated.View key={tip.num} entering={FadeInUp.delay(200 + i * 80).duration(400)}>
             <View style={styles.tip}>
@@ -57,12 +58,11 @@ export default function LightingScreen() {
         ))}
       </Animated.View>
 
-      <View style={styles.spacer} />
+      <View style={ob.spacer} />
 
-      {/* CTA */}
       <Animated.View entering={FadeInUp.delay(500).duration(500)} style={styles.bottom}>
         <GlassButton
-          title="I'm ready — scan me"
+          title="I'm Ready — Scan Me"
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             router.push('/(onboarding)/first-scan');
@@ -70,55 +70,24 @@ export default function LightingScreen() {
           variant="primary"
           style={styles.cta}
         />
-        <Text style={styles.note}>Takes about 3 seconds</Text>
+        <Text style={ob.footnote}>Takes about 3 seconds</Text>
       </Animated.View>
 
-      {/* Atmospheric bottom gradient bridges to the dark camera world */}
       <LinearGradient
         colors={['transparent', 'rgba(10,8,7,0.08)']}
         style={styles.bottomGlow}
         pointerEvents="none"
       />
 
-      {/* Decorative */}
-      <Animated.Text entering={FadeIn.duration(900)} style={styles.decor}>✦</Animated.Text>
+      <Animated.Text entering={FadeIn.duration(900)} style={styles.decor} pointerEvents="none">
+        ✦
+      </Animated.Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: tokens.colors.beige,
-    paddingHorizontal: 28,
-  },
   header: { marginBottom: 36 },
-  eyebrow: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    color: tokens.colors.pinkDeep,
-    marginBottom: 14,
-  },
-  title: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 34,
-    fontWeight: '400',
-    color: tokens.colors.text,
-    lineHeight: 44,
-    marginBottom: 10,
-  },
-  sub: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 14,
-    fontWeight: '300',
-    color: tokens.colors.gray,
-    lineHeight: 22,
-  },
-
-  tips: {},
   tip: {
     flexDirection: 'row',
     gap: 18,
@@ -154,17 +123,8 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.border,
     marginLeft: 42,
   },
-
-  spacer: { flex: 1, minHeight: 32 },
-  bottom: { alignItems: 'center', gap: 12, zIndex: 2 },
+  bottom: { alignItems: 'center', gap: 10, zIndex: 2 },
   cta: { width: '100%' },
-  note: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    color: tokens.colors.grayLight,
-    letterSpacing: 0.2,
-  },
-
   bottomGlow: {
     position: 'absolute',
     bottom: 0,
@@ -178,6 +138,5 @@ const styles = StyleSheet.create({
     right: 22,
     fontSize: 60,
     color: 'rgba(232,57,154,0.05)',
-    pointerEvents: 'none',
   },
 });
