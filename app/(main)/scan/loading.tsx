@@ -81,7 +81,7 @@ export default function LoadingPage() {
   }, [params.uri]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#06010E' }}>
+    <View style={{ flex: 1 }}>
       <LoadingScreen />
     </View>
   );

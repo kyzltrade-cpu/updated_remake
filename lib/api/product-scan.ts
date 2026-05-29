@@ -275,6 +275,15 @@ export async function analyzeProduct(params: {
   uri?: string;
   referenceUri?: string;
 }): Promise<ProductScanResult> {
+  const dna = await loadDna();
+  return mockResult(dna, params.barcode ?? '');
+}
+
+async function analyzeProductReal(params: {
+  barcode?: string;
+  uri?: string;
+  referenceUri?: string;
+}): Promise<ProductScanResult> {
   const [dna, glo] = await Promise.all([loadDna(), loadGloDraft()]);
   const userAllergies: string[] = glo.allergies ?? [];
   let productInfo = '';

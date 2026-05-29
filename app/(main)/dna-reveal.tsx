@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useReducer } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions, ScrollView, Linking } from 'react-native';
 import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   FadeIn, FadeInUp,
   useSharedValue, useAnimatedStyle,
   withSpring, withTiming, withDelay, withRepeat, withSequence,
-  cancelAnimation, runOnJS,
+  cancelAnimation, runOnJS, Easing,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
@@ -23,10 +23,10 @@ import { useSubscription } from '@/contexts/subscription-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DnaShareCard, CARD_W, CARD_H } from '@/components/dna-share-card';
 import { findShades } from '@/lib/api/shades';
-import { getRecsForDna, type ProductRec } from '@/lib/api/recommendations';
+import { getKitForDna, type CategoryKit, type ProductRec } from '@/lib/api/recommendations';
 
 const { width: W, height: H } = Dimensions.get('window');
-const SLIDE_COUNT = 11;
+const SLIDE_COUNT = 16;
 const SLIDE_DURATION = 9000;
 const SEG_GAP = 3;
 const SEG_PAD = 14;
@@ -48,16 +48,15 @@ const PLACEHOLDER_DNA: DnaResult = {
   blushProfile: 'Bronze Flush',
 };
 
-const MUSIC_TRACKS = [
-  require('../../assets/sounds/tc.mp3'),
-  require('../../assets/sounds/tf.mp3'),
-  require('../../assets/sounds/te.mp3'),
-  require('../../assets/sounds/t2.mp3'),
-  require('../../assets/sounds/t3.mp3'),
-  require('../../assets/sounds/t4.mp3'),
-  require('../../assets/sounds/t5.mp3'),
-];
-const MUSIC_SWITCH_MS = 15000;
+// Two tracks: one for the journey (0–5), one for the reveal (6–10).
+// Preload the reveal track on slide 3 so the crossfade is instant with no silence.
+const MUSIC_JOURNEY = require('../../assets/sounds/t5.mp3');  // energetic build
+const MUSIC_REVEAL  = require('../../assets/sounds/tf.mp3');  // peak energy, archetype reveal
+const MUSIC_VOL = 0.75;
+const CROSSFADE_STEPS = 20;
+const CROSSFADE_STEP_MS = 55; // 20 × 55ms = 1.1s crossfade
+const MUSIC_REVEAL_SLIDE = 6;
+const MUSIC_PRELOAD_SLIDE = 3;
 
 // ── Sparkles ──────────────────────────────────────────────────────────────────
 
@@ -137,9 +136,19 @@ const SLIDE_COLORS: SlideColors[] = [
   { gradientTop: '#A83868', gradientBot: '#400820', blobA: '#D870A0', blobB: '#B84880', text: '#FFE8F0', muted: 'rgba(255,232,240,0.62)', eyebrow: 'rgba(255,232,240,0.45)', accent: '#FFB0C8' },
   // 8 — Blush: warm coral rose
   { gradientTop: '#E88878', gradientBot: '#B83840', blobA: '#F0ACA0', blobB: '#E08078', text: '#FFF4F0', muted: 'rgba(255,244,240,0.62)', eyebrow: 'rgba(255,244,240,0.45)', accent: '#FFCAB8' },
-  // 9 — Kit: warm mocha/sienna
+  // 9 — Foundation: warm mocha/sienna
   { gradientTop: '#906050', gradientBot: '#402010', blobA: '#C08860', blobB: '#A06840', text: '#FFF4EE', muted: 'rgba(255,244,238,0.62)', eyebrow: 'rgba(255,244,238,0.45)', accent: '#D0A888' },
-  // 10 — Summary: deep midnight gold (finale)
+  // 10 — Blush recs: soft clay peach
+  { gradientTop: '#D4897A', gradientBot: '#8C3828', blobA: '#E8B0A0', blobB: '#D07868', text: '#FFF6F4', muted: 'rgba(255,246,244,0.65)', eyebrow: 'rgba(255,246,244,0.45)', accent: '#FFD0C0' },
+  // 11 — Mascara: deep charcoal night
+  { gradientTop: '#2C2840', gradientBot: '#0A0814', blobA: '#5C5080', blobB: '#402868', text: '#F0EEF8', muted: 'rgba(240,238,248,0.62)', eyebrow: 'rgba(240,238,248,0.42)', accent: '#C0B0E0' },
+  // 12 — Eye: rich forest emerald
+  { gradientTop: '#244830', gradientBot: '#061808', blobA: '#3A7848', blobB: '#286038', text: '#EEFAF2', muted: 'rgba(238,250,242,0.62)', eyebrow: 'rgba(238,250,242,0.42)', accent: '#A0E8B8' },
+  // 13 — Lip: deep crimson velvet
+  { gradientTop: '#8C2038', gradientBot: '#300810', blobA: '#C04868', blobB: '#A02848', text: '#FFF0F4', muted: 'rgba(255,240,244,0.65)', eyebrow: 'rgba(255,240,244,0.45)', accent: '#FFB0C8' },
+  // 14 — Skincare: sage mist
+  { gradientTop: '#5A7860', gradientBot: '#1A3820', blobA: '#8AB898', blobB: '#6A9878', text: '#F0F8F2', muted: 'rgba(240,248,242,0.62)', eyebrow: 'rgba(240,248,242,0.42)', accent: '#C0E8CC' },
+  // 15 — Summary: deep midnight gold (finale)
   { gradientTop: '#1C0838', gradientBot: '#060108', blobA: '#D4AF37', blobB: '#C8906A', text: '#FFEEDD', muted: 'rgba(255,238,221,0.6)', eyebrow: 'rgba(255,238,221,0.4)', accent: '#D4AF37' },
 ];
 
@@ -284,32 +293,41 @@ function ConfettiBurst({ count = 20 }: { count?: number }) {
   );
 }
 
-// ── Content transitions — dissolve, no x-axis movement ───────────────────────
+// ── Content transitions — Z-axis push-through, direction-aware ───────────────
 
+// Outgoing recedes: fades + scales down + drifts up. Fast — get out of the way.
 function OutgoingContent({ children }: { children: React.ReactNode }) {
   const op = useSharedValue(1);
   const ty = useSharedValue(0);
+  const sc = useSharedValue(1);
   useEffect(() => {
-    op.value = withTiming(0, { duration: 220 });
-    ty.value = withTiming(-24, { duration: 280 });
+    op.value = withTiming(0, { duration: 180, easing: Easing.out(Easing.quad) });
+    ty.value = withTiming(-12, { duration: 180, easing: Easing.out(Easing.quad) });
+    sc.value = withTiming(0.96, { duration: 180, easing: Easing.out(Easing.quad) });
   }, []);
   const sty = useAnimatedStyle(() => ({
     opacity: op.value,
-    transform: [{ translateY: ty.value }],
+    transform: [{ translateY: ty.value }, { scale: sc.value }],
   }));
   return <Animated.View style={[StyleSheet.absoluteFill, sty]}>{children}</Animated.View>;
 }
 
-function IncomingContent({ children }: { children: React.ReactNode }) {
+// Incoming advances: scales up from slightly behind + drifts from direction hint.
+// dir=1 → forward (hint from right), dir=-1 → back (hint from left).
+function IncomingContent({ children, dir }: { children: React.ReactNode; dir: 1 | -1 }) {
   const op = useSharedValue(0);
-  const ty = useSharedValue(28);
+  const ty = useSharedValue(16);
+  const sc = useSharedValue(0.97);
+  const tx = useSharedValue(dir * 8);
   useEffect(() => {
-    op.value = withDelay(160, withTiming(1, { duration: 300 }));
-    ty.value = withDelay(160, withSpring(0, { damping: 22, stiffness: 180 }));
+    op.value = withDelay(90, withTiming(1, { duration: 230, easing: Easing.out(Easing.quad) }));
+    ty.value = withDelay(90, withSpring(0, { damping: 28, stiffness: 240 }));
+    sc.value = withDelay(90, withSpring(1, { damping: 28, stiffness: 240 }));
+    tx.value = withDelay(90, withSpring(0, { damping: 28, stiffness: 240 }));
   }, []);
   const sty = useAnimatedStyle(() => ({
     opacity: op.value,
-    transform: [{ translateY: ty.value }],
+    transform: [{ translateY: ty.value }, { translateX: tx.value }, { scale: sc.value }],
   }));
   return <Animated.View style={[StyleSheet.absoluteFill, sty]}>{children}</Animated.View>;
 }
@@ -390,6 +408,264 @@ function RevealPop({ delay, children }: { delay: number; children: React.ReactNo
   return <Animated.View style={sty}>{children}</Animated.View>;
 }
 
+// Bounces in from scale 0.2 — for large visual anchors (swatches, rings)
+function PopIn({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const op = useSharedValue(0);
+  const sc = useSharedValue(0.2);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 200 }));
+    sc.value = withDelay(delay, withSpring(1, { damping: 6, stiffness: 110 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ scale: sc.value }] }));
+  return <Animated.View style={sty}>{children}</Animated.View>;
+}
+
+// Spins in — scale + rotation. Only for glyphs/icons where rotation is visible.
+function SpinIn({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const op = useSharedValue(0);
+  const sc = useSharedValue(0.2);
+  const rot = useSharedValue(-25);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 200 }));
+    sc.value = withDelay(delay, withSpring(1, { damping: 7, stiffness: 100 }));
+    rot.value = withDelay(delay, withSpring(0, { damping: 9, stiffness: 90 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({
+    opacity: op.value,
+    transform: [{ rotate: `${rot.value}deg` }, { scale: sc.value }],
+  }));
+  return <Animated.View style={sty}>{children}</Animated.View>;
+}
+
+// Falls from above — for eyebrows and category labels. Opposite of RevealItem.
+function DropIn({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const op = useSharedValue(0);
+  const ty = useSharedValue(-18);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 220 }));
+    ty.value = withDelay(delay, withSpring(0, { damping: 16, stiffness: 180 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ translateY: ty.value }] }));
+  return <Animated.View style={sty}>{children}</Animated.View>;
+}
+
+// Slides in from left — for labels/elements on the left side of a pair
+function SlideFromLeft({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const op = useSharedValue(0);
+  const tx = useSharedValue(-44);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 240 }));
+    tx.value = withDelay(delay, withSpring(0, { damping: 18, stiffness: 170 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ translateX: tx.value }] }));
+  return <Animated.View style={sty}>{children}</Animated.View>;
+}
+
+// Slides in from right — for labels/elements on the right side of a pair
+function SlideFromRight({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const op = useSharedValue(0);
+  const tx = useSharedValue(44);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 240 }));
+    tx.value = withDelay(delay, withSpring(0, { damping: 18, stiffness: 170 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ translateX: tx.value }] }));
+  return <Animated.View style={sty}>{children}</Animated.View>;
+}
+
+// ── Lash star cluster — 5 stars that scatter from origin ─────────────────────
+
+function LashStar({ delay, color, tx, ty, size }: {
+  delay: number; color: string; tx: number; ty: number; size: number;
+}) {
+  const op = useSharedValue(0);
+  const x = useSharedValue(0);
+  const y = useSharedValue(0);
+  const sc = useSharedValue(0);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 180 }));
+    x.value = withDelay(delay, withSpring(tx, { damping: 7, stiffness: 80 }));
+    y.value = withDelay(delay, withSpring(ty, { damping: 7, stiffness: 80 }));
+    sc.value = withDelay(delay, withSpring(1, { damping: 5, stiffness: 90 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({
+    opacity: op.value,
+    transform: [{ translateX: x.value }, { translateY: y.value }, { scale: sc.value }],
+  }));
+  return <Animated.Text style={[{ position: 'absolute', fontSize: size, color }, sty]}>✦</Animated.Text>;
+}
+
+function LashStars({ delay, color }: { delay: number; color: string }) {
+  const stars = [
+    { tx: 0,   ty: -58, size: 36 },
+    { tx: -52, ty: -18, size: 22 },
+    { tx: 52,  ty: -18, size: 22 },
+    { tx: -34, ty: 34,  size: 16 },
+    { tx: 34,  ty: 34,  size: 16 },
+  ];
+  return (
+    <View style={{ width: 140, height: 120, alignItems: 'center', justifyContent: 'center' }}>
+      {stars.map((s, i) => (
+        <LashStar key={i} delay={delay + i * 90} color={color} tx={s.tx} ty={s.ty} size={s.size} />
+      ))}
+    </View>
+  );
+}
+
+// ── Blush dot cluster — 3 circles in a triangle (like actual blush placement) ──
+
+function BlushDot({ delay, hex, tx, ty, size, isLocked }: {
+  delay: number; hex: string; tx: number; ty: number; size: number; isLocked?: boolean;
+}) {
+  const op = useSharedValue(0);
+  const sc = useSharedValue(0);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 200 }));
+    sc.value = withDelay(delay, withSpring(1, { damping: 6, stiffness: 100 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ scale: sc.value }] }));
+  return (
+    <Animated.View style={[{
+      position: 'absolute',
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: isLocked ? `${hex}40` : hex,
+      shadowColor: hex, shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: isLocked ? 0 : 0.55, shadowRadius: size * 0.28,
+      left: '50%', top: '50%',
+      marginLeft: tx - size / 2, marginTop: ty - size / 2,
+    }, sty]} />
+  );
+}
+
+function BlushDots({ delay, hex, isLocked }: { delay: number; hex: string; isLocked?: boolean }) {
+  const dots = [
+    { tx: -42, ty: -10, size: 76 },
+    { tx: 42,  ty: -10, size: 76 },
+    { tx: 0,   ty: 46,  size: 58 },
+  ];
+  return (
+    <View style={{ width: 160, height: 130, position: 'relative' }}>
+      {dots.map((d, i) => (
+        <BlushDot key={i} delay={delay + i * 180} hex={hex} tx={d.tx} ty={d.ty} size={d.size} isLocked={isLocked} />
+      ))}
+    </View>
+  );
+}
+
+// ── Ripple rings — expanding concentric rings from a point, looping ──────────
+
+function RippleRing({ color, ringDelay, size }: { color: string; ringDelay: number; size: number }) {
+  const sc = useSharedValue(0.3);
+  const op = useSharedValue(0);
+  useEffect(() => {
+    sc.value = withDelay(ringDelay, withRepeat(
+      withTiming(2.6, { duration: 2600, easing: Easing.out(Easing.quad) }), -1, false,
+    ));
+    op.value = withDelay(ringDelay, withRepeat(
+      withSequence(
+        withTiming(0.6, { duration: 150 }),
+        withTiming(0, { duration: 2450, easing: Easing.out(Easing.cubic) }),
+      ),
+      -1, false,
+    ));
+  }, []);
+  const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ scale: sc.value }] }));
+  return (
+    <Animated.View
+      style={[{ position: 'absolute', width: size, height: size, borderRadius: size / 2, borderWidth: 1.5, borderColor: color }, sty]}
+      pointerEvents="none"
+    />
+  );
+}
+
+function RippleRings({ color, size = 180, delay = 0 }: { color: string; size?: number; delay?: number }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+      <RippleRing color={color} ringDelay={delay} size={size} />
+      <RippleRing color={color} ringDelay={delay + 870} size={size} />
+      <RippleRing color={color} ringDelay={delay + 1740} size={size} />
+    </View>
+  );
+}
+
+// ── Season bars — animated bar chart for colour season ────────────────────────
+
+function SeasonBar({ name, color, targetH, isActive, index, isLocked, textColor, mutedColor }: {
+  name: string; color: string; targetH: number; isActive: boolean; index: number;
+  isLocked?: boolean; textColor: string; mutedColor: string;
+}) {
+  const ht = useSharedValue(4);
+  useEffect(() => {
+    ht.value = withDelay(2000 + index * 140, withSpring(targetH, { damping: 15, stiffness: 85 }));
+  }, []);
+  const barSty = useAnimatedStyle(() => ({ height: ht.value }));
+  return (
+    <View style={{ flex: 1, alignItems: 'center', gap: 8 }}>
+      <Animated.View style={[{
+        width: '100%', borderRadius: 10,
+        backgroundColor: isLocked ? `${color}35` : color,
+        ...(isActive && !isLocked ? { shadowColor: color, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 14 } : {}),
+      }, barSty]} />
+      <Text style={{ fontFamily: 'Inter', fontSize: 9, letterSpacing: 0.8, color: isActive && !isLocked ? textColor : mutedColor, fontWeight: isActive ? '700' : '400' }}>
+        {name.slice(0, 3).toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
+// ── Symmetry bars — two bars growing from centre outward ──────────────────────
+
+function SymmetryBars({ color }: { color: string }) {
+  const w = useSharedValue(0);
+  const BAR_HALF = (W - 100) / 2;
+  useEffect(() => {
+    w.value = withDelay(1800, withTiming(BAR_HALF, { duration: 1900, easing: Easing.out(Easing.cubic) }));
+  }, []);
+  const barSty = useAnimatedStyle(() => ({ width: w.value }));
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', width: W - 56, marginTop: -8 }}>
+      <View style={{ flex: 1, alignItems: 'flex-end' }}>
+        <Animated.View style={[{ height: 2, borderRadius: 1, backgroundColor: `${color}50` }, barSty]} />
+      </View>
+      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color, marginHorizontal: 3 }} />
+      <View style={{ flex: 1, alignItems: 'flex-start' }}>
+        <Animated.View style={[{ height: 2, borderRadius: 1, backgroundColor: `${color}50` }, barSty]} />
+      </View>
+    </View>
+  );
+}
+
+// ── Burst dots — ✦ symbols radiating outward from a point ────────────────────
+
+function BurstDot({ angle, color, delay }: { angle: number; color: string; delay: number }) {
+  const d = useSharedValue(0);
+  const op = useSharedValue(0);
+  const rad = (angle * Math.PI) / 180;
+  useEffect(() => {
+    op.value = withDelay(delay, withSequence(
+      withTiming(1, { duration: 70 }),
+      withDelay(300, withTiming(0, { duration: 700, easing: Easing.out(Easing.cubic) })),
+    ));
+    d.value = withDelay(delay, withTiming(110, { duration: 760, easing: Easing.out(Easing.cubic) }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({
+    opacity: op.value,
+    transform: [{ translateX: Math.cos(rad) * d.value }, { translateY: Math.sin(rad) * d.value }],
+  }));
+  return <Animated.Text style={[{ position: 'absolute', fontSize: 11, color }, sty]}>✦</Animated.Text>;
+}
+
+function BurstDots({ color, delay = 0 }: { color: string; delay?: number }) {
+  const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+  return (
+    <View style={{ width: 0, height: 0, alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+      {angles.map((a, i) => (
+        <BurstDot key={a} angle={a} color={color} delay={delay + i * 35} />
+      ))}
+    </View>
+  );
+}
+
 // ── Slide: Canvas ─────────────────────────────────────────────────────────────
 
 function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
@@ -407,25 +683,31 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <Animated.View style={[ds.canvasGlow, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }, glSty]} />
       <View style={ds.bodyWrap}>
-        <RevealItem delay={0}>
+        <DropIn delay={0}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR CANVAS</Text>
-        </RevealItem>
-        <RevealItem delay={700}>
+        </DropIn>
+        <RevealItem delay={600}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'There are thousands of foundation shades\nout there.'}</Text>
         </RevealItem>
-        <RevealItem delay={1500}>
+        <RevealItem delay={1400}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{'Yours is the only one\nthat matters.'}</Text>
         </RevealItem>
-        <RevealItem delay={2300}>
-          <View style={[ds.canvasSwatch, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }]}>
-            {isLocked && <BlurView intensity={28} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 110 }]} />}
+        {/* Ripple rings radiate from behind the swatch */}
+        <View style={{ width: 240, height: 240, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="none">
+            <RippleRings color={dna.skinToneHex} size={220} delay={1700} />
           </View>
-        </RevealItem>
+          <PopIn delay={2100}>
+            <View style={[ds.canvasSwatch, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }]}>
+              {isLocked && <BlurView intensity={28} tint="dark" style={[StyleSheet.absoluteFillObject, { borderRadius: 110 }]} />}
+            </View>
+          </PopIn>
+        </View>
         {isLocked
-          ? <RevealItem delay={3200}><LockedValue size="lg" color={colors.muted} /></RevealItem>
-          : <RevealPop delay={3200}><Text style={[ds.hexCode, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text></RevealPop>}
+          ? <RevealItem delay={3000}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          : <RevealPop delay={3000}><Text style={[ds.hexCode, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text></RevealPop>}
         {shades && (
-          <RevealItem delay={3700}>
+          <RevealItem delay={3500}>
             <View style={[ds.shadesCard, { borderColor: `${colors.text}22`, backgroundColor: 'rgba(0,0,0,0.08)' }]}>
               <View style={ds.shadesRow}>
                 <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Fenty</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.Fenty}</Text>
@@ -468,29 +750,25 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         <RevealItem delay={1500}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{"You won't anymore."}</Text>
         </RevealItem>
-        <RevealItem delay={2200}>
-          <View style={ds.seasonGrid}>
-            {allSeasons.map((s) => {
-              const active = !isLocked && s === userSeason;
-              return (
-                <View key={s} style={[ds.seasonCard, { borderColor: `${colors.text}18`, backgroundColor: 'rgba(0,0,0,0.12)' }, active && { borderColor: colors.text, backgroundColor: 'rgba(255,255,255,0.18)' }]}>
-                  <View style={[ds.seasonSwatch, { backgroundColor: isLocked ? SWATCH_SEASON[s] + '55' : SWATCH_SEASON[s] }, active && ds.seasonSwatchActive]} />
-                  <Text style={[ds.seasonLabel, { color: colors.muted }, active && { color: colors.text, fontWeight: '700' }]}>{s}</Text>
-                </View>
-              );
-            })}
-          </View>
-        </RevealItem>
+        {/* Animated bar chart — each season grows to its height, active season tallest + glowing */}
+        <View style={{ flexDirection: 'row', gap: 10, height: 164, alignItems: 'flex-end', paddingHorizontal: 8, width: W - 56 }}>
+          {allSeasons.map((s, i) => (
+            <SeasonBar
+              key={s}
+              name={s}
+              color={SWATCH_SEASON[s] ?? '#CCC'}
+              targetH={!isLocked && s === userSeason ? 140 : [72, 90, 116, 100][i]}
+              isActive={!isLocked && s === userSeason}
+              index={i}
+              isLocked={isLocked}
+              textColor={colors.text}
+              mutedColor={colors.muted}
+            />
+          ))}
+        </View>
         {isLocked
           ? <RevealItem delay={2800}><LockedValue size="md" color={colors.muted} /></RevealItem>
           : <>
-              <RevealItem delay={2800}>
-                <View style={ds.paletteRow}>
-                  {SEASON_PALETTES[dna.colorSeason].map((hex, i) => (
-                    <View key={i} style={[ds.paletteDot, { backgroundColor: hex, shadowColor: hex }]} />
-                  ))}
-                </View>
-              </RevealItem>
               <RevealItem delay={3000} fast>
                 <Text style={[ds.revealLabel, { color: colors.muted }]}>Your colour season is</Text>
               </RevealItem>
@@ -513,27 +791,28 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
-        <RevealItem delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>FACE SHAPE</Text>
-        </RevealItem>
-        <RevealItem delay={700}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Brow arch, highlight zones,\ncontour map —'}</Text>
-        </RevealItem>
-        <RevealItem delay={1500}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'all of it is built\naround this.'}</Text>
-        </RevealItem>
-        <RevealItem delay={2200}>
+        {/* Glyph spins in — rotation makes it feel completely different from any other slide */}
+        <SpinIn delay={0}>
           <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>
             {isLocked ? '⬭' : (GLYPHS[dna.faceShape] ?? '⬭')}
           </Text>
+        </SpinIn>
+        <DropIn delay={600}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>FACE SHAPE</Text>
+        </DropIn>
+        <RevealItem delay={1100}>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Brow arch, highlight zones,\ncontour map —'}</Text>
+        </RevealItem>
+        <RevealItem delay={1800}>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'all of it is built\naround this.'}</Text>
         </RevealItem>
         {isLocked
-          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          ? <RevealItem delay={2500}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
-              <RevealItem delay={2900} fast>
+              <RevealItem delay={2500} fast>
                 <Text style={[ds.revealLabel, { color: colors.muted }]}>Your face shape is</Text>
               </RevealItem>
-              <RevealPop delay={3100}>
+              <RevealPop delay={2700}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.faceShape}</Text>
               </RevealPop>
             </>}
@@ -550,27 +829,31 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     if (isLocked) return;
     const target = dna.browSymmetryPct;
     let frame = 0;
+    // Ease-out counter — fast start, slows into final number
+    const totalFrames = 36;
     const id = setInterval(() => {
       frame++;
-      setDisplayPct(Math.round((frame / 30) * target));
-      if (frame >= 30) clearInterval(id);
-    }, 50);
+      const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
+      setDisplayPct(Math.round(eased * target));
+      if (frame >= totalFrames) clearInterval(id);
+    }, 48);
     return () => clearInterval(id);
   }, [isLocked]);
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
-        <RevealItem delay={0}>
+        <DropIn delay={0}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BROW BLUEPRINT</Text>
-        </RevealItem>
-        <RevealItem delay={700}>
+        </DropIn>
+        <RevealItem delay={600}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Nothing rewrites your face\nfaster than your brows.'}</Text>
         </RevealItem>
-        <RevealItem delay={1500}>
+        <RevealItem delay={1400}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{"Here's your blueprint."}</Text>
         </RevealItem>
-        <RevealItem delay={2200}>
+        {/* Ring bounces in with overshoot, counter eases out to final number */}
+        <PopIn delay={2100}>
           <View style={[ds.browRing, { borderColor: `${colors.text}30`, shadowColor: colors.text }]}>
             <View style={[ds.browRingInner, { borderColor: colors.text, shadowColor: colors.text }]}>
               {isLocked
@@ -581,7 +864,9 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
                   </>}
             </View>
           </View>
-        </RevealItem>
+        </PopIn>
+        {/* Two bars extending symmetrically from centre — mirrors the symmetry concept */}
+        <SymmetryBars color={colors.text} />
         {isLocked
           ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
@@ -603,25 +888,24 @@ function SlideLashes({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
-        <RevealItem delay={0}>
+        <DropIn delay={0}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LASH PROFILE</Text>
-        </RevealItem>
-        <RevealItem delay={700}>
+        </DropIn>
+        <RevealItem delay={350}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'The right formula and technique\nturns your natural lashes'}</Text>
         </RevealItem>
-        <RevealItem delay={1500}>
+        <RevealItem delay={850}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{'into your signature.'}</Text>
         </RevealItem>
-        <RevealItem delay={2200}>
-          <Text style={[ds.lashGlyph, { color: `${colors.text}99` }]}>✦</Text>
-        </RevealItem>
+        {/* Stars scatter from centre — each one arrives from a different direction */}
+        <LashStars delay={1350} color={`${colors.text}88`} />
         {isLocked
-          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          ? <RevealItem delay={2050}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
-              <RevealItem delay={2900} fast>
+              <RevealItem delay={2050} fast>
                 <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lash profile is</Text>
               </RevealItem>
-              <RevealPop delay={3100}>
+              <RevealPop delay={2270}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lashProfile}</Text>
               </RevealPop>
             </>}
@@ -636,27 +920,31 @@ const POS_MAP: Record<string, number> = { Sharp: 0.1, Balanced: 0.5, Soft: 0.9 }
 
 function SlideEnergy({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
   const pos = isLocked ? 0.5 : (POS_MAP[dna.energy] ?? 0.5);
-  const dotX = useSharedValue((0.5 - pos) * TRACK_W);
+  // Dot shoots in from the far edge then bounces to its real position — heavy overshoot
+  const dotX = useSharedValue((0.5 - pos) * TRACK_W * 1.4);
   useEffect(() => {
-    dotX.value = withDelay(2500, withSpring(0, { damping: 12, stiffness: 80 }));
+    dotX.value = withDelay(2100, withSpring(0, { damping: 5, stiffness: 55 }));
   }, []);
   const dotSty = useAnimatedStyle(() => ({ transform: [{ translateX: dotX.value }] }));
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
-        <RevealItem delay={0}>
+        <DropIn delay={0}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>ENERGY TYPE</Text>
-        </RevealItem>
-        <RevealItem delay={700}>
+        </DropIn>
+        <RevealItem delay={500}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Every face leans one of two ways —\nsharp and graphic,'}</Text>
         </RevealItem>
-        <RevealItem delay={1500}>
+        <RevealItem delay={1100}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{'or soft and blended.'}</Text>
         </RevealItem>
-        <RevealItem delay={2200}>
+        {/* Labels slide in from their respective edges — Sharp from left, Soft from right */}
+        <RevealItem delay={1800}>
           <View style={ds.spectrumWrap}>
-            <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Sharp</Text>
+            <SlideFromLeft delay={1900}>
+              <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Sharp</Text>
+            </SlideFromLeft>
             <View style={[ds.spectrumTrack, { backgroundColor: `${colors.text}22` }]}>
               <LinearGradient
                 colors={[`${colors.text}15`, `${colors.text}55`, `${colors.text}15`]}
@@ -665,7 +953,9 @@ function SlideEnergy({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
               />
               <Animated.View style={[ds.spectrumDot, { left: `${pos * 100}%` as `${number}%`, backgroundColor: colors.text, shadowColor: colors.text, borderColor: colors.gradientBot }, dotSty]} />
             </View>
-            <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Soft</Text>
+            <SlideFromRight delay={1900}>
+              <Text style={[ds.spectrumEndLabel, { color: colors.muted }]}>Soft</Text>
+            </SlideFromRight>
           </View>
         </RevealItem>
         {isLocked
@@ -698,7 +988,14 @@ function SlideArchetype({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
       withSequence(withTiming(1.08, { duration: 1400 }), withTiming(0.92, { duration: 1400 })),
       -1, true,
     ));
-  }, []);
+    if (!isLocked) {
+      const t = setTimeout(() => {
+        setShowConfetti(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }, 2400);
+      return () => clearTimeout(t);
+    }
+  }, [isLocked]);
   const glowSty = useAnimatedStyle(() => ({ opacity: glowAl.value, transform: [{ scale: glowSc.value }] }));
 
   return (
@@ -709,25 +1006,29 @@ function SlideArchetype({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
         <RevealItem delay={0}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BEAUTY ARCHETYPE</Text>
         </RevealItem>
-        <RevealItem delay={700}>
+        <RevealItem delay={800}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Your season. Your shape.\nYour energy.'}</Text>
         </RevealItem>
-        <RevealItem delay={1500}>
+        <RevealItem delay={1800}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{'They all point to one identity.'}</Text>
         </RevealItem>
-        <RevealItem delay={2200} fast>
+        <RevealItem delay={2300} fast>
           <Text style={[ds.youAre, { color: colors.muted }]}>You are</Text>
         </RevealItem>
-        <RevealPop delay={2400}>
+        <RevealPop delay={2500}>
           <View style={ds.archetypeNameWrap}>
             {isLocked
               ? <Text style={[ds.archetypeHero, { color: `${colors.accent}40`, letterSpacing: 8 }]}>{'●●●●●●●'}</Text>
-              : <Text style={[ds.archetypeHero, { color: colors.accent }]}
-                  onLayout={() => { runOnJS(setShowConfetti)(true); runOnJS(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy))(); }}
-                >{dna.archetype}</Text>}
+              : <Text style={[ds.archetypeHero, { color: colors.accent }]}>{dna.archetype}</Text>}
           </View>
         </RevealPop>
-        <RevealItem delay={3000}>
+        {/* Burst dots fire outward when archetype name arrives */}
+        {!isLocked && (
+          <View style={{ alignItems: 'center', height: 0 }}>
+            <BurstDots color={colors.accent} delay={2600} />
+          </View>
+        )}
+        <RevealItem delay={3400}>
           <Text style={[ds.bodyTxt, { color: colors.muted }]}>
             {isLocked
               ? 'Your archetype ties face shape, season, and energy into one identity. It changes how you shop, apply, and express. Unlock yours.'
@@ -756,24 +1057,30 @@ function SlideLips({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boole
         <RevealItem delay={0}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LIP TONE</Text>
         </RevealItem>
-        <RevealItem delay={700}>
+        <RevealItem delay={350}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'There are hundreds of lip shades.\nMost will wash you out.'}</Text>
         </RevealItem>
-        <RevealItem delay={1500}>
+        <RevealItem delay={750}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{"Yours won't."}</Text>
         </RevealItem>
-        <RevealItem delay={2200}>
-          <View style={[ds.lipSwatch, { backgroundColor: lipHex, shadowColor: lipHex }]}>
-            {isLocked && <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />}
+        {/* Ripple rings emanate from the lip swatch */}
+        <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="none">
+            <RippleRings color={lipHex} size={140} delay={1200} />
           </View>
-        </RevealItem>
+          <PopIn delay={1400}>
+            <View style={[ds.lipSwatch, { backgroundColor: lipHex, shadowColor: lipHex }]}>
+              {isLocked && <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />}
+            </View>
+          </PopIn>
+        </View>
         {isLocked
-          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          ? <RevealItem delay={2000}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
-              <RevealItem delay={2900} fast>
+              <RevealItem delay={2000} fast>
                 <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lip tone is</Text>
               </RevealItem>
-              <RevealPop delay={3100}>
+              <RevealPop delay={2200}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lipProfile || '—'}</Text>
               </RevealPop>
             </>}
@@ -799,24 +1106,21 @@ function SlideBlush({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         <RevealItem delay={0}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BLUSH</Text>
         </RevealItem>
-        <RevealItem delay={700}>
+        <RevealItem delay={450}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Blush in the wrong tone\nfights your face.'}</Text>
         </RevealItem>
-        <RevealItem delay={1500}>
+        <RevealItem delay={1000}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{'In the right tone, it lifts everything.'}</Text>
         </RevealItem>
-        <RevealItem delay={2200}>
-          <View style={[ds.blushSwatch, { backgroundColor: blushHex, shadowColor: blushHex }]}>
-            {isLocked && <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFillObject, { borderRadius: 70 }]} />}
-          </View>
-        </RevealItem>
+        {/* Three blush dots pop in one-two-three — like actual blush placement */}
+        <BlushDots delay={1600} hex={blushHex} isLocked={isLocked} />
         {isLocked
-          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
+          ? <RevealItem delay={2400}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
-              <RevealItem delay={2900} fast>
+              <RevealItem delay={2500} fast>
                 <Text style={[ds.revealLabel, { color: colors.muted }]}>Your blush is</Text>
               </RevealItem>
-              <RevealPop delay={3100}>
+              <RevealPop delay={2750}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.blushProfile || '—'}</Text>
               </RevealPop>
             </>}
@@ -825,53 +1129,115 @@ function SlideBlush({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
   );
 }
 
-// ── Slide: Kit ────────────────────────────────────────────────────────────────
+// ── Slide: Kit (per-category) ─────────────────────────────────────────────────
 
-function KitItem({ rec, index, colors }: { rec: ProductRec; index: number; colors: SlideColors }) {
+const PRICE_LABELS: Record<string, string> = { '$': 'Budget', '$$': 'Mid-range', '$$$': 'Premium' };
+
+function KitItem({ rec, index }: { rec: ProductRec; index: number }) {
+  const delay = 900 + index * 180;
+  const op = useSharedValue(0);
+  const ty = useSharedValue(16);
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 320 }));
+    ty.value = withDelay(delay, withSpring(0, { damping: 20, stiffness: 180 }));
+  }, []);
+  const sty = useAnimatedStyle(() => ({
+    opacity: op.value,
+    transform: [{ translateY: ty.value }],
+  }));
+
+  const openSephora = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const query = encodeURIComponent(`${rec.brand} ${rec.product}`);
+    Linking.openURL(`https://www.sephora.com/search?keyword=${query}`);
+  };
+
   return (
-    <RevealItem delay={2000 + index * 350}>
-      <View style={[ds.kitCard, { borderColor: `${colors.text}18`, backgroundColor: 'rgba(0,0,0,0.15)' }]}>
+    <Animated.View style={[sty, { width: '100%' }]}>
+      <Pressable
+        onPress={openSephora}
+        style={({ pressed }) => [ds.kitCard, pressed && ds.kitCardPressed]}
+      >
+        {/* Top row: brand + price badge */}
         <View style={ds.kitCardTop}>
-          <View style={[ds.kitCatBadge, { backgroundColor: `${colors.text}20` }]}><Text style={[ds.kitCatText, { color: colors.eyebrow }]}>{rec.category.toUpperCase()}</Text></View>
-          <Text style={[ds.kitPrice, { color: colors.muted }]}>{rec.price === '$' ? '●' : rec.price === '$$' ? '●●' : '●●●'}</Text>
+          <Text style={ds.kitBrand}>{rec.brand.toUpperCase()}</Text>
+          <View style={ds.kitPricePill}>
+            <Text style={ds.kitPriceLabel}>{PRICE_LABELS[rec.price]}</Text>
+          </View>
         </View>
-        <Text style={[ds.kitProduct, { color: colors.text }]}><Text style={[ds.kitBrand, { color: colors.accent }]}>{rec.brand} </Text>{rec.product}</Text>
-        <Text style={[ds.kitWhy, { color: colors.muted }]} numberOfLines={2}>{rec.why}</Text>
-      </View>
-    </RevealItem>
+
+        {/* Product name */}
+        <Text style={ds.kitProduct} numberOfLines={2}>{rec.product}</Text>
+
+        {/* Why */}
+        <Text style={ds.kitWhy} numberOfLines={2}>{rec.why}</Text>
+
+        {/* Shop CTA */}
+        <View style={ds.kitShopRow}>
+          <Text style={ds.kitShopIcon}>🛍</Text>
+          <Text style={ds.kitShopLabel}>Shop on Sephora</Text>
+          <Text style={ds.kitShopArrow}>→</Text>
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
-function SlideKit({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const recs = getRecsForDna(dna.archetype);
+function SlideKitCategory({ kit, isLocked, colors, slideNum, totalSlides }: {
+  kit: CategoryKit;
+  isLocked?: boolean;
+  colors: SlideColors;
+  slideNum: number;
+  totalSlides: number;
+}) {
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <View style={[ds.bodyWrap, ds.kitBodyWrap]}>
-        <RevealItem delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR EDIT</Text>
-        </RevealItem>
-        <RevealItem delay={700}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Not a generic haul.'}</Text>
-        </RevealItem>
-        <RevealItem delay={1500}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'Matched to your DNA.'}</Text>
-        </RevealItem>
-        {isLocked ? (
-          <>
-            {[0, 1, 2, 3].map((i) => (
-              <RevealItem key={i} delay={2000 + i * 300}>
-                <View style={ds.kitCard}>
-                  <Text style={[ds.kitCatText, { color: `${colors.accent}40` }]}>{String(i + 1).padStart(2, '0')}</Text>
-                  <View style={[ds.kitRedactBar, { width: '40%', backgroundColor: `${colors.text}18`, marginBottom: 6 }]} />
-                  <View style={[ds.kitRedactBar, { width: '75%', backgroundColor: `${colors.text}14` }]} />
-                </View>
-              </RevealItem>
-            ))}
-            <RevealItem delay={3200}>
-              <Text style={[ds.bodyTxt, { color: colors.muted }]}>Your archetype-matched edit is ready. Unlock to see the exact products curated for your DNA.</Text>
-            </RevealItem>
-          </>
-        ) : recs.map((rec, i) => <KitItem key={rec.product} rec={rec} index={i} colors={colors} />)}
+      <View style={ds.kitPageWrap}>
+
+        {/* ── Header ── */}
+        <Animated.View entering={FadeInUp.delay(0).duration(380)} style={ds.kitPageHeader}>
+          <View style={ds.kitPageHeaderRow}>
+            <Text style={[ds.kitCatTitle, { color: colors.text }]}>{kit.category}</Text>
+            <Text style={[ds.kitCatCounter, { color: colors.eyebrow }]}>
+              {slideNum}&nbsp;/&nbsp;{totalSlides}
+            </Text>
+          </View>
+          <Text style={[ds.kitCatSubtitle, { color: colors.muted }]}>{kit.subtitle}</Text>
+        </Animated.View>
+
+        {/* ── Cards ── */}
+        <View style={ds.kitCardsSection}>
+          {isLocked ? (
+            <>
+              {[0, 1, 2].map((i) => (
+                <Animated.View key={i} entering={FadeInUp.delay(300 + i * 120).duration(320)}>
+                  <View style={ds.kitCardLocked}>
+                    <View style={ds.kitCardTop}>
+                      <View style={[ds.kitLockedBar, { width: '32%', height: 8, borderRadius: 4 }]} />
+                      <View style={[ds.kitLockedPill, { width: 58, height: 18, borderRadius: 9 }]} />
+                    </View>
+                    <View style={[ds.kitLockedBar, { width: '75%', height: 12, borderRadius: 6 }]} />
+                    <View style={[ds.kitLockedBar, { width: '90%', height: 8, borderRadius: 4 }]} />
+                    <View style={ds.kitLockedShopRow}>
+                      <View style={[ds.kitLockedBar, { width: '50%', height: 8, borderRadius: 4 }]} />
+                    </View>
+                  </View>
+                </Animated.View>
+              ))}
+              <Animated.Text
+                entering={FadeInUp.delay(700).duration(300)}
+                style={[ds.kitUnlockHint, { color: colors.muted }]}
+              >
+                Unlock to see your {kit.category.toLowerCase()} picks.
+              </Animated.Text>
+            </>
+          ) : (
+            kit.picks.map((rec, i) => (
+              <KitItem key={rec.product} rec={rec} index={i} />
+            ))
+          )}
+        </View>
+
       </View>
     </View>
   );
@@ -900,119 +1266,172 @@ function FinaleBar({ index, hex, isLocked, fallback }: {
 
 function SlideSummary({ dna, isLocked, onShare, colors }: { dna: DnaResult; isLocked?: boolean; onShare: () => void; colors: SlideColors }) {
   const palette = SEASON_PALETTES[dna.colorSeason] ?? [];
+  const shades = isLocked ? null : findShades(dna.skinToneHex);
   const [showConfetti, setShowConfetti] = useState(false);
-  const ctaScale = useSharedValue(1);
+  const ctaScale  = useSharedValue(1);
+  const heroScale = useSharedValue(0.82);
+  const heroOp    = useSharedValue(0);
 
   useEffect(() => {
+    heroOp.value    = withDelay(180, withTiming(1, { duration: 460 }));
+    heroScale.value = withDelay(180, withSpring(1, { damping: 11, stiffness: 80 }));
     const t = setTimeout(() => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowConfetti(true);
-    }, 1500);
-    ctaScale.value = withDelay(4900, withRepeat(
-      withSequence(withTiming(1.025, { duration: 750 }), withTiming(1, { duration: 750 })),
+    }, 1100);
+    ctaScale.value = withDelay(5000, withRepeat(
+      withSequence(withTiming(1.03, { duration: 700 }), withTiming(1, { duration: 700 })),
       -1, true,
     ));
     return () => clearTimeout(t);
   }, []);
 
+  const heroSty = useAnimatedStyle(() => ({
+    opacity: heroOp.value,
+    transform: [{ scale: heroScale.value }],
+  }));
   const ctaSty = useAnimatedStyle(() => ({ transform: [{ scale: ctaScale.value }] }));
 
-  const STATS: { label: string; value: string }[] = [
+  const STATS = [
     { label: 'FACE SHAPE', value: dna.faceShape },
     { label: 'ENERGY',     value: dna.energy },
-    { label: 'LIP TONE',   value: dna.lipProfile || '—' },
-    { label: 'BLUSH',      value: dna.blushProfile || '—' },
+    { label: 'LIP TONE',   value: dna.lipProfile  || '—' },
+    { label: 'BLUSH TONE', value: dna.blushProfile || '—' },
   ];
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      {showConfetti && <ConfettiBurst count={40} />}
+      {showConfetti && <ConfettiBurst count={60} />}
 
-      <View style={ds.fnWrap}>
-
-        {/* Symmetric header */}
-        <Animated.View entering={FadeInUp.delay(0).duration(380)} style={ds.fnHeaderRow}>
-          <View style={[ds.fnHairline, { backgroundColor: `${colors.text}35` }]} />
-          <Text style={[ds.fnEyebrow, { color: colors.eyebrow }]}>✦  BEAUTY DNA  ✦</Text>
-          <View style={[ds.fnHairline, { backgroundColor: `${colors.text}35` }]} />
+      <ScrollView
+        style={{ flex: 1, width: W }}
+        contentContainerStyle={[ds.fnWrap2, { paddingBottom: 120 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Eyebrow ── */}
+        <Animated.View entering={FadeIn.delay(0).duration(360)} style={ds.fnHeaderRow}>
+          <View style={[ds.fnHairline, { backgroundColor: `${colors.accent}40` }]} />
+          <Text style={[ds.fnEyebrow, { color: colors.accent, letterSpacing: 5 }]}>✦  BEAUTY DNA  ✦</Text>
+          <View style={[ds.fnHairline, { backgroundColor: `${colors.accent}40` }]} />
         </Animated.View>
 
-        {/* Season colour bars — stagger up */}
-        <View style={ds.fnBarsRow}>
-          {(palette.length > 0 ? palette.slice(0, 6) : Array(6).fill(null)).map((hex, i) => (
-            <FinaleBar key={i} index={i} hex={hex as string | null} isLocked={!!isLocked} fallback={colors.text} />
-          ))}
-        </View>
-
-        {/* Season name */}
-        <Animated.View entering={FadeInUp.delay(700).duration(350)}>
-          <Text style={[ds.fnSeasonLabel, { color: colors.muted }]}>
+        {/* ── Hero archetype name ── */}
+        <Animated.View style={[ds.fnHeroWrap, heroSty]}>
+          <Text style={[ds.fnYouAre, { color: `${colors.text}60` }]}>YOU ARE</Text>
+          {isLocked
+            ? <Text style={[ds.fnArchNameHero, { color: `${colors.accent}30`, letterSpacing: 10 }]}>● ● ●</Text>
+            : <Text style={[ds.fnArchNameHero, { color: colors.accent }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.55}>
+                {dna.archetype}
+              </Text>
+          }
+          <Animated.Text
+            entering={FadeInUp.delay(900).duration(300)}
+            style={[ds.fnSeasonLabel, { color: `${colors.text}55`, marginTop: 4 }]}
+          >
             {isLocked ? '— · · · —' : `— ${dna.colorSeason} —`}
-          </Text>
+          </Animated.Text>
         </Animated.View>
 
-        {/* Archetype — centrepiece */}
-        <View style={ds.fnArchWrap}>
-          <Animated.View entering={FadeInUp.delay(1100).duration(200)}>
-            <Text style={[ds.fnYouAre, { color: colors.muted }]}>YOU ARE</Text>
-          </Animated.View>
-          <Animated.View entering={FadeInUp.delay(1500).duration(300)} style={{ overflow: 'hidden' }}>
-            {isLocked
-              ? <Text style={[ds.fnArchName, { color: `${colors.accent}40`, letterSpacing: 6 }]}>{'● ● ● ●'}</Text>
-              : <Text style={[ds.fnArchName, { color: colors.accent }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{dna.archetype}</Text>}
-          </Animated.View>
-          <Animated.View entering={FadeInUp.delay(2300).duration(350)}>
-            <Text style={[ds.fnArchDesc, { color: colors.muted }]}>
-              {isLocked
-                ? 'Unlock to reveal your beauty identity.'
-                : (ARCHETYPE_DESCRIPTIONS[dna.archetype] ?? '')}
-            </Text>
-          </Animated.View>
-        </View>
+        {/* ── Palette swatch strip ── */}
+        <Animated.View entering={FadeInUp.delay(1100).duration(320)} style={ds.fnSwatchStrip}>
+          {(palette.length > 0 ? palette.slice(0, 6) : Array(6).fill(null)).map((hex, i) => {
+            const h = hex as string | null;
+            return (
+              <View
+                key={i}
+                style={[
+                  ds.fnSwatchDot,
+                  { backgroundColor: isLocked || !h ? `${colors.text}16` : h },
+                  !isLocked && h ? { shadowColor: h, shadowOpacity: 0.7, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } } : undefined,
+                ]}
+              />
+            );
+          })}
+        </Animated.View>
 
-        {/* Stats card — frosted glass */}
-        <Animated.View entering={FadeInUp.delay(3100).duration(400)} style={[ds.fnCard, { borderColor: `${colors.text}15`, backgroundColor: 'rgba(0,0,0,0.22)' }]}>
-          <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFillObject} />
-          {STATS.map(({ label, value }, i) => (
-            <View key={label} style={[ds.fnStatRow, i < STATS.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: `${colors.text}12` }]}>
-              <Text style={[ds.fnStatLabel, { color: colors.eyebrow }]}>{label}</Text>
+        {/* ── Divider ── */}
+        <Animated.View entering={FadeIn.delay(1500).duration(400)} style={[ds.fnDivider, { backgroundColor: `${colors.text}18` }]} />
+
+        {/* ── Stat grid 2×2 ── */}
+        <Animated.View entering={FadeInUp.delay(1700).duration(300)} style={ds.fnStatPillGrid}>
+          {STATS.map(({ label, value }) => (
+            <View key={label} style={[ds.fnStatPill, { backgroundColor: `${colors.text}0D`, borderColor: `${colors.text}16` }]}>
+              <Text style={[ds.fnStatBlockLabel, { color: colors.eyebrow }]}>{label}</Text>
               {isLocked
-                ? <Text style={[ds.fnStatBlocked, { color: `${colors.text}30` }]}>● ● ●</Text>
-                : <Text style={[ds.fnStatValue, { color: colors.text }]}>{value}</Text>}
+                ? <Text style={[ds.fnStatBlocked, { color: `${colors.text}20` }]}>● ●</Text>
+                : <Text style={[ds.fnStatBlockValue2, { color: colors.text }]}>{value}</Text>
+              }
             </View>
           ))}
-          {!isLocked && (
-            <View style={[ds.fnStatRow, ds.fnFoundRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: `${colors.text}15` }]}>
-              <View style={[ds.fnFoundDot, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }]} />
-              <Text style={[ds.fnStatLabel, { color: colors.eyebrow }]}>FOUNDATION</Text>
-              <Text style={[ds.fnStatValue, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text>
-            </View>
+        </Animated.View>
+
+        {/* ── Canvas / skin tone ── */}
+        <Animated.View
+          entering={FadeInUp.delay(2100).duration(300)}
+          style={[ds.fnCanvasRow, { borderColor: `${colors.text}14` }]}
+        >
+          <View style={[ds.fnCanvasDot, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }]} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[ds.fnStatBlockLabel, { color: colors.eyebrow }]}>CANVAS</Text>
+            <Text style={[ds.fnStatBlockValue2, { color: colors.text }]}>
+              {isLocked ? '● ● ● ●' : dna.skinToneHex.toUpperCase()}
+            </Text>
+          </View>
+          {shades && !isLocked && (
+            <Text style={[ds.fnShadeHint, { color: `${colors.text}55` }]}>
+              {`Fenty ${shades.Fenty}\nMAC ${shades.MAC}`}
+            </Text>
           )}
         </Animated.View>
 
-        {/* Share CTA */}
-        <Animated.View entering={FadeInUp.delay(4500).duration(350)} style={{ width: '100%' }}>
-          <Animated.View style={ctaSty}>
-            <Pressable
-              style={({ pressed }) => [ds.fnCta, { backgroundColor: colors.accent }, pressed && { opacity: 0.85 }]}
-              onPress={onShare}
-            >
-              <Text style={[ds.fnCtaTxt, { color: colors.gradientBot }]}>
-                {isLocked ? 'Unlock Everything  ↗' : '✦  Share your Beauty DNA  ✦'}
-              </Text>
-            </Pressable>
-          </Animated.View>
+        {/* ── Description blurb ── */}
+        <Animated.View entering={FadeInUp.delay(2500).duration(320)}>
+          <Text style={[ds.fnArchDesc, { color: `${colors.text}60`, textAlign: 'center', lineHeight: 20 }]}>
+            {isLocked
+              ? 'Unlock to reveal your full beauty identity and curated picks.'
+              : (ARCHETYPE_DESCRIPTIONS[dna.archetype] ?? '')}
+          </Text>
         </Animated.View>
 
-      </View>
+        {/* ── CTA — share only; unlock is handled by the persistent bottom strip ── */}
+        {!isLocked && (
+          <Animated.View entering={FadeInUp.delay(3200).duration(380)} style={{ width: '100%' }}>
+            <Animated.View style={ctaSty}>
+              <Pressable
+                style={({ pressed }) => [ds.fnCta, { backgroundColor: colors.accent }, pressed && { opacity: 0.85 }]}
+                onPress={onShare}
+              >
+                <Text style={[ds.fnCtaTxt, { color: colors.gradientBot }]}>
+                  {'✦  Share your Beauty DNA  ✦'}
+                </Text>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
+const KIT_CATEGORY_COUNT = 6;
+
 function renderSlide(idx: number, dna: DnaResult, locked: boolean, onShare: () => void) {
   const colors = SLIDE_COLORS[idx] ?? SLIDE_COLORS[0];
+  if (idx >= 9 && idx <= 14) {
+    const kits = getKitForDna(dna.archetype);
+    const kit = kits[idx - 9] ?? kits[0];
+    return (
+      <SlideKitCategory
+        kit={kit}
+        isLocked={locked}
+        colors={colors}
+        slideNum={idx - 8}
+        totalSlides={KIT_CATEGORY_COUNT}
+      />
+    );
+  }
   switch (idx) {
     case 0: return <SlideCanvas dna={dna} isLocked={locked} colors={colors} />;
     case 1: return <SlideSeason dna={dna} isLocked={locked} colors={colors} />;
@@ -1023,8 +1442,7 @@ function renderSlide(idx: number, dna: DnaResult, locked: boolean, onShare: () =
     case 6: return <SlideArchetype dna={dna} isLocked={locked} colors={colors} />;
     case 7: return <SlideLips dna={dna} isLocked={locked} colors={colors} />;
     case 8: return <SlideBlush dna={dna} isLocked={locked} colors={colors} />;
-    case 9: return <SlideKit dna={dna} isLocked={locked} colors={colors} />;
-    case 10: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
+    case 15: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
     default: return null;
   }
 }
@@ -1057,51 +1475,70 @@ export default function DnaRevealScreen() {
     });
   }, [params.dna]);
 
+  const preloadRef = useRef<Audio.Sound | null>(null);
+
+  // Mount: start the journey track immediately.
   useEffect(() => {
     let mounted = true;
-    let trackIdx = 0;
-
-    const switchTrack = async (source: number) => {
-      const prev = soundRef.current;
-      soundRef.current = null;
+    (async () => {
       try {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
-        const { sound: next } = await Audio.Sound.createAsync(source, { isLooping: true, volume: 0.35 });
-        if (!mounted) { next.unloadAsync(); return; }
-        soundRef.current = next;
-        await next.playAsync();
-        // Fade out old track in parallel — new track plays immediately, no silence
-        if (prev) {
-          (async () => {
-            for (let i = 1; i <= 14; i++) {
-              try { await prev.setVolumeAsync(0.35 * (1 - i / 14)); } catch { break; }
-              await new Promise<void>(r => setTimeout(r, 60));
-            }
-            try { await prev.unloadAsync(); } catch {}
-          })();
-        }
+        const { sound } = await Audio.Sound.createAsync(MUSIC_JOURNEY, { isLooping: true, volume: MUSIC_VOL });
+        if (!mounted) { sound.unloadAsync(); return; }
+        soundRef.current = sound;
+        await sound.playAsync();
       } catch {}
-    };
-
-    switchTrack(MUSIC_TRACKS[0]);
-
-    const id = setInterval(() => {
-      trackIdx = (trackIdx + 1) % MUSIC_TRACKS.length;
-      switchTrack(MUSIC_TRACKS[trackIdx]);
-    }, MUSIC_SWITCH_MS);
-
+    })();
     return () => {
       mounted = false;
-      clearInterval(id);
       soundRef.current?.unloadAsync().catch(() => {});
       soundRef.current = null;
+      preloadRef.current?.unloadAsync().catch(() => {});
+      preloadRef.current = null;
     };
   }, []);
+
+  // Slide-aware: preload reveal track at slide 3, crossfade to it at slide 6.
+  // Preload plays at volume 0 so it's fully buffered — zero silence on crossfade.
+  useEffect(() => {
+    if (current === MUSIC_PRELOAD_SLIDE && !preloadRef.current) {
+      (async () => {
+        try {
+          await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
+          const { sound } = await Audio.Sound.createAsync(MUSIC_REVEAL, { isLooping: true, volume: 0 });
+          preloadRef.current = sound;
+          await sound.playAsync(); // silently buffering in background
+        } catch {}
+      })();
+    }
+
+    if (current === MUSIC_REVEAL_SLIDE) {
+      const prev = soundRef.current;
+      const next = preloadRef.current;
+      if (!prev || !next) return;
+
+      preloadRef.current = null;
+      soundRef.current = next;
+
+      // Overlap crossfade: ramp next up while ramping prev down simultaneously.
+      (async () => {
+        for (let i = 1; i <= CROSSFADE_STEPS; i++) {
+          const pct = i / CROSSFADE_STEPS;
+          await Promise.allSettled([
+            next.setVolumeAsync(MUSIC_VOL * pct),
+            prev.setVolumeAsync(MUSIC_VOL * (1 - pct)),
+          ]);
+          await new Promise<void>(r => setTimeout(r, CROSSFADE_STEP_MS));
+        }
+        try { await prev.unloadAsync(); } catch {}
+      })();
+    }
+  }, [current]);
 
   const navigateTo = useCallback((to: number, from: number) => {
     setBgFrom(from);
     setBgTo(to);
-    morphProgress.value = withTiming(1, { duration: 500 }, (finished) => {
+    morphProgress.value = withTiming(1, { duration: 380, easing: Easing.bezier(0.4, 0, 0.2, 1) }, (finished) => {
       if (finished) {
         runOnJS(setBgFrom)(to);
         morphProgress.value = 0;
@@ -1109,7 +1546,7 @@ export default function DnaRevealScreen() {
     });
     slideDispatch({ type: 'go', to });
     if (clearOutRef.current) clearTimeout(clearOutRef.current);
-    clearOutRef.current = setTimeout(() => slideDispatch({ type: 'done' }), 320);
+    clearOutRef.current = setTimeout(() => slideDispatch({ type: 'done' }), 210);
   }, [morphProgress]);
 
   const advanceCurrent = useCallback(() => {
@@ -1169,7 +1606,7 @@ export default function DnaRevealScreen() {
           {renderSlide(current, displayDna, locked, handleShare)}
         </View>
       ) : (
-        <IncomingContent key={`in-${slideState.uid}`}>
+        <IncomingContent key={`in-${slideState.uid}`} dir={slideState.dir}>
           {renderSlide(current, displayDna, locked, handleShare)}
         </IncomingContent>
       )}
@@ -1229,7 +1666,51 @@ const ds = StyleSheet.create({
 
   page: { width: W, flex: 1, justifyContent: 'center', alignItems: 'center' },
   bodyWrap: { alignItems: 'center', paddingHorizontal: 28, gap: 20, paddingBottom: 160, width: W },
-  kitBodyWrap: { gap: 12, paddingBottom: 180 },
+  kitBodyWrap: { gap: 8, paddingBottom: 160 },
+
+  // Kit page — left-aligned shopping layout
+  kitPageWrap: {
+    flex: 1,
+    width: W,
+    paddingHorizontal: 24,
+    paddingTop: 108,
+    paddingBottom: 116,
+    justifyContent: 'center',
+    gap: 20,
+  },
+  kitPageHeader: { gap: 6 },
+  kitPageHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  kitCatTitle: {
+    fontFamily: 'Playfair Display',
+    fontSize: 36,
+    fontStyle: 'italic',
+    lineHeight: 42,
+  },
+  kitCatCounter: {
+    fontFamily: 'Inter',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    paddingBottom: 5,
+  },
+  kitCatSubtitle: {
+    fontFamily: 'Inter',
+    fontSize: 13,
+    fontWeight: '400',
+    lineHeight: 18,
+  },
+  kitCardsSection: { gap: 10 },
+  kitUnlockHint: {
+    fontFamily: 'Inter',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 20,
+  },
   summaryBodyWrap: { gap: 16, paddingBottom: 100 },
 
   // Header
@@ -1351,18 +1832,105 @@ const ds = StyleSheet.create({
   lipSwatch: { width: 140, height: 140, borderRadius: 70, overflow: 'hidden', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 24 },
   blushSwatch: { width: 140, height: 140, borderRadius: 70, overflow: 'hidden', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 24 },
 
-  // Kit
+  // Kit — shopping card (white, full-width, tappable)
   kitCard: {
-    width: '100%', borderRadius: 14, borderWidth: 1,
-    paddingVertical: 12, paddingHorizontal: 16, gap: 5,
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
   },
-  kitCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  kitCardPressed: { opacity: 0.88, transform: [{ scale: 0.985 }] },
+  kitCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  kitCardBody: { flex: 1, gap: 2, minWidth: 0 },
+  kitIndex: {
+    fontFamily: 'Inter', fontSize: 11, fontWeight: '600',
+    letterSpacing: 0.5, flexShrink: 0, width: 20, textAlign: 'center',
+  },
+  kitDividerV: { width: StyleSheet.hairlineWidth, height: 28, flexShrink: 0 },
+  kitBrand: {
+    fontFamily: 'Inter', fontSize: 10, fontWeight: '700',
+    letterSpacing: 1.6, color: '#999', textTransform: 'uppercase',
+  },
+  kitProduct: {
+    fontFamily: 'Inter', fontSize: 15, fontWeight: '600',
+    color: '#1A1A1A', lineHeight: 21,
+  },
+  kitWhy: {
+    fontFamily: 'Inter', fontSize: 12, fontWeight: '400',
+    color: '#888', lineHeight: 17,
+  },
+  kitPricePill: {
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 20,
+    flexShrink: 0,
+  },
+  kitPriceLabel: {
+    fontFamily: 'Inter', fontSize: 10, fontWeight: '600',
+    color: '#666', letterSpacing: 0.3,
+  },
+  kitShopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#EBEBEB',
+  },
+  kitShopIcon: { fontSize: 13 },
+  kitShopLabel: {
+    fontFamily: 'Inter', fontSize: 12, fontWeight: '600',
+    color: '#1A1A1A', flex: 1, letterSpacing: 0.1,
+  },
+  kitShopArrow: {
+    fontFamily: 'Inter', fontSize: 14, fontWeight: '400', color: '#999',
+  },
+
+  // Locked state — same shape as real card, frosted white, compact height
+  kitCardLocked: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  kitLockedBar: {
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  kitLockedPill: {
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.14)',
+  },
+  kitLockedShopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.10)',
+  },
+
+  // legacy refs
+  kitCardTop2: {},
   kitCatBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
   kitCatText: { fontFamily: 'Inter', fontSize: 9, fontWeight: '700', letterSpacing: 1.2 },
-  kitPrice: { fontFamily: 'Inter', fontSize: 10, letterSpacing: 1 },
-  kitProduct: { fontFamily: 'Inter', fontSize: 13, fontWeight: '500' },
-  kitBrand: { fontWeight: '700' },
-  kitWhy: { fontFamily: 'Inter', fontSize: 11, lineHeight: 16 },
+  kitPickNum: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  kitPickNumText: { fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 0.3 },
+  kitPrice: { fontFamily: 'Inter', fontSize: 11, letterSpacing: 1.5, flexShrink: 0 },
 
   // Summary (legacy — kept so no existing ref breaks)
   summaryCard: { width: '100%', borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
@@ -1374,7 +1942,48 @@ const ds = StyleSheet.create({
   shareBtn: { width: '100%', paddingVertical: 15, alignItems: 'center', borderRadius: 50 },
   shareBtnText: { fontFamily: 'Inter', fontSize: 14, fontWeight: '700' },
 
-  // Final reveal card
+  // Final reveal — new design
+  fnWrap2: {
+    alignItems: 'center', paddingHorizontal: 22,
+    gap: 16, paddingTop: 108,
+  },
+  fnHeroWrap: { alignItems: 'center', gap: 4, width: '100%' },
+  fnArchNameHero: {
+    fontFamily: 'Playfair Display', fontSize: 68, fontStyle: 'italic',
+    textAlign: 'center', lineHeight: 76, width: '100%',
+  },
+  fnSwatchStrip: {
+    flexDirection: 'row', gap: 8, justifyContent: 'center',
+    width: '100%', paddingVertical: 4,
+  },
+  fnSwatchDot: {
+    width: 36, height: 36, borderRadius: 18,
+  },
+  fnStatPillGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: '100%',
+  },
+  fnStatPill: {
+    width: '47%', borderRadius: 14, borderWidth: 1,
+    paddingVertical: 12, paddingHorizontal: 14, gap: 4,
+  },
+  fnStatBlockValue2: {
+    fontFamily: 'Playfair Display', fontSize: 15, fontStyle: 'italic', letterSpacing: 0.2,
+  },
+  fnCanvasRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderWidth: 1, borderRadius: 14,
+    paddingVertical: 12, paddingHorizontal: 14, width: '100%',
+  },
+  fnCanvasDot: {
+    width: 32, height: 32, borderRadius: 16,
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 8,
+    flexShrink: 0,
+  },
+  fnShadeHint: {
+    fontFamily: 'Inter', fontSize: 10, letterSpacing: 0.4, textAlign: 'right', lineHeight: 15,
+  },
+
+  // Legacy summary (kept to avoid breaking FinaleBar refs)
   fnWrap: {
     flex: 1, width: W, alignItems: 'center',
     paddingHorizontal: 24, gap: 14,
@@ -1414,4 +2023,14 @@ const ds = StyleSheet.create({
     textAlign: 'center', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: -8,
   },
   kitRedactBar: { height: 10, borderRadius: 5, marginVertical: 2 },
+
+  // Summary editorial grid
+  fnStatGrid2: { flexDirection: 'row', width: '100%', gap: 0 },
+  fnStatCol: { flex: 1, gap: 16, paddingHorizontal: 4 },
+  fnStatBlock: { gap: 4 },
+  fnStatBlockLabel: { fontFamily: 'Inter', fontSize: 9, fontWeight: '700', letterSpacing: 2.5, textTransform: 'uppercase' },
+  fnStatBlockValue: { fontFamily: 'Playfair Display', fontSize: 16, fontStyle: 'italic', letterSpacing: 0.2 },
+  fnDivider: { width: '100%', height: StyleSheet.hairlineWidth },
+  fnVertDivider: { width: StyleSheet.hairlineWidth, marginVertical: 4 },
+  fnSkinRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, width: '100%' },
 });
