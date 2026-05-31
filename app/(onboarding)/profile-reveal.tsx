@@ -1,196 +1,164 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { FadeInUp, FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import { tokens } from '@/components/theme';
-import { ob } from '@/components/onboarding-styles';
-import { GlassButton } from '@/components/glass-button';
 import { loadGloDraft } from '@/lib/glo-profile';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { tokens } from '@/components/theme';
 
-interface ProfileRow {
-  label: string;
-  value: string;
+interface ProfileData {
+  skin_type?: string;
+  undertone?: string;
+  goals?: string[];
+  archetype?: string;
 }
 
-function buildRows(
-  skinType: string,
-  undertone: string,
-  allergies: string[],
-  goal: string,
-): ProfileRow[] {
-  const goalLabels: Record<string, string> = {
-    shade:       'Perfect shade match',
-    ingredients: 'Avoid bad ingredients',
-    discover:    'Personalised picks',
-    money:       'Stop wasting money',
-  };
+function formatSkinType(v?: string) {
+  if (!v) return '—';
+  return v.charAt(0).toUpperCase() + v.slice(1);
+}
 
-  return [
-    { label: 'Skin Type',    value: skinType   || 'Not set' },
-    { label: 'Undertone',    value: undertone  || 'Not sure' },
-    {
-      label: 'Sensitivities',
-      value: allergies.length > 0
-        ? allergies.slice(0, 2).join(' · ') + (allergies.length > 2 ? ` +${allergies.length - 2}` : '')
-        : 'None flagged',
-    },
-    { label: 'Goal',         value: goalLabels[goal] || 'Personalised results' },
-  ];
+function formatUndertone(v?: string) {
+  if (!v) return '—';
+  return v.replace('_', ' ').replace(/^\w/, c => c.toUpperCase());
 }
 
 export default function ProfileRevealScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [rows, setRows] = useState<ProfileRow[]>([]);
+  const [profile, setProfile] = useState<ProfileData>({});
+  const [goal, setGoal] = useState('');
 
   useEffect(() => {
-    const load = async () => {
-      const [draft, goal] = await Promise.all([
-        loadGloDraft(),
-        AsyncStorage.getItem('@remake_onboarding_goal'),
-      ]);
-      setRows(buildRows(
-        draft.skin_type ?? '',
-        draft.undertone_guess ?? '',
-        draft.allergies ?? [],
-        goal ?? '',
-      ));
-    };
-    load();
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    loadGloDraft().then(d => {
+      if (d) setProfile(d as ProfileData);
+    });
+    AsyncStorage.getItem('@remake_frequency').then(v => {
+      if (v) setGoal(v.replace('_', ' '));
+    });
   }, []);
 
-  const handleContinue = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(onboarding)/notification-permission');
-  };
+  const rows = [
+    { label: 'Skin type',   value: formatSkinType(profile.skin_type) },
+    { label: 'Undertone',   value: formatUndertone(profile.undertone) },
+    { label: 'Goal',        value: profile.goals?.[0] ? profile.goals[0].replace('_', ' ').replace(/^\w/, c => c.toUpperCase()) : '—' },
+    { label: 'Style',       value: profile.archetype ? profile.archetype.charAt(0).toUpperCase() + profile.archetype.slice(1) : '—' },
+  ];
 
   return (
-    <View style={[ob.rootDark, styles.root, { paddingBottom: insets.bottom + 40 }]}>
-      {/* Eyebrow */}
-      <Animated.Text entering={FadeIn.delay(80).duration(600)} style={ob.eyebrowGold}>
-        Your Scanner Is Ready ✦
-      </Animated.Text>
+    <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
+      <View style={[styles.top, { paddingTop: insets.top + 40 }]}>
+        <Animated.View entering={ZoomIn.delay(100).duration(500)} style={styles.checkWrap}>
+          <Text style={styles.checkIcon}>✓</Text>
+        </Animated.View>
 
-      {/* Title */}
-      <Animated.Text entering={FadeInUp.delay(180).duration(500)} style={ob.titleDark}>
-        Personalised{'\n'}just for you.
-      </Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(240).duration(500)} style={styles.congrats}>
+          Congratulations,
+        </Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(300).duration(500)} style={styles.title}>
+          your beauty profile{'\n'}is ready!
+        </Animated.Text>
 
-      {/* Profile rows */}
-      <View style={styles.rows}>
-        {rows.map((row, i) => (
-          <Animated.View
-            key={row.label}
-            entering={FadeInUp.delay(280 + i * 80).duration(400)}
-            style={styles.row}
-          >
-            <Text style={styles.rowLabel}>{row.label}</Text>
-            <Text style={styles.rowValue}>{row.value}</Text>
-          </Animated.View>
-        ))}
+        <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.card}>
+          <Text style={styles.cardLabel}>Daily recommendation</Text>
+          <Text style={styles.cardSub}>You can edit this anytime</Text>
+          <View style={styles.rows}>
+            {rows.map((r, i) => (
+              <View key={r.label} style={[styles.row, i > 0 && styles.rowBorder]}>
+                <Text style={styles.rowLabel}>{r.label}</Text>
+                <Text style={styles.rowValue}>{r.value}</Text>
+              </View>
+            ))}
+          </View>
+        </Animated.View>
       </View>
 
-      {/* Blurred preview card */}
-      <Animated.View entering={FadeInUp.delay(620).duration(400)} style={styles.preview}>
-        <Text style={styles.previewEye}>🔒</Text>
-        <View style={styles.previewLines}>
-          <View style={[styles.shimmer, { width: '70%' }]} />
-          <View style={[styles.shimmer, { width: '50%' }]} />
-          <View style={[styles.shimmer, { width: '85%' }]} />
-        </View>
-      </Animated.View>
+      <View style={{ flex: 1 }} />
 
-      <Animated.Text entering={FadeInUp.delay(680).duration(400)} style={styles.lockNote}>
-        Unlock full ingredient breakdowns, shade match scores,{'\n'}and personalised product picks.
-      </Animated.Text>
-
-      <View style={ob.spacer} />
-
-      <Animated.View entering={FadeInUp.delay(720).duration(400)} style={ob.bottom}>
-        <GlassButton
-          title="See My Full Results"
-          onPress={handleContinue}
-          variant="primary"
+      <Animated.View entering={FadeInUp.delay(600).duration(500)} style={styles.bottom}>
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/(onboarding)/notification-permission');
+          }}
           style={styles.cta}
-        />
+        >
+          <Text style={styles.ctaText}>Let's get started!</Text>
+        </Pressable>
       </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    paddingTop: 72,
+  root: { flex: 1, backgroundColor: tokens.colors.cream, paddingHorizontal: 28 },
+  top: { alignItems: 'center' },
+  checkWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: tokens.colors.pinkDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 8,
   },
-  rows: {
-    marginTop: 28,
-    gap: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
+  checkIcon: { color: '#FFFFFF', fontSize: 28, fontWeight: '700' },
+  congrats: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '600',
+    color: tokens.colors.pinkDeep,
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
+  title: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 32,
+    fontWeight: '400',
+    color: tokens.colors.text,
+    lineHeight: 42,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.07)',
+    padding: 20,
+    alignSelf: 'stretch',
+  },
+  cardLabel: { fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '700', color: tokens.colors.text, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 },
+  cardSub: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, marginBottom: 16 },
+  rows: { gap: 0 },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderLeftWidth: 3,
-    borderLeftColor: tokens.colors.pinkDeep,
+    paddingVertical: 12,
   },
-  rowLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 13,
-    fontWeight: '400',
-    color: 'rgba(255,255,255,0.5)',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  rowValue: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    maxWidth: '60%',
-    textAlign: 'right',
-  },
-  preview: {
-    marginTop: 20,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  previewEye: {
-    fontSize: 22,
-    opacity: 0.5,
-  },
-  previewLines: {
-    flex: 1,
-    gap: 8,
-  },
-  shimmer: {
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 4,
-  },
-  lockNote: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 12,
-    fontWeight: '300',
-    color: 'rgba(255,255,255,0.4)',
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: 12,
-  },
+  rowBorder: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)' },
+  rowLabel: { fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '400', color: tokens.colors.gray },
+  rowValue: { fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '700', color: tokens.colors.text },
+  bottom: {},
   cta: {
-    width: '100%',
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 50,
+    paddingVertical: 17,
+    alignItems: 'center',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    elevation: 7,
   },
+  ctaText: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
 });

@@ -6,53 +6,42 @@ import * as Haptics from 'expo-haptics';
 import { OnboardingHeader } from '@/components/onboarding-header';
 import { tokens } from '@/components/theme';
 
-const FEATURES = [
-  {
-    icon: '🔬',
-    title: 'AI-rated in seconds',
-    body: 'Point. Shoot. Get a score across Complexion, Eyes, Lips, and Sculpt.',
-  },
-  {
-    icon: '🎨',
-    title: 'Matched to your skin',
-    body: 'Products filtered for your type, undertone, and sensitivities — not just your budget.',
-  },
-  {
-    icon: '📈',
-    title: 'Gets sharper over time',
-    body: 'Every scan builds your Beauty DNA. The longer you use it, the better it knows you.',
-  },
+const TRUST_POINTS = [
+  { icon: '🔒', title: 'Stays on your device', body: 'Your skin data is never sold or shared.' },
+  { icon: '🗑️', title: 'Delete anytime', body: 'Remove your profile and all data in one tap.' },
+  { icon: '🚫', title: 'Zero promotional messages', body: 'We only contact you if you ask us to.' },
 ];
 
-export default function FeaturesScreen() {
+export default function ThankYouTrustScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingHeader step={6} total={18} onBack={() => router.back()} />
+      <OnboardingHeader step={17} total={18} onBack={() => router.back()} />
 
       <View style={styles.body}>
         <Animated.Text entering={FadeInUp.delay(80).duration(500)} style={styles.eyebrow}>
-          HOW IT WORKS
+          BEFORE WE BUILD YOUR PROFILE
         </Animated.Text>
         <Animated.Text entering={FadeInUp.delay(160).duration(500)} style={styles.title}>
-          {'Three things REMAKE\ndoes that others don\'t.'}
+          {'Your data is\nyours. Always.'}
+        </Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(220).duration(500)} style={styles.sub}>
+          We need a few skin details to personalise your results. Here's how we protect them.
         </Animated.Text>
 
-        <View style={styles.featureList}>
-          {FEATURES.map((f, i) => (
+        <View style={styles.trustList}>
+          {TRUST_POINTS.map((p, i) => (
             <Animated.View
-              key={f.title}
-              entering={FadeInUp.delay(260 + i * 80).duration(480)}
-              style={styles.featureRow}
+              key={p.title}
+              entering={FadeInUp.delay(300 + i * 70).duration(450)}
+              style={[styles.trustRow, i > 0 && styles.trustRowBorder]}
             >
-              <View style={styles.featureIconWrap}>
-                <Text style={styles.featureIcon}>{f.icon}</Text>
-              </View>
-              <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>{f.title}</Text>
-                <Text style={styles.featureBody}>{f.body}</Text>
+              <Text style={styles.trustIcon}>{p.icon}</Text>
+              <View style={styles.trustText}>
+                <Text style={styles.trustTitle}>{p.title}</Text>
+                <Text style={styles.trustBody}>{p.body}</Text>
               </View>
             </Animated.View>
           ))}
@@ -61,15 +50,15 @@ export default function FeaturesScreen() {
 
       <View style={{ flex: 1 }} />
 
-      <Animated.View entering={FadeInUp.delay(520).duration(500)} style={styles.bottom}>
+      <Animated.View entering={FadeInUp.delay(560).duration(500)} style={styles.bottom}>
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/tone-guess');
+            router.push('/(onboarding)/camera-permission');
           }}
           style={styles.cta}
         >
-          <Text style={styles.ctaText}>Continue</Text>
+          <Text style={styles.ctaText}>I understand — continue</Text>
         </Pressable>
       </Animated.View>
     </View>
@@ -85,51 +74,50 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 3,
     color: tokens.colors.pinkDeep,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   title: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 30,
+    fontSize: 34,
     fontWeight: '400',
     color: tokens.colors.text,
-    lineHeight: 40,
-    marginBottom: 32,
+    lineHeight: 44,
+    marginBottom: 10,
   },
-  featureList: {
-    gap: 0,
+  sub: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '300',
+    color: tokens.colors.gray,
+    lineHeight: 21,
+    marginBottom: 28,
+  },
+  trustList: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: 'rgba(0,0,0,0.06)',
+    borderColor: 'rgba(0,0,0,0.07)',
     overflow: 'hidden',
   },
-  featureRow: {
+  trustRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     padding: 18,
     gap: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-    alignItems: 'flex-start',
   },
-  featureIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: tokens.colors.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+  trustRowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.06)',
   },
-  featureIcon: { fontSize: 20 },
-  featureText: { flex: 1, gap: 4 },
-  featureTitle: {
+  trustIcon: { fontSize: 22, marginTop: 1 },
+  trustText: { flex: 1, gap: 3 },
+  trustTitle: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: tokens.colors.text,
-    lineHeight: 20,
   },
-  featureBody: {
+  trustBody: {
     fontFamily: tokens.fonts.regular,
     fontSize: 13,
     fontWeight: '300',
@@ -148,5 +136,10 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 7,
   },
-  ctaText: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  ctaText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 });

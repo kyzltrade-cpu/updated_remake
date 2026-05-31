@@ -9,15 +9,13 @@ import { CalCard } from '@/components/cal-card';
 import { tokens } from '@/components/theme';
 
 const OPTIONS = [
-  { id: 'daily',     icon: '🌅', label: 'Every day',          description: 'Part of my daily routine' },
-  { id: 'often',     icon: '📅', label: 'A few times a week', description: 'Most days but not always' },
-  { id: 'sometimes', icon: '🎉', label: 'Special occasions',  description: 'Events and weekends' },
-  { id: 'rarely',    icon: '🌙', label: 'Rarely',             description: 'Just getting started' },
+  { id: 'no',  icon: '👎', label: 'No',  description: 'First time trying something like this' },
+  { id: 'yes', icon: '👍', label: 'Yes', description: 'I\'ve used other beauty apps before' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];
 
-export default function FrequencyScreen() {
+export default function TriedAppsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<Id | null>(null);
@@ -27,17 +25,17 @@ export default function FrequencyScreen() {
 
     setSelected(id);
     Haptics.selectionAsync();
-    AsyncStorage.setItem('@remake_frequency', id);
+    AsyncStorage.setItem('@remake_tried_apps', id);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/where-heard'), 480);
+    timerRef.current = setTimeout(() => router.push('/(onboarding)/results-proof'), 480);
   };
 
   return (
     <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingHeader step={2} total={18} onBack={() => router.back()} />
+      <OnboardingHeader step={4} total={18} onBack={() => router.back()} />
       <View style={styles.body}>
-        <Text style={styles.title}>How often do you{'\n'}wear makeup?</Text>
-        <Text style={styles.sub}>Tells us how often to check in with you.</Text>
+        <Text style={styles.title}>Have you tried{'\n'}other beauty apps?</Text>
+        <Text style={styles.sub}>We built REMAKE for people who've been let down.</Text>
         <View style={styles.options}>
           {OPTIONS.map((o, i) => (
             <CalCard

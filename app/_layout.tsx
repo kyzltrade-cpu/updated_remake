@@ -3,6 +3,7 @@ import { useEffect, useState, ReactNode } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { tokens } from '@/components/theme';
 import { useBrandFonts } from '@/hooks/use-brand-fonts';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -41,6 +42,7 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <Providers>
       <StatusBar style="dark" />
       <Stack
@@ -55,6 +57,7 @@ export default function RootLayout() {
         <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
       </Stack>
     </Providers>
+    </GestureHandlerRootView>
   );
 }
 

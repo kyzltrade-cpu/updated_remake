@@ -1,363 +1,237 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import {
-  View, Text, StyleSheet, TextInput, Alert,
-  KeyboardAvoidingView, Platform, Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { signUp, signInDev, DEV_BYPASS } from '@/lib/auth';
 import { isValidEmail, isValidPassword, sanitizeEmail } from '@/lib/validation';
 import { clearGloDraft } from '@/lib/glo-profile';
-import * as Haptics from 'expo-haptics';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { tokens } from '@/components/theme';
 
-const DNA_CHIPS = [
-  { glyph: '◯', label: 'Foundation Shade' },
-  { glyph: '✦', label: 'Colour Season' },
-  { glyph: '⬭', label: 'Face Shape' },
-  { glyph: '—', label: 'Brow Blueprint' },
-  { glyph: '✦', label: 'Lash Profile' },
-  { glyph: '◉', label: 'Energy Type' },
-  { glyph: '♡', label: 'Lip Profile' },
-  { glyph: '◉', label: 'Blush Profile' },
-  { glyph: '✦', label: 'Beauty Archetype' },
-  { glyph: '♡', label: 'Beauty Wrapped' },
-];
+const advance = (router: ReturnType<typeof useRouter>) => {
+  router.replace('/(onboarding)/first-scan');
+};
 
 export default function CreateAccountScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
+  const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-
-  const validate = (): boolean => {
-    let valid = true;
-    const cleanEmail = sanitizeEmail(email);
-    if (!cleanEmail || !isValidEmail(cleanEmail)) {
-      setEmailError('Enter a valid email address');
-      valid = false;
-    } else setEmailError('');
-    if (!isValidPassword(password)) {
-      setPasswordError('At least 8 characters with a letter and number');
-      valid = false;
-    } else setPasswordError('');
-    return valid;
-  };
-
-  const handleCreate = async () => {
-    if (!validate()) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoading(true);
-    try {
-      if (DEV_BYPASS) {
-        await signInDev();
-        await clearGloDraft();
-        router.replace('/(onboarding)/camera-permission');
-        return;
-      }
-      const { error } = await signUp(sanitizeEmail(email), password);
-      if (error) {
-        Alert.alert('Sign up failed', error.message);
-      } else {
-        await clearGloDraft();
-        router.replace('/(onboarding)/camera-permission');
-      }
-    } catch {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [emailErr, setEmailErr] = useState('');
+  const [passErr, setPassErr] = useState('');
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace('/(onboarding)/camera-permission');
+    advance(router);
+  };
+
+  const handleDevOrCreate = async () => {
+    if (DEV_BYPASS) {
+      await signInDev();
+      await clearGloDraft();
+      advance(router);
+      return;
+    }
+    let valid = true;
+    const clean = sanitizeEmail(email);
+    if (!clean || !isValidEmail(clean)) { setEmailErr('Enter a valid email'); valid = false; } else setEmailErr('');
+    if (!isValidPassword(password)) { setPassErr('Min. 8 chars with a letter and number'); valid = false; } else setPassErr('');
+    if (!valid) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setLoading(true);
+    try {
+      const { error } = await signUp(clean, password);
+      if (error) { Alert.alert('Sign up failed', error.message); }
+      else { await clearGloDraft(); advance(router); }
+    } catch { Alert.alert('Error', 'Something went wrong. Try again.'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <View style={styles.root}>
-      {/* Warm ivory-to-blush background */}
-      <LinearGradient
-        colors={['#FFF5F2', '#FBE8E3', '#FAD8DD']}
-        locations={[0, 0.55, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={[styles.root, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32 }]}>
+        <Animated.Text entering={FadeInUp.delay(80).duration(500)} style={styles.title}>
+          Save your{'\n'}progress.
+        </Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(140).duration(500)} style={styles.sub}>
+          Don't lose your Beauty DNA. Save it now.
+        </Animated.Text>
 
-      {/* Back */}
-      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 10 }]}>
-        <MaterialIcons name="chevron-left" size={26} color={tokens.colors.pinkRich} />
-      </Pressable>
-
-      <KeyboardAvoidingView
-        style={styles.kav}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <View style={[styles.inner, { paddingTop: insets.top + 54, paddingBottom: insets.bottom + 24 }]}>
-
-          {/* Header */}
-          <Animated.View entering={FadeInUp.delay(80).duration(500)} style={styles.header}>
-            <Text style={styles.eyebrow}>Your results are ready</Text>
-            <Text style={styles.title}>Unlock your{'\n'}Beauty DNA.</Text>
+        {!showEmail ? (
+          <Animated.View entering={FadeInUp.delay(220).duration(500)} style={styles.buttons}>
+            <Pressable style={[styles.ssoBtn, styles.appleBtn]} onPress={handleDevOrCreate}>
+              <Text style={styles.appleBtnText}>🍎  Sign in with Apple</Text>
+            </Pressable>
+            <Pressable style={[styles.ssoBtn, styles.googleBtn]} onPress={handleDevOrCreate}>
+              <Text style={styles.googleBtnText}>G  Sign in with Google</Text>
+            </Pressable>
+            <Pressable onPress={() => setShowEmail(true)} hitSlop={8}>
+              <Text style={styles.emailToggle}>Use email & password</Text>
+            </Pressable>
           </Animated.View>
-
-          {/* DNA chip grid */}
-          <Animated.View entering={FadeIn.delay(180).duration(700)} style={styles.chipSection}>
-            <Text style={styles.chipSectionLabel}>10 results · locked</Text>
-            <View style={styles.chipGrid}>
-              {DNA_CHIPS.map((chip) => (
-                <View key={chip.label} style={styles.chip}>
-                  <Text style={styles.chipGlyph}>{chip.glyph}</Text>
-                  <Text style={styles.chipLabel}>{chip.label}</Text>
-                  <MaterialIcons name="lock" size={8} color={tokens.colors.pinkMid} />
-                </View>
-              ))}
-            </View>
-          </Animated.View>
-
-          {/* Divider */}
-          <Animated.View entering={FadeIn.delay(260).duration(500)} style={styles.divider} />
-
-          {/* Form */}
-          <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.form}>
+        ) : (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.emailForm}>
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Email</Text>
               <TextInput
-                style={[styles.input, emailError ? styles.inputError : null]}
+                style={[styles.input, emailErr ? styles.inputErr : null]}
                 placeholder="you@example.com"
                 placeholderTextColor="rgba(61,53,50,0.28)"
                 value={email}
-                onChangeText={t => { setEmail(t); if (emailError) setEmailError(''); }}
+                onChangeText={t => { setEmail(t); setEmailErr(''); }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="email"
               />
-              {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+              {emailErr ? <Text style={styles.errText}>{emailErr}</Text> : null}
             </View>
-
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Password</Text>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={[styles.input, styles.inputFlex, passwordError ? styles.inputError : null]}
-                  placeholder="Min. 8 chars, 1 letter, 1 number"
-                  placeholderTextColor="rgba(61,53,50,0.28)"
-                  value={password}
-                  onChangeText={t => { setPassword(t); if (passwordError) setPasswordError(''); }}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                <Pressable onPress={() => setShowPassword(v => !v)} hitSlop={10}>
-                  <MaterialIcons
-                    name={showPassword ? 'visibility-off' : 'visibility'}
-                    size={20}
-                    color={tokens.colors.gray}
-                  />
-                </Pressable>
-              </View>
-              {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+              <TextInput
+                style={[styles.input, passErr ? styles.inputErr : null]}
+                placeholder="Min. 8 chars, 1 letter, 1 number"
+                placeholderTextColor="rgba(61,53,50,0.28)"
+                value={password}
+                onChangeText={t => { setPassword(t); setPassErr(''); }}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+              {passErr ? <Text style={styles.errText}>{passErr}</Text> : null}
             </View>
-          </Animated.View>
-
-          <View style={styles.spacer} />
-
-          {/* Actions */}
-          <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.actions}>
             <Pressable
-              onPress={handleCreate}
+              onPress={handleDevOrCreate}
               disabled={loading}
-              style={({ pressed }) => [styles.cta, pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }, loading && { opacity: 0.55 }]}
+              style={[styles.cta, loading && styles.ctaDim]}
             >
-              <LinearGradient
-                colors={[tokens.colors.pinkDeep, tokens.colors.pinkRich]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.ctaGradient}
-              >
-                <Text style={styles.ctaText}>
-                  {loading ? 'Creating account…' : 'Reveal My Beauty DNA'}
-                </Text>
-                {!loading && <MaterialIcons name="arrow-forward" size={16} color="#fff" />}
-              </LinearGradient>
-            </Pressable>
-            <Text style={styles.legal}>
-              By continuing you agree to our Terms of Service and Privacy Policy.
-            </Text>
-            <Pressable onPress={handleSkip} hitSlop={8} style={styles.skipBtn}>
-              <Text style={styles.skipText}>Skip for now</Text>
+              <Text style={styles.ctaText}>{loading ? 'Creating…' : 'Create Account'}</Text>
             </Pressable>
           </Animated.View>
+        )}
 
-        </View>
-      </KeyboardAvoidingView>
-    </View>
+        <View style={{ flex: 1 }} />
+
+        <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.footer}>
+          <Pressable onPress={handleSkip} hitSlop={8}>
+            <Text style={styles.skip}>Would you like to sign in later? <Text style={styles.skipBold}>Skip</Text></Text>
+          </Pressable>
+          <Text style={styles.legal}>By continuing you agree to our Terms & Privacy Policy.</Text>
+        </Animated.View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: tokens.colors.ivory },
-  kav: { flex: 1 },
-  inner: {
+  root: {
     flex: 1,
+    backgroundColor: tokens.colors.cream,
     paddingHorizontal: 28,
-  },
-
-  // Header
-  header: { marginBottom: 24 },
-  eyebrow: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 3.2,
-    textTransform: 'uppercase',
-    color: tokens.colors.pinkDeep,
-    marginBottom: 8,
   },
   title: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: '400',
     color: tokens.colors.text,
-    lineHeight: 46,
-  },
-
-  // Chip grid
-  chipSection: { marginBottom: 20 },
-  chipSectionLabel: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 2.2,
-    color: tokens.colors.pinkMid,
-    textTransform: 'uppercase',
+    lineHeight: 52,
     marginBottom: 10,
   },
-  chipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.72)',
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-  },
-  chipGlyph: {
-    fontFamily: tokens.fonts.serif,
-    fontSize: 10,
-    color: tokens.colors.pinkDeep,
-    lineHeight: 14,
-  },
-  chipLabel: {
+  sub: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '300',
     color: tokens.colors.gray,
-    letterSpacing: 0.1,
+    marginBottom: 36,
+    lineHeight: 22,
   },
-
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: tokens.colors.border,
-    marginBottom: 20,
+  buttons: { gap: 12 },
+  ssoBtn: {
+    borderRadius: 50,
+    paddingVertical: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
-  // Form
-  form: { gap: 12 },
+  appleBtn: {
+    backgroundColor: tokens.colors.text,
+  },
+  appleBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
+  googleBtn: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  googleBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    fontWeight: '600',
+    color: tokens.colors.text,
+  },
+  emailToggle: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    color: tokens.colors.pinkDeep,
+    textAlign: 'center',
+    paddingVertical: 4,
+  },
+  emailForm: { gap: 14 },
   field: { gap: 6 },
   fieldLabel: {
     fontFamily: tokens.fonts.regular,
     fontSize: 10,
     fontWeight: '700',
     color: tokens.colors.gray,
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingVertical: 14,
     fontFamily: tokens.fonts.regular,
     fontSize: 15,
     color: tokens.colors.text,
     borderWidth: 1.5,
-    borderColor: tokens.colors.border,
+    borderColor: 'rgba(0,0,0,0.08)',
   },
-  inputFlex: { flex: 1 },
-  inputError: { borderColor: tokens.colors.pinkDeep },
-  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  errorText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    color: tokens.colors.pinkDeep,
-    marginTop: 2,
-  },
-
-  spacer: { flex: 1, minHeight: 20 },
-
-  // Actions
-  actions: { alignItems: 'center', gap: 10 },
+  inputErr: { borderColor: tokens.colors.pinkDeep },
+  errText: { fontFamily: tokens.fonts.regular, fontSize: 11, color: tokens.colors.pinkDeep },
   cta: {
-    width: '100%',
+    backgroundColor: tokens.colors.pinkDeep,
     borderRadius: 50,
-    overflow: 'hidden',
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.32,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  ctaGradient: {
-    flexDirection: 'row',
+    paddingVertical: 17,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 28,
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 7,
+    marginTop: 6,
   },
-  ctaText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: 0.2,
-  },
-  legal: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 11,
-    color: 'rgba(61,53,50,0.38)',
-    textAlign: 'center',
-    lineHeight: 17,
-  },
-  skipBtn: { paddingVertical: 4 },
-  skipText: {
+  ctaDim: { opacity: 0.6 },
+  ctaText: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  footer: { gap: 10, alignItems: 'center' },
+  skip: {
     fontFamily: tokens.fonts.regular,
     fontSize: 13,
     color: tokens.colors.gray,
+    textAlign: 'center',
   },
-  backBtn: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 10,
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+  skipBold: { fontWeight: '700', color: tokens.colors.text, textDecorationLine: 'underline' },
+  legal: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    color: tokens.colors.grayLight,
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });

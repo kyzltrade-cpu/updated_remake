@@ -35,14 +35,25 @@ const MOCK_UV: UVData = {
   tanningAdvice: 'Brief sessions only — 15 min max',
 };
 
+// Hourly UV data for the bar chart (mock — replace with real API data when available)
+const UV_HOURS = [
+  { hour: '6am',  uvi: 0, safe: true  },
+  { hour: '8am',  uvi: 1, safe: true  },
+  { hour: '10am', uvi: 3, safe: true  },
+  { hour: '12pm', uvi: 7, safe: false },
+  { hour: '2pm',  uvi: 9, safe: false },
+  { hour: '4pm',  uvi: 5, safe: false },
+  { hour: '6pm',  uvi: 2, safe: true  },
+];
+const MAX_BAR_H = 52;
+const MAX_UVI   = 10;
+
 // ── UV Popup ──────────────────────────────────────────────────────────────────
 
 function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number }) {
   const [uv, setUV] = useState<UVData | null>(null);
 
-  useEffect(() => {
-    setUV(MOCK_UV);
-  }, []);
+  useEffect(() => { setUV(MOCK_UV); }, []);
 
   return (
     <Modal transparent animationType="none" onRequestClose={onClose}>
@@ -52,34 +63,76 @@ function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number 
           style={[styles.uvPanel, { top: insetTop + 62 }]}
         >
           {uv !== null && (
-            <View style={styles.uvPanelInner}>
-              <View style={styles.uvPanelLeft}>
-                <Text style={styles.uvPanelEyebrow}>UV Index</Text>
-                <View style={styles.uvPanelMain}>
-                  <Text style={styles.uvPanelNum}>{uv.uvIndex}</Text>
-                  <View style={styles.uvPanelMeta}>
-                    <Text style={styles.uvPanelCat}>{uv.category}</Text>
-                    <Text style={styles.uvPanelSub}>Now · your location</Text>
-                  </View>
+            <View>
+              {/* ── Header ── */}
+              <View style={styles.uvCardHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.uvCardEyebrow}>TODAY · YOUR LOCATION</Text>
+                  <Text style={styles.uvCardTitle}>Best tanning window</Text>
+                </View>
+                <View style={[styles.uvIndexBadge, { borderColor: uv.color + '40', backgroundColor: uv.color + '14' }]}>
+                  <Text style={[styles.uvIndexNum, { color: uv.color }]}>{uv.uvIndex}</Text>
+                  <Text style={[styles.uvIndexLbl, { color: uv.color }]}>UV</Text>
                 </View>
               </View>
 
-              <View style={styles.uvPanelSep} />
+              {/* ── Time window pill ── */}
+              <View style={styles.uvWindowRow}>
+                <LinearGradient
+                  colors={[tokens.colors.pinkDeep, tokens.colors.gold]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.uvWindowPill}
+                >
+                  <Text style={styles.uvWindowTime}>10:00 – 11:30 am</Text>
+                </LinearGradient>
+                <Text style={styles.uvWindowNote}>Low risk · 30 min max</Text>
+              </View>
 
-              <View style={styles.uvPanelRight}>
-                <View style={styles.uvAdviceRow}>
-                  <Text style={styles.uvAdviceLbl}>SPF</Text>
-                  <Text style={styles.uvAdviceVal}>{uv.spfRecommendation}</Text>
+              {/* ── Hourly bar chart ── */}
+              <View style={styles.uvBarChart}>
+                {UV_HOURS.map(h => {
+                  const barH = Math.max(4, (h.uvi / MAX_UVI) * MAX_BAR_H);
+                  return (
+                    <View key={h.hour} style={styles.uvBarItem}>
+                      {/* Bar area — fills available height, bar sits at bottom */}
+                      <View style={styles.uvBarArea}>
+                        <View style={[
+                          styles.uvBar,
+                          {
+                            height: barH,
+                            backgroundColor: h.safe ? tokens.colors.pinkDeep : '#FFB347',
+                            opacity: h.safe ? 0.72 : 1,
+                          },
+                        ]} />
+                      </View>
+                      {/* Label always below the bar area */}
+                      <Text style={styles.uvBarLabel}>{h.hour}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* ── Legend ── */}
+              <View style={styles.uvLegendRow}>
+                <View style={styles.uvLegendItem}>
+                  <View style={[styles.uvLegendDot, { backgroundColor: tokens.colors.pinkDeep, opacity: 0.72 }]} />
+                  <Text style={styles.uvLegendText}>Safe window</Text>
                 </View>
-                <View style={styles.uvAdviceRow}>
-                  <Text style={styles.uvAdviceLbl}>Tanning</Text>
-                  <Text style={styles.uvAdviceVal}>{uv.tanningAdvice}</Text>
+                <View style={styles.uvLegendItem}>
+                  <View style={[styles.uvLegendDot, { backgroundColor: '#FFB347' }]} />
+                  <Text style={styles.uvLegendText}>Avoid</Text>
                 </View>
               </View>
 
-              <Pressable onPress={onClose} hitSlop={12} style={styles.uvPanelClose}>
-                <MaterialIcons name="close" size={13} color={tokens.colors.grayLight} />
-              </Pressable>
+              {/* ── Skin note ── */}
+              <View style={styles.uvSkinNote}>
+                <View style={styles.uvSkinDot} />
+                <Text style={styles.uvSkinText}>
+                  Calibrated to your skin tone &amp; SPF preferences
+                </Text>
+              </View>
+
             </View>
           )}
         </Animated.View>
@@ -582,48 +635,101 @@ const styles = StyleSheet.create({
   bubbleBackdrop: { flex: 1 },
   uvPanel: {
     position: 'absolute', left: 12, right: 12,
-    backgroundColor: tokens.colors.white,
-    borderRadius: 14,
-    borderWidth: 1, borderColor: tokens.colors.border,
-    shadowColor: tokens.colors.pinkDeep, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12, shadowRadius: 18, elevation: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.06)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14, shadowRadius: 20, elevation: 16,
+    padding: 16,
     overflow: 'hidden',
   },
-  uvPanelInner: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 14, gap: 14,
+  // Header
+  uvCardHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'flex-start', marginBottom: 12,
   },
-  uvPanelLeft: { gap: 4 },
-  uvPanelEyebrow: {
+  uvCardEyebrow: {
     fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700',
-    letterSpacing: 1.8, textTransform: 'uppercase', color: tokens.colors.pinkDeep,
+    letterSpacing: 2, textTransform: 'uppercase',
+    color: tokens.colors.grayLight, marginBottom: 3,
   },
-  uvPanelMain: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  uvPanelNum: {
-    fontFamily: tokens.fonts.serif, fontSize: 44, fontWeight: '400', lineHeight: 48,
+  uvCardTitle: {
+    fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '700',
     color: tokens.colors.text,
   },
-  uvPanelMeta: { gap: 2 },
-  uvPanelCat: {
-    fontFamily: tokens.fonts.serif, fontStyle: 'italic', fontSize: 15, color: tokens.colors.text,
+  uvIndexBadge: {
+    alignItems: 'center', borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderWidth: 1,
   },
-  uvPanelSub: {
-    fontFamily: tokens.fonts.regular, fontSize: 10, color: tokens.colors.grayLight, letterSpacing: 0.2,
+  uvIndexNum: {
+    fontFamily: tokens.fonts.serif, fontSize: 18, fontWeight: '400', lineHeight: 22,
   },
-  uvPanelSep: {
-    width: 1, height: 38, backgroundColor: tokens.colors.border,
+  uvIndexLbl: {
+    fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700', letterSpacing: 1,
   },
-  uvPanelRight: { flex: 1, gap: 8 },
-  uvAdviceRow: { gap: 1 },
-  uvAdviceLbl: {
-    fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '700',
-    letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.pinkDeep,
+  // Time window
+  uvWindowRow: { gap: 5, marginBottom: 14 },
+  uvWindowPill: {
+    borderRadius: 50, paddingVertical: 8, paddingHorizontal: 16, alignSelf: 'flex-start',
   },
-  uvAdviceVal: {
+  uvWindowTime: {
+    fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '700',
+    color: '#FFFFFF', letterSpacing: 0.2,
+  },
+  uvWindowNote: {
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '400',
+    color: tokens.colors.gray, marginLeft: 2,
+  },
+  // Bar chart — bar area + label stacked vertically, no overlap
+  uvBarChart: {
+    flexDirection: 'row',
+    height: MAX_BAR_H + 18, // bar area height + label height
+    marginBottom: 10,
+  },
+  uvBarItem: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  uvBarArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end', // bar sits at the bottom of its area
+  },
+  uvBar: { width: 14, borderRadius: 4 },
+  uvBarLabel: {
+    height: 14,
+    fontFamily: tokens.fonts.regular, fontSize: 8, fontWeight: '500',
+    color: tokens.colors.grayLight, textAlign: 'center',
+    marginTop: 3,
+  },
+  // Legend
+  uvLegendRow: {
+    flexDirection: 'row', gap: 14,
+    paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)',
+    marginBottom: 10,
+  },
+  uvLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  uvLegendDot: { width: 8, height: 8, borderRadius: 4 },
+  uvLegendText: {
     fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500',
-    color: tokens.colors.text, lineHeight: 15,
+    color: tokens.colors.text,
   },
-  uvPanelClose: { alignSelf: 'flex-start', paddingTop: 2 },
+  // Skin note
+  uvSkinNote: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    backgroundColor: tokens.colors.cream, borderRadius: 10,
+    paddingVertical: 8, paddingHorizontal: 10,
+  },
+  uvSkinDot: {
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: tokens.colors.pinkDeep, flexShrink: 0,
+  },
+  uvSkinText: {
+    flex: 1, fontFamily: tokens.fonts.regular, fontSize: 11,
+    fontWeight: '400', color: tokens.colors.gray, lineHeight: 15,
+  },
 
   // ── Permission screen ─────────────────────────────────────
   permissionScreen: {

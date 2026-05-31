@@ -10,7 +10,7 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 import { tokens } from '@/components/theme';
 
-const SIZE = 152;
+const SIZE = 148;
 const STROKE = 2;
 const RADIUS = (SIZE - STROKE * 2) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;

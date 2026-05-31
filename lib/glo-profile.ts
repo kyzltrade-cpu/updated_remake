@@ -12,6 +12,10 @@ export interface GloProfileDraft {
   undertone_guess: string;
   vibe_picks: string[];
   bare_photo_uri: string;
+  goals: string[];
+  skill: string;
+  foundation_struggle: string;
+  pain_points: string[];
   // Gemini Vision results
   undertone: string;
   face_shape: string;

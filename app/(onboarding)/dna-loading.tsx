@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
-  useSharedValue, useAnimatedStyle,
+  useSharedValue, useAnimatedStyle, useAnimatedProps,
   withTiming, withDelay, withRepeat, withSequence, withSpring,
   Easing,
 } from 'react-native-reanimated';
+import Svg, { Circle, Defs } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,6 +16,7 @@ import { getOnboardingData } from '@/lib/onboarding-store';
 import type { PriorityCategory } from '@/lib/onboarding-store';
 import { saveDnaResult } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { tokens } from '@/components/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -27,10 +29,12 @@ const PHASES = [
   'Revealing your Beauty DNA…',
 ];
 
-const SPARK_CHARS = ['✦', '✧', '◉', '✿', '★', '♡'];
+// ─── Floating sparks ─────────────────────────────────────────────────────────
+
+const SPARK_CHARS  = ['✦', '✧', '◉', '♡', '★', '✿'];
 const SPARK_COLORS = [
-  'rgba(200,144,130,0.5)', 'rgba(255,232,255,0.25)',
-  'rgba(180,120,200,0.4)', 'rgba(255,180,120,0.35)',
+  'rgba(232,57,154,0.35)', 'rgba(255,200,230,0.20)',
+  'rgba(212,175,55,0.30)',  'rgba(255,170,217,0.25)',
 ];
 
 function FloatSpark({ x, y, delay, color, char, size }: {
@@ -39,13 +43,18 @@ function FloatSpark({ x, y, delay, color, char, size }: {
   const ty = useSharedValue(0);
   const op = useSharedValue(0);
   useEffect(() => {
-    ty.value = withDelay(delay, withRepeat(withTiming(-120, { duration: 2600, easing: Easing.out(Easing.quad) }), -1, false));
+    ty.value = withDelay(delay, withRepeat(
+      withTiming(-H * 0.55, { duration: 3200, easing: Easing.out(Easing.quad) }),
+      -1, false,
+    ));
     op.value = withDelay(delay, withRepeat(
-      withSequence(withTiming(0.85, { duration: 320 }), withTiming(0, { duration: 2280 })),
+      withSequence(withTiming(0.9, { duration: 400 }), withTiming(0, { duration: 2800 })),
       -1, false,
     ));
   }, []);
-  const sty = useAnimatedStyle(() => ({ transform: [{ translateY: ty.value }], opacity: op.value }));
+  const sty = useAnimatedStyle(() => ({
+    transform: [{ translateY: ty.value }], opacity: op.value,
+  }));
   return (
     <Animated.Text style={[{ position: 'absolute', left: x, top: y, fontSize: size, color }, sty]}>
       {char}
@@ -55,13 +64,13 @@ function FloatSpark({ x, y, delay, color, char, size }: {
 
 function FloatingSparks() {
   const [sparks] = useState(() =>
-    Array.from({ length: 10 }, (_, i) => ({
-      x: 24 + Math.random() * (W - 48),
-      y: H * 0.12 + Math.random() * H * 0.6,
-      delay: Math.floor(Math.random() * 1400),
+    Array.from({ length: 12 }, (_, i) => ({
+      x: 20 + (W - 40) * (i / 11),
+      y: H * 0.15 + (H * 0.55) * ((i * 137) % 100) / 100,
+      delay: i * 180,
       color: SPARK_COLORS[i % SPARK_COLORS.length],
       char: SPARK_CHARS[i % SPARK_CHARS.length],
-      size: 10 + Math.floor(Math.random() * 12),
+      size: 10 + (i % 3) * 4,
     }))
   );
   return (
@@ -71,33 +80,107 @@ function FloatingSparks() {
   );
 }
 
-function PulseOrb() {
-  const sc = useSharedValue(1);
-  const al = useSharedValue(0.14);
+// ─── Animated scan ring ───────────────────────────────────────────────────────
+
+const RING_SIZE = W * 0.56;
+const RING_R    = (RING_SIZE - 8) / 2;
+const RING_CIRC = 2 * Math.PI * RING_R;
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function ScanRing() {
+  const rotation  = useSharedValue(0);
+  const progress  = useSharedValue(0);
+  const innerPulse = useSharedValue(0.6);
+
   useEffect(() => {
-    sc.value = withRepeat(withSequence(withTiming(1.12, { duration: 1600 }), withTiming(0.9, { duration: 1400 })), -1, true);
-    al.value = withRepeat(withSequence(withTiming(0.28, { duration: 1200 }), withTiming(0.08, { duration: 1600 })), -1, true);
+    // Continuous rotation
+    rotation.value = withRepeat(
+      withTiming(360, { duration: 3200, easing: Easing.linear }),
+      -1, false,
+    );
+    // Fill from 0 to ~85% over the loading duration
+    progress.value = withTiming(0.85, { duration: 5200, easing: Easing.out(Easing.quad) });
+    // Inner orb pulse
+    innerPulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1100, easing: Easing.out(Easing.sin) }),
+        withTiming(0.6, { duration: 1100, easing: Easing.in(Easing.sin) }),
+      ),
+      -1, false,
+    );
   }, []);
-  const sty = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: al.value }));
-  return <Animated.View style={[ls.orb, sty]} />;
+
+  const rotStyle    = useAnimatedStyle(() => ({ transform: [{ rotate: `${rotation.value}deg` }] }));
+  const innerStyle  = useAnimatedStyle(() => ({ opacity: innerPulse.value }));
+  const arcProps    = useAnimatedProps(() => ({
+    strokeDashoffset: RING_CIRC * (1 - progress.value),
+  }));
+
+  const cx = RING_SIZE / 2;
+
+  return (
+    <View style={{ width: RING_SIZE, height: RING_SIZE, alignItems: 'center', justifyContent: 'center' }}>
+      {/* Glow behind ring */}
+      <Animated.View style={[ls.ringGlow, innerStyle]} />
+
+      {/* Static track */}
+      <Svg width={RING_SIZE} height={RING_SIZE} style={StyleSheet.absoluteFill}>
+        <Circle
+          cx={cx} cy={cx} r={RING_R}
+          stroke="rgba(232,57,154,0.10)"
+          strokeWidth={2}
+          fill="none"
+        />
+      </Svg>
+
+      {/* Animated arc — rotates */}
+      <Animated.View style={[StyleSheet.absoluteFill, rotStyle]}>
+        <Svg width={RING_SIZE} height={RING_SIZE}>
+          <Defs />
+          <AnimatedCircle
+            cx={cx} cy={cx} r={RING_R}
+            stroke={tokens.colors.pinkDeep}
+            strokeWidth={2.5}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={RING_CIRC}
+            animatedProps={arcProps}
+            rotation={-90}
+            originX={cx}
+            originY={cx}
+          />
+        </Svg>
+      </Animated.View>
+
+      {/* Centre icon */}
+      <Animated.View style={[ls.ringCenter, innerStyle]}>
+        <Text style={ls.ringIcon}>✦</Text>
+      </Animated.View>
+    </View>
+  );
 }
+
+// ─── Phase text ───────────────────────────────────────────────────────────────
 
 function PhaseText({ text }: { text: string }) {
   const op = useSharedValue(0);
-  const ty = useSharedValue(8);
+  const ty = useSharedValue(6);
   useEffect(() => {
-    op.value = withTiming(1, { duration: 300 });
-    ty.value = withSpring(0, { damping: 14, stiffness: 120 });
-    return () => { op.value = withTiming(0, { duration: 200 }); };
+    op.value = withTiming(1, { duration: 280 });
+    ty.value = withSpring(0, { damping: 16, stiffness: 140 });
+    return () => { op.value = withTiming(0, { duration: 180 }); };
   }, []);
   const sty = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ translateY: ty.value }] }));
   return <Animated.Text style={[ls.phase, sty]}>{text}</Animated.Text>;
 }
 
+// ─── Progress bar ─────────────────────────────────────────────────────────────
+
 function ProgressBar({ duration = 5000 }: { duration?: number }) {
   const w = useSharedValue(0);
   useEffect(() => {
-    w.value = withTiming(W - 56, { duration, easing: Easing.out(Easing.cubic) });
+    w.value = withTiming(W - 80, { duration, easing: Easing.out(Easing.cubic) });
   }, []);
   const sty = useAnimatedStyle(() => ({ width: w.value }));
   return (
@@ -107,17 +190,7 @@ function ProgressBar({ duration = 5000 }: { duration?: number }) {
   );
 }
 
-function Dot({ index }: { index: number }) {
-  const sc = useSharedValue(0.5);
-  useEffect(() => {
-    sc.value = withDelay(index * 220, withRepeat(
-      withSequence(withTiming(1, { duration: 380 }), withTiming(0.5, { duration: 380 })),
-      -1, false,
-    ));
-  }, []);
-  const sty = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
-  return <Animated.View style={[ls.dot, sty]} />;
-}
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function DnaLoadingScreen() {
   const router = useRouter();
@@ -125,21 +198,13 @@ export default function DnaLoadingScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [phaseIdx, setPhaseIdx] = useState(0);
-  const titleOp = useSharedValue(0);
-  const titleSc = useSharedValue(0.82);
 
   useEffect(() => {
-    titleOp.value = withTiming(1, { duration: 500 });
-    titleSc.value = withSpring(1, { damping: 14, stiffness: 100 });
     const id = setInterval(() => {
       setPhaseIdx(i => (i + 1) % PHASES.length);
-    }, 1200);
+    }, 1100);
     return () => clearInterval(id);
   }, []);
-
-  const titleSty = useAnimatedStyle(() => ({
-    opacity: titleOp.value, transform: [{ scale: titleSc.value }],
-  }));
 
   useEffect(() => {
     const run = async () => {
@@ -150,13 +215,9 @@ export default function DnaLoadingScreen() {
         router.replace('/(main)/dna-reveal');
         return;
       }
-
       try {
         const pendingUri = await AsyncStorage.getItem('pending_dna_uri');
-        if (!pendingUri) {
-          router.replace('/(main)/dna-reveal');
-          return;
-        }
+        if (!pendingUri) { router.replace('/(main)/dna-reveal'); return; }
         const { priorityCategory } = await getOnboardingData();
         const dna = await analyzeDna({
           imageUri: pendingUri,
@@ -169,80 +230,107 @@ export default function DnaLoadingScreen() {
         router.replace('/(main)/dna-reveal');
       }
     };
-
     run();
   }, []);
 
   return (
     <View style={ls.root}>
       <LinearGradient
-        colors={['#1A0530', '#340824', '#06010E']}
-        locations={[0, 0.4, 1]}
-        start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }}
+        colors={['#1A0D14', '#2D0A1E', '#08010C']}
+        locations={[0, 0.5, 1]}
+        start={{ x: 0.3, y: 0 }} end={{ x: 0.7, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <PulseOrb />
       <FloatingSparks />
 
-      <View style={[ls.body, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 40 }]}>
+      <View style={[ls.body, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 44 }]}>
+
+        {/* Top: eyebrow + headline */}
         <View style={ls.top}>
           <Text style={ls.eyebrow}>BEAUTY DNA</Text>
-          <Animated.Text style={[ls.headline, titleSty]}>
-            {'Discovering\nyour face.'}
-          </Animated.Text>
+          <Text style={ls.headline}>{'Building\nyour profile.'}</Text>
         </View>
 
-        <View style={ls.middle}>
-          <PhaseText key={phaseIdx} text={PHASES[phaseIdx]} />
-          <View style={ls.dotRow}>
-            {[0, 1, 2].map(i => <Dot key={i} index={i} />)}
-          </View>
+        {/* Centre: scan ring */}
+        <View style={ls.ringWrap}>
+          <ScanRing />
         </View>
 
+        {/* Bottom: phase + progress */}
         <View style={ls.bottom}>
-          <ProgressBar duration={5000} />
-          <Text style={ls.hint}>Your Beauty DNA is being built</Text>
+          <PhaseText key={phaseIdx} text={PHASES[phaseIdx]} />
+          <ProgressBar duration={5200} />
         </View>
+
       </View>
     </View>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const ls = StyleSheet.create({
   root: { flex: 1 },
-  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 28 },
-  orb: {
-    position: 'absolute',
-    width: W * 0.85, height: W * 0.85, borderRadius: W * 0.425,
-    top: H * 0.1, left: W * 0.075,
-    backgroundColor: '#8820C8',
-    shadowColor: '#C040FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 80,
+  body: {
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 28,
   },
-  top: { gap: 18 },
+
+  top: { alignItems: 'center', gap: 10 },
   eyebrow: {
-    fontFamily: 'Inter', fontSize: 10, fontWeight: '700',
+    fontFamily: tokens.fonts.regular, fontSize: 10, fontWeight: '700',
     letterSpacing: 3.5, textTransform: 'uppercase',
-    color: 'rgba(255,232,255,0.4)',
+    color: 'rgba(232,57,154,0.55)',
   },
   headline: {
-    fontFamily: 'Playfair Display', fontSize: 56, fontStyle: 'italic',
-    color: '#FFE8FF', lineHeight: 64,
+    fontFamily: tokens.fonts.serif, fontSize: 42, fontStyle: 'italic',
+    color: '#FFF5F9', lineHeight: 50, textAlign: 'center', letterSpacing: 0.2,
   },
-  middle: { alignItems: 'center', gap: 24 },
+
+  // Ring
+  ringWrap: { alignItems: 'center', justifyContent: 'center' },
+  ringGlow: {
+    position: 'absolute',
+    width: RING_SIZE * 0.65,
+    height: RING_SIZE * 0.65,
+    borderRadius: RING_SIZE * 0.325,
+    backgroundColor: tokens.colors.pinkDeep,
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: RING_SIZE * 0.18,
+    elevation: 0,
+  },
+  ringCenter: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringIcon: {
+    fontSize: 28,
+    color: 'rgba(255,200,230,0.65)',
+  },
+
+  // Phase + progress
+  bottom: { alignItems: 'center', gap: 20, width: '100%' },
   phase: {
-    fontFamily: 'Inter', fontSize: 14, fontWeight: '400',
+    fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '300',
     color: 'rgba(255,232,255,0.5)', letterSpacing: 0.3, textAlign: 'center',
+    lineHeight: 20,
   },
-  dotRow: { flexDirection: 'row', gap: 8 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(200,140,220,0.6)' },
-  bottom: { gap: 12 },
   progressTrack: {
-    height: 1.5, width: W - 56, borderRadius: 1,
-    backgroundColor: 'rgba(255,232,255,0.1)', overflow: 'hidden',
+    height: 1.5, width: W - 80, borderRadius: 1,
+    backgroundColor: 'rgba(232,57,154,0.12)', overflow: 'hidden',
+    alignSelf: 'center',
   },
-  progressFill: { height: '100%', borderRadius: 1, backgroundColor: 'rgba(220,160,255,0.7)' },
-  hint: {
-    fontFamily: 'Inter', fontSize: 11, color: 'rgba(255,232,255,0.28)',
-    textAlign: 'center', letterSpacing: 0.2,
+  progressFill: {
+    height: '100%', borderRadius: 1,
+    backgroundColor: tokens.colors.pinkDeep,
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
 });

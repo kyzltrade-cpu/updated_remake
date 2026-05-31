@@ -20,13 +20,14 @@ import Svg, { Defs, Filter, FeTurbulence, FeColorMatrix, Rect } from 'react-nati
 import type { DnaResult } from '@/lib/api/dna';
 import { SEASON_DESCRIPTIONS, ARCHETYPE_DESCRIPTIONS, SEASON_PALETTES } from '@/lib/api/dna';
 import { useSubscription } from '@/contexts/subscription-context';
+import { useAuth } from '@/contexts/AuthContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DnaShareCard, CARD_W, CARD_H } from '@/components/dna-share-card';
 import { findShades } from '@/lib/api/shades';
 import { getKitForDna, type CategoryKit, type ProductRec } from '@/lib/api/recommendations';
 
 const { width: W, height: H } = Dimensions.get('window');
-const SLIDE_COUNT = 16;
+const SLIDE_COUNT = 18; // +2 for welcome + opening slides
 const SLIDE_DURATION = 9000;
 const SEG_GAP = 3;
 const SEG_PAD = 14;
@@ -118,7 +119,11 @@ interface SlideColors {
 }
 
 const SLIDE_COLORS: SlideColors[] = [
-  // 0 — Canvas: warm champagne ivory
+  // 0 — Welcome: deep rose (matches wrapped opening)
+  { gradientTop: '#1A0414', gradientBot: '#C2187A', blobA: '#E8399A', blobB: '#C2187A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.65)', eyebrow: 'rgba(255,245,249,0.45)', accent: '#FFD6EF' },
+  // 1 — Opening: hot pink
+  { gradientTop: '#1A0414', gradientBot: '#E8399A', blobA: '#FF70C0', blobB: '#E8399A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.65)', eyebrow: 'rgba(255,245,249,0.45)', accent: '#FFAAD9' },
+  // 2 — Canvas: warm champagne ivory
   { gradientTop: '#F2E4D0', gradientBot: '#C49A6A', blobA: '#E0C088', blobB: '#C8A870', text: '#1E0C04', muted: 'rgba(30,12,4,0.55)', eyebrow: 'rgba(30,12,4,0.4)', accent: '#7A4010' },
   // 1 — Season: dusty rose blush
   { gradientTop: '#F7CDD6', gradientBot: '#C8607C', blobA: '#F0AABB', blobB: '#E88A9C', text: '#280510', muted: 'rgba(40,5,16,0.55)', eyebrow: 'rgba(40,5,16,0.4)', accent: '#7A2038' },
@@ -153,6 +158,25 @@ const SLIDE_COLORS: SlideColors[] = [
 ];
 
 // ── Grain overlay (iOS renders, Android gracefully skips) ─────────────────────
+
+// Pulsing glow orb — same energy as Beauty Wrapped
+function DnaPulseOrb() {
+  const sc = useSharedValue(1);
+  const al = useSharedValue(0.10);
+  useEffect(() => {
+    sc.value = withRepeat(withSequence(withTiming(1.12,{duration:2000}),withTiming(0.9,{duration:1800})),-1,true);
+    al.value = withRepeat(withSequence(withTiming(0.22,{duration:1500}),withTiming(0.07,{duration:1900})),-1,true);
+  }, []);
+  const sty = useAnimatedStyle(() => ({ transform:[{scale:sc.value}], opacity:al.value }));
+  return <Animated.View style={[dnaPulseOrbStyle, sty]} pointerEvents="none" />;
+}
+const dnaPulseOrbStyle = {
+  position:'absolute' as const, width:W*0.85, height:W*0.85, borderRadius:W*0.425,
+  top:H*0.1, left:W*0.075,
+  backgroundColor:'#E8399A',
+  shadowColor:'#E8399A', shadowOffset:{width:0,height:0},
+  shadowOpacity:0.5, shadowRadius:80,
+};
 
 function GrainOverlay() {
   return (
@@ -1413,36 +1437,79 @@ function SlideSummary({ dna, isLocked, onShare, colors }: { dna: DnaResult; isLo
   );
 }
 
+// ── Welcome + Opening slides (matching Beauty Wrapped style) ─────────────────
+
+function DnaSlideWelcome({ name }: { name?: string }) {
+  const greeting = name ? `Hi ${name} 👋` : 'Hi there 👋';
+  const op = useSharedValue(0);
+  const sc = useSharedValue(0.88);
+  useEffect(() => {
+    op.value = withDelay(500, withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) }));
+    sc.value = withDelay(500, withSpring(1, { damping: 12, stiffness: 100 }));
+  }, []);
+  const textStyle = useAnimatedStyle(() => ({ opacity: op.value, transform: [{ scale: sc.value }] }));
+  return (
+    <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', gap: 16 }]}>
+      <Animated.Text entering={FadeInUp.delay(80).duration(500)} style={ds.welcomeHi}>{greeting}</Animated.Text>
+      <Animated.View style={textStyle}>
+        <Text style={ds.welcomeReady}>{'Your Beauty\nWrapped is ready.'}</Text>
+      </Animated.View>
+      <Animated.Text entering={FadeIn.delay(1200).duration(600)} style={ds.welcomeHint}>tap to begin  →</Animated.Text>
+    </View>
+  );
+}
+
+function DnaSlideOpening() {
+  const sc = useSharedValue(0.78);
+  useEffect(() => { sc.value = withDelay(200, withSpring(1, { damping: 9, stiffness: 80 })); }, []);
+  const heroStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  return (
+    <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', gap: 12 }]}>
+      <Animated.Text entering={FadeIn.delay(60).duration(350)} style={ds.openingSub}>YOUR</Animated.Text>
+      <Animated.View style={heroStyle}>
+        <Text style={ds.openingHero}>BEAUTY{'\n'}DNA</Text>
+      </Animated.View>
+      <Animated.Text entering={FadeIn.delay(600).duration(400)} style={ds.openingYear}>2  0  2  6</Animated.Text>
+    </View>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 const KIT_CATEGORY_COUNT = 6;
 
-function renderSlide(idx: number, dna: DnaResult, locked: boolean, onShare: () => void) {
+function renderSlide(idx: number, dna: DnaResult, locked: boolean, onShare: () => void, name?: string) {
   const colors = SLIDE_COLORS[idx] ?? SLIDE_COLORS[0];
-  if (idx >= 9 && idx <= 14) {
+  // New welcome slides
+  if (idx === 0) return <DnaSlideWelcome name={name} />;
+  if (idx === 1) return <DnaSlideOpening />;
+  // Existing slides shifted by +2
+  // Kit slides shifted from 9-14 → 11-16
+  if (idx >= 11 && idx <= 16) {
     const kits = getKitForDna(dna.archetype);
-    const kit = kits[idx - 9] ?? kits[0];
+    const kit = kits[idx - 11] ?? kits[0];
     return (
       <SlideKitCategory
         kit={kit}
         isLocked={locked}
         colors={colors}
-        slideNum={idx - 8}
+        slideNum={idx - 10}
         totalSlides={KIT_CATEGORY_COUNT}
       />
     );
   }
+  // Existing content slides shifted by +2
   switch (idx) {
-    case 0: return <SlideCanvas dna={dna} isLocked={locked} colors={colors} />;
-    case 1: return <SlideSeason dna={dna} isLocked={locked} colors={colors} />;
-    case 2: return <SlideFaceShape dna={dna} isLocked={locked} colors={colors} />;
-    case 3: return <SlideBrows dna={dna} isLocked={locked} colors={colors} />;
-    case 4: return <SlideLashes dna={dna} isLocked={locked} colors={colors} />;
-    case 5: return <SlideEnergy dna={dna} isLocked={locked} colors={colors} />;
-    case 6: return <SlideArchetype dna={dna} isLocked={locked} colors={colors} />;
-    case 7: return <SlideLips dna={dna} isLocked={locked} colors={colors} />;
-    case 8: return <SlideBlush dna={dna} isLocked={locked} colors={colors} />;
-    case 15: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
+    case 2:  return <SlideCanvas dna={dna} isLocked={locked} colors={colors} />;
+    case 3:  return <SlideSeason dna={dna} isLocked={locked} colors={colors} />;
+    case 4:  return <SlideFaceShape dna={dna} isLocked={locked} colors={colors} />;
+    case 5:  return <SlideBrows dna={dna} isLocked={locked} colors={colors} />;
+    case 6:  return <SlideLashes dna={dna} isLocked={locked} colors={colors} />;
+    case 7:  return <SlideEnergy dna={dna} isLocked={locked} colors={colors} />;
+    case 8:  return <SlideArchetype dna={dna} isLocked={locked} colors={colors} />;
+    case 9:  return <SlideLips dna={dna} isLocked={locked} colors={colors} />;
+    case 10: return <SlideBlush dna={dna} isLocked={locked} colors={colors} />;
+    case 17: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
     default: return null;
   }
 }
@@ -1458,7 +1525,13 @@ export default function DnaRevealScreen() {
   const shareCardRef = useRef<View>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
   const { subscription } = useSubscription();
+  const { user } = useAuth();
   const isPro = subscription?.plan === 'pro' || (__DEV__ && params.bypass === '1');
+  const displayName = (() => {
+    const raw = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? '';
+    const first = raw.replace(/[^a-zA-Z ]/g, ' ').trim().split(' ')[0];
+    return first ? first.charAt(0).toUpperCase() + first.slice(1) : undefined;
+  })();
   const progress = useSharedValue(0);
 
   // Background morph state — drives MorphingBackground and PersistentAmbient
@@ -1588,7 +1661,7 @@ export default function DnaRevealScreen() {
   // Free users see their real DNA on all analysis slides (0–8).
   // Product pick slides (9–14) are the hard paywall — locked for free users.
   const displayDna = dna ?? PLACEHOLDER_DNA;
-  const isProductSlide = (idx: number) => idx >= 9 && idx <= 14;
+  const isProductSlide = (idx: number) => idx >= 11 && idx <= 16;
   const locked = !isPro && isProductSlide(current);
 
   return (
@@ -1596,21 +1669,22 @@ export default function DnaRevealScreen() {
       {/* Persistent world — never remounts */}
       <MorphingBackground fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
       <GrainOverlay />
+      <DnaPulseOrb />
       <PersistentAmbient fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
 
       {/* Content only — dissolves out then in */}
       {slideState.outgoing && (
         <OutgoingContent key={`out-${slideState.outgoing.uid}`}>
-          {renderSlide(slideState.outgoing.idx, displayDna, !isPro && isProductSlide(slideState.outgoing.idx), handleShare)}
+          {renderSlide(slideState.outgoing.idx, displayDna, !isPro && isProductSlide(slideState.outgoing.idx), handleShare, displayName)}
         </OutgoingContent>
       )}
       {slideState.uid === 0 ? (
         <View key="init" style={StyleSheet.absoluteFill}>
-          {renderSlide(current, displayDna, locked, handleShare)}
+          {renderSlide(current, displayDna, locked, handleShare, displayName)}
         </View>
       ) : (
         <IncomingContent key={`in-${slideState.uid}`} dir={slideState.dir}>
-          {renderSlide(current, displayDna, locked, handleShare)}
+          {renderSlide(current, displayDna, locked, handleShare, displayName)}
         </IncomingContent>
       )}
 
@@ -1668,8 +1742,8 @@ const ds = StyleSheet.create({
   shareCardHost: { position: 'absolute', opacity: 0, top: 0, left: 0 },
 
   page: { width: W, flex: 1, justifyContent: 'center', alignItems: 'center' },
-  bodyWrap: { alignItems: 'center', paddingHorizontal: 28, gap: 20, paddingBottom: 160, width: W },
-  kitBodyWrap: { gap: 8, paddingBottom: 160 },
+  bodyWrap: { alignItems: 'center', paddingHorizontal: 28, gap: 20, paddingBottom: 60, paddingTop: 40, width: W },
+  kitBodyWrap: { gap: 8, paddingBottom: 60 },
 
   // Kit page — left-aligned shopping layout
   kitPageWrap: {
@@ -1723,13 +1797,41 @@ const ds = StyleSheet.create({
     paddingHorizontal: SEG_PAD, paddingBottom: 10, gap: 8, zIndex: 30,
   },
   barsRow: { flex: 1, flexDirection: 'row', gap: SEG_GAP, alignItems: 'center' },
-  segTrack: { height: 2.5, borderRadius: 1.5, backgroundColor: 'rgba(255,249,247,0.2)', overflow: 'hidden' },
+  segTrack: { flex: 1, height: 2.5, borderRadius: 1.5, backgroundColor: 'rgba(255,249,247,0.2)', overflow: 'hidden' },
   segFill: { height: '100%', backgroundColor: '#FFF9F7', borderRadius: 1.5 },
   closeBtn: {
     width: 30, height: 30, borderRadius: 15,
     backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center',
   },
   closeTxt: { color: '#FFF9F7', fontSize: 13 },
+
+  // Welcome + Opening slides
+  welcomeHi: {
+    fontFamily: 'Playfair Display', fontSize: 32, fontWeight: '400',
+    color: 'rgba(255,245,249,0.85)', textAlign: 'center', lineHeight: 40,
+  },
+  welcomeReady: {
+    fontFamily: 'Playfair Display', fontSize: 52, fontWeight: '400',
+    color: '#FFF5F9', textAlign: 'center', lineHeight: 60, letterSpacing: 0.2,
+    textShadowColor: 'rgba(232,57,154,0.55)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 44,
+  },
+  welcomeHint: {
+    fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,170,217,0.4)',
+    letterSpacing: 1.2,
+  },
+  openingSub: {
+    fontFamily: 'Inter', fontSize: 13, fontWeight: '700',
+    letterSpacing: 8, color: 'rgba(255,170,217,0.65)',
+  },
+  openingHero: {
+    fontFamily: 'Playfair Display', fontSize: 68, color: '#FFF5F9',
+    textAlign: 'center', lineHeight: 74, letterSpacing: 0.5,
+    textShadowColor: 'rgba(232,57,154,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 50,
+  },
+  openingYear: {
+    fontFamily: 'Inter', fontSize: 12, fontWeight: '500',
+    letterSpacing: 10, color: '#D4AF37', marginTop: 4,
+  },
 
   // Tap zones
   tapLeft: { position: 'absolute', left: 0, top: 0, bottom: 0, width: W * 0.28 },

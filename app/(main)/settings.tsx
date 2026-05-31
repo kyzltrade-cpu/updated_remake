@@ -1,8 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Image } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, Pressable, Alert, Image,
+} from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +13,8 @@ import { tokens } from '@/components/theme';
 import { useSettings } from '@/contexts/settings-context';
 import { useUser } from '@/contexts/user-context';
 import { useSubscription } from '@/contexts/subscription-context';
+
+// ─── Toggle ───────────────────────────────────────────────────────────────────
 
 function Toggle({ value, onValueChange, disabled }: {
   value: boolean;
@@ -26,7 +31,13 @@ function Toggle({ value, onValueChange, disabled }: {
   );
 }
 
-function Section({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) {
+// ─── Section wrapper ─────────────────────────────────────────────────────────
+
+function Section({ title, children, delay = 0 }: {
+  title: string;
+  children: React.ReactNode;
+  delay?: number;
+}) {
   return (
     <Animated.View entering={FadeInUp.delay(delay).duration(400)} style={styles.section}>
       <Text style={styles.sectionLabel}>{title}</Text>
@@ -35,17 +46,93 @@ function Section({ title, children, delay = 0 }: { title: string; children: Reac
   );
 }
 
-function Row({ label, sub, children }: { label: string; sub?: string; children?: React.ReactNode }) {
-  return (
+// ─── Standard row ────────────────────────────────────────────────────────────
+
+function Row({ label, sub, right, onPress }: {
+  label: string;
+  sub?: string;
+  right?: React.ReactNode;
+  onPress?: () => void;
+}) {
+  const inner = (
     <View style={styles.row}>
       <View style={styles.rowLeft}>
         <Text style={styles.rowLabel}>{label}</Text>
         {sub ? <Text style={styles.rowSub}>{sub}</Text> : null}
       </View>
-      {children}
+      {right}
     </View>
   );
+  if (onPress) return <Pressable onPress={onPress}>{inner}</Pressable>;
+  return inner;
 }
+
+// ─── Reference photo section ─────────────────────────────────────────────────
+
+function ReferencePhotoCard({
+  uri,
+  onPick,
+  onClear,
+}: { uri: string | null; onPick: () => void; onClear: () => void }) {
+  if (uri) {
+    return (
+      <View>
+        {/* Photo with change-overlay */}
+        <Pressable onPress={onPick} style={styles.refPhotoWrap}>
+          <Image source={{ uri }} style={styles.refPhoto} />
+          {/* Dark gradient + edit badge at bottom of photo */}
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.55)']}
+            style={styles.refPhotoOverlay}
+          >
+            <View style={styles.refEditBadge}>
+              <MaterialIcons name="edit" size={13} color="#FFFFFF" />
+              <Text style={styles.refEditText}>Change photo</Text>
+            </View>
+          </LinearGradient>
+        </Pressable>
+
+        {/* Metadata row */}
+        <View style={styles.refMetaRow}>
+          <View style={styles.refMetaLeft}>
+            <MaterialIcons name="check-circle" size={14} color={tokens.colors.pinkDeep} />
+            <Text style={styles.refMetaText}>Reference photo set</Text>
+          </View>
+          <Pressable onPress={onClear} hitSlop={8}>
+            <Text style={styles.refRemoveText}>Remove</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  // Empty state
+  return (
+    <Pressable onPress={onPick} style={styles.refEmpty}>
+      {/* Dashed photo-shaped preview */}
+      <View style={styles.refEmptyPreview}>
+        <View style={styles.refEmptyIcon}>
+          <MaterialIcons name="add-photo-alternate" size={28} color={tokens.colors.pinkDeep} />
+        </View>
+        <Text style={styles.refEmptyAdd}>Add reference photo</Text>
+      </View>
+
+      {/* Explanation */}
+      <View style={styles.refEmptyInfo}>
+        <Text style={styles.refEmptyTitle}>Track your progress over time</Text>
+        <Text style={styles.refEmptyBody}>
+          A reference photo lets you compare side-by-side how your looks evolve with each scan.
+          Pick a well-lit photo in natural light.
+        </Text>
+        <View style={styles.refAddBtn}>
+          <Text style={styles.refAddBtnText}>Choose from library</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -54,6 +141,8 @@ export default function SettingsScreen() {
   const { user, logout, isLoggedIn } = useUser();
   const { subscription } = useSubscription();
   const [pickingRef, setPickingRef] = useState(false);
+
+  const isPro = subscription?.plan === 'pro';
 
   const pickReference = async () => {
     if (pickingRef) return;
@@ -75,90 +164,149 @@ export default function SettingsScreen() {
   };
 
   const clearReference = () => {
-    if (settings.hapticsEnabled) Haptics.selectionAsync();
-    updateSettings({ referencePhoto: null });
+    Alert.alert('Remove reference photo?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove', style: 'destructive',
+        onPress: () => {
+          if (settings.hapticsEnabled) Haptics.selectionAsync();
+          updateSettings({ referencePhoto: null });
+        },
+      },
+    ]);
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure? You can sign back in anytime.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: logout },
-      ]
-    );
+    Alert.alert('Sign Out', 'Are you sure? You can sign back in anytime.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: logout },
+    ]);
   };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerEyebrow}>Your preferences</Text>
-          <Text style={styles.headerTitle}>Settings</Text>
-        </View>
+        <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 34 }} />
       </View>
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 48 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Preferences */}
-        <Section title="Preferences" delay={50}>
-          <Row label="Haptic feedback" sub="Vibration on interactions">
-            <Toggle value={settings.hapticsEnabled} onValueChange={() => toggleSetting('hapticsEnabled')} />
-          </Row>
-          <View style={styles.divider} />
-          <Row label="Mirror photos" sub="Front camera flip">
-            <Toggle value={settings.mirrorPhotos} onValueChange={() => toggleSetting('mirrorPhotos')} />
-          </Row>
-        </Section>
 
-        {/* Notifications */}
-        <Section title="Notifications" delay={120}>
-          <Row label="Push notifications" sub="Scan results & tips">
-            <Toggle value={settings.notificationsEnabled} onValueChange={() => toggleSetting('notificationsEnabled')} />
-          </Row>
-          <View style={styles.divider} />
-          <Row label="Product expiry reminders" sub="Alerts when scanned items expire">
-            <Toggle value={settings.notificationsEnabled} onValueChange={() => toggleSetting('notificationsEnabled')} />
-          </Row>
-        </Section>
+        {/* Profile card */}
+        {isLoggedIn && (
+          <Animated.View entering={FadeInUp.delay(40).duration(400)} style={styles.profileCard}>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileAvatarLetter}>
+                {(user?.email?.[0] ?? 'U').toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileEmail}>{user?.email ?? ''}</Text>
+              <View style={[styles.planBadge, isPro && styles.planBadgePro]}>
+                <Text style={[styles.planBadgeText, isPro && styles.planBadgeTextPro]}>
+                  {isPro ? '✦  Pro' : 'Free'}
+                </Text>
+              </View>
+            </View>
+            <Pressable
+              onPress={() => router.push('/(main)/paywall')}
+              style={styles.upgradeCta}
+              hitSlop={8}
+            >
+              {!isPro && <Text style={styles.upgradeCtaText}>Upgrade</Text>}
+            </Pressable>
+          </Animated.View>
+        )}
 
-        {/* Subscription */}
-        <Section title="Subscription" delay={190}>
+        {/* ── Preferences ── */}
+        <Section title="Preferences" delay={80}>
           <Row
-            label="Plan"
-            sub={subscription?.plan === 'pro' ? 'Pro' : 'Free'}
-          >
-            <Text style={styles.rowValue}>
-              {subscription?.plan === 'pro' ? '$39.99 / year' : 'Free (1 scan)'}
-            </Text>
-          </Row>
+            label="Haptic feedback"
+            sub="Vibration on interactions"
+            right={
+              <Toggle
+                value={settings.hapticsEnabled}
+                onValueChange={() => toggleSetting('hapticsEnabled')}
+              />
+            }
+          />
           <View style={styles.divider} />
-          <Pressable
-            style={styles.upgradeRow}
-            onPress={() => {
-              if (settings.hapticsEnabled) Haptics.selectionAsync();
-              router.push('/(main)/paywall');
-            }}
-          >
-            <Text style={styles.upgradeText}>Change plan</Text>
-            <MaterialIcons name="chevron-right" size={18} color={tokens.colors.gold} />
-          </Pressable>
+          <Row
+            label="Mirror photos"
+            sub="Front camera flip"
+            right={
+              <Toggle
+                value={settings.mirrorPhotos}
+                onValueChange={() => toggleSetting('mirrorPhotos')}
+              />
+            }
+          />
         </Section>
 
-        {/* About */}
-        <Section title="About" delay={260}>
-          <Row label="Version">
-            <Text style={styles.rowValue}>1.0.0</Text>
-          </Row>
+        {/* ── Notifications ── */}
+        <Section title="Notifications" delay={150}>
+          <Row
+            label="Push notifications"
+            sub="Scan results & tips"
+            right={
+              <Toggle
+                value={settings.notificationsEnabled}
+                onValueChange={() => toggleSetting('notificationsEnabled')}
+              />
+            }
+          />
+          <View style={styles.divider} />
+          <Row
+            label="Product expiry reminders"
+            sub="Alerts when scanned items expire"
+            right={
+              <Toggle
+                value={settings.notificationsEnabled}
+                onValueChange={() => toggleSetting('notificationsEnabled')}
+              />
+            }
+          />
+        </Section>
+
+        {/* ── Reference Photo ── */}
+        <Section title="Reference Photo" delay={210}>
+          <ReferencePhotoCard
+            uri={settings.referencePhoto ?? null}
+            onPick={pickReference}
+            onClear={clearReference}
+          />
+        </Section>
+
+        {/* ── Subscription ── */}
+        <Section title="Subscription" delay={270}>
+          <Row
+            label="Current plan"
+            sub={isPro ? 'Pro · $39.99 / year' : 'Free — 1 scan included'}
+            right={
+              <Pressable
+                onPress={() => router.push('/(main)/paywall')}
+                style={styles.changePlanBtn}
+              >
+                <Text style={styles.changePlanText}>
+                  {isPro ? 'Manage' : 'Upgrade'}
+                </Text>
+                <MaterialIcons name="chevron-right" size={16} color={tokens.colors.pinkDeep} />
+              </Pressable>
+            }
+          />
+        </Section>
+
+        {/* ── About ── */}
+        <Section title="About" delay={330}>
+          <Row label="Version" right={<Text style={styles.rowValue}>1.0.0</Text>} />
           {isLoggedIn && (
             <>
               <View style={styles.divider} />
@@ -167,33 +315,11 @@ export default function SettingsScreen() {
           )}
         </Section>
 
-        {/* Reference Photo */}
-        <Section title="Reference Photo" delay={330}>
-          {settings.referencePhoto ? (
-            <>
-              <Pressable onPress={pickReference}>
-                <Image source={{ uri: settings.referencePhoto }} style={styles.refPhoto} />
-                <Text style={styles.refHint}>Tap to change</Text>
-              </Pressable>
-              <Pressable style={styles.clearBtn} onPress={clearReference}>
-                <Text style={styles.clearBtnText}>Remove</Text>
-              </Pressable>
-            </>
-          ) : (
-            <Pressable style={styles.refPlaceholder} onPress={pickReference}>
-              <View style={styles.refIconWrap}>
-                <MaterialIcons name="add-photo-alternate" size={22} color={tokens.colors.pinkDeep} />
-              </View>
-              <Text style={styles.refPlaceholderText}>Add reference photo</Text>
-              <Text style={styles.refPlaceholderSub}>Compare scan-to-scan progress over time</Text>
-            </Pressable>
-          )}
-        </Section>
-
         {/* Sign out */}
         {isLoggedIn && (
-          <Animated.View entering={FadeInUp.delay(400).duration(400)}>
+          <Animated.View entering={FadeInUp.delay(390).duration(400)}>
             <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
+              <MaterialIcons name="logout" size={16} color="#B04040" />
               <Text style={styles.signOutText}>Sign Out</Text>
             </Pressable>
           </Animated.View>
@@ -203,92 +329,209 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: tokens.colors.beige },
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: tokens.colors.cream },
+
+  // Header
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 14, paddingBottom: 18,
-    borderBottomWidth: 1, borderBottomColor: tokens.colors.border,
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16,
   },
   backBtn: {
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: tokens.colors.white, borderWidth: 1, borderColor: tokens.colors.border,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.07)',
     justifyContent: 'center', alignItems: 'center',
   },
-  backIcon: { fontSize: 20, color: tokens.colors.text, lineHeight: 22 },
-  headerCenter: { alignItems: 'center', gap: 2 },
-  headerEyebrow: {
-    fontFamily: tokens.fonts.regular, fontSize: 10, fontWeight: '500',
-    letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight,
-  },
+  backIcon: { fontSize: 22, color: tokens.colors.text, lineHeight: 26, includeFontPadding: false },
   headerTitle: {
-    fontFamily: tokens.fonts.serif, fontSize: 22, fontWeight: '400', color: tokens.colors.text,
+    fontFamily: tokens.fonts.serif, fontSize: 20, fontWeight: '400', color: tokens.colors.text,
   },
 
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 24, gap: 20 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 8, gap: 20 },
 
+  // Profile card
+  profileCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.06)',
+    padding: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+  },
+  profileAvatar: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: tokens.colors.pinkDeep,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  profileAvatarLetter: {
+    fontFamily: tokens.fonts.regular, fontSize: 18, fontWeight: '700', color: '#FFFFFF',
+  },
+  profileInfo: { flex: 1, gap: 5 },
+  profileEmail: {
+    fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '500', color: tokens.colors.text,
+  },
+  planBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: tokens.colors.cream,
+    borderRadius: 50, paddingHorizontal: 10, paddingVertical: 3,
+    borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)',
+  },
+  planBadgePro: {
+    backgroundColor: 'rgba(212,175,55,0.12)',
+    borderColor: 'rgba(212,175,55,0.3)',
+  },
+  planBadgeText: {
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '600', color: tokens.colors.gray,
+  },
+  planBadgeTextPro: { color: tokens.colors.gold },
+  upgradeCta: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 50, paddingHorizontal: 14, paddingVertical: 8,
+  },
+  upgradeCtaText: {
+    fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '700', color: '#FFFFFF',
+  },
+
+  // Section
   section: {},
   sectionLabel: {
-    fontFamily: tokens.fonts.regular, fontSize: 10, fontWeight: '600',
-    letterSpacing: 1.2, textTransform: 'uppercase', color: tokens.colors.grayLight,
-    marginBottom: 10, marginLeft: 4,
+    fontFamily: tokens.fonts.regular, fontSize: 10, fontWeight: '700',
+    letterSpacing: 1.4, textTransform: 'uppercase', color: tokens.colors.grayLight,
+    marginBottom: 9, marginLeft: 4,
   },
   card: {
-    backgroundColor: tokens.colors.white, borderRadius: 18, overflow: 'hidden',
-    borderWidth: 1.5, borderColor: tokens.colors.border,
+    backgroundColor: '#FFFFFF', borderRadius: 18, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.06)',
   },
 
+  // Row
   row: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 16, paddingHorizontal: 18, minHeight: 58,
+    paddingVertical: 15, paddingHorizontal: 18, minHeight: 56,
   },
   rowLeft: { flex: 1, paddingRight: 12 },
-  rowLabel: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: tokens.colors.text },
-  rowSub: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, marginTop: 2 },
+  rowLabel: {
+    fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: tokens.colors.text,
+  },
+  rowSub: {
+    fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, marginTop: 2,
+  },
   rowValue: { fontFamily: tokens.fonts.regular, fontSize: 14, color: tokens.colors.gray },
+  divider: { height: 1, backgroundColor: 'rgba(0,0,0,0.05)', marginLeft: 18 },
 
-  divider: { height: 1, backgroundColor: tokens.colors.border, marginLeft: 18 },
-
+  // Toggle
   toggle: {
     width: 48, height: 28, borderRadius: 14,
-    backgroundColor: tokens.colors.border, padding: 2, justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.12)', padding: 2, justifyContent: 'center',
   },
   toggleOn: { backgroundColor: tokens.colors.pinkDeep },
   toggleDisabled: { opacity: 0.4 },
   toggleThumb: {
-    width: 24, height: 24, borderRadius: 12, backgroundColor: tokens.colors.white,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2,
+    width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15, shadowRadius: 2, elevation: 2,
   },
   toggleThumbOn: { alignSelf: 'flex-end' },
 
-  // Reference photo
-  refPhoto: { width: '100%', aspectRatio: 3 / 4, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
-  refHint: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, textAlign: 'center', paddingVertical: 10 },
-  refPlaceholder: { alignItems: 'center', paddingVertical: 32, gap: 8 },
-  refIconWrap: {
-    width: 52, height: 52, borderRadius: 16,
-    backgroundColor: tokens.colors.cream, borderWidth: 1.5, borderColor: tokens.colors.border,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 4,
-  },
-  refPlaceholderText: { fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '500', color: tokens.colors.text },
-  refPlaceholderSub: { fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.gray, textAlign: 'center', paddingHorizontal: 28 },
-  clearBtn: { paddingVertical: 14, alignItems: 'center', borderTopWidth: 1, borderTopColor: tokens.colors.border },
-  clearBtnText: { fontFamily: tokens.fonts.regular, fontSize: 14, color: '#C04040', fontWeight: '500' },
+  // ── Reference photo ───────────────────────────────────────────
 
-  // Upgrade
-  upgradeRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 16, paddingHorizontal: 18,
+  // Filled state
+  refPhotoWrap: { position: 'relative' },
+  refPhoto: { width: '100%', aspectRatio: 3 / 4 },
+  refPhotoOverlay: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    height: 72,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16, paddingBottom: 14,
   },
-  upgradeText: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '600', color: tokens.colors.gold },
+  refEditBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 50, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
+  },
+  refEditText: {
+    fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '600', color: '#FFFFFF',
+  },
+  refMetaRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 18, paddingVertical: 14,
+    borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  refMetaLeft: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  refMetaText: {
+    fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '500', color: tokens.colors.text,
+  },
+  refRemoveText: {
+    fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '500', color: '#C04040',
+  },
+
+  // Empty state
+  refEmpty: {
+    flexDirection: 'row', gap: 16,
+    padding: 18, alignItems: 'flex-start',
+  },
+  refEmptyPreview: {
+    width: 80,
+    aspectRatio: 3 / 4,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: tokens.colors.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colors.cream,
+    flexShrink: 0,
+    gap: 6,
+  },
+  refEmptyIcon: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: 'rgba(232,57,154,0.08)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  refEmptyAdd: {
+    fontFamily: tokens.fonts.regular, fontSize: 9, fontWeight: '600',
+    color: tokens.colors.pinkDeep, textAlign: 'center', letterSpacing: 0.2,
+    paddingHorizontal: 4,
+  },
+  refEmptyInfo: { flex: 1, gap: 6 },
+  refEmptyTitle: {
+    fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '700', color: tokens.colors.text,
+    lineHeight: 20,
+  },
+  refEmptyBody: {
+    fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '300',
+    color: tokens.colors.gray, lineHeight: 18,
+  },
+  refAddBtn: {
+    marginTop: 6, alignSelf: 'flex-start',
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 50, paddingHorizontal: 14, paddingVertical: 8,
+  },
+  refAddBtnText: {
+    fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '700', color: '#FFFFFF',
+  },
+
+  // Subscription change plan
+  changePlanBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 2,
+  },
+  changePlanText: {
+    fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '600', color: tokens.colors.pinkDeep,
+  },
 
   // Sign out
   signOutBtn: {
-    backgroundColor: tokens.colors.white, borderRadius: 18,
-    borderWidth: 1.5, borderColor: tokens.colors.border,
-    paddingVertical: 16, alignItems: 'center',
+    backgroundColor: '#FFFFFF', borderRadius: 18,
+    borderWidth: 1.5, borderColor: 'rgba(192,64,64,0.2)',
+    paddingVertical: 15, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center', gap: 8,
   },
-  signOutText: { fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '400', color: tokens.colors.gray },
+  signOutText: {
+    fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: '#B04040',
+  },
 });

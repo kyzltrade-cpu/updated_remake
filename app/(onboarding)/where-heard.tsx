@@ -9,15 +9,18 @@ import { CalCard } from '@/components/cal-card';
 import { tokens } from '@/components/theme';
 
 const OPTIONS = [
-  { id: 'daily',     icon: '🌅', label: 'Every day',          description: 'Part of my daily routine' },
-  { id: 'often',     icon: '📅', label: 'A few times a week', description: 'Most days but not always' },
-  { id: 'sometimes', icon: '🎉', label: 'Special occasions',  description: 'Events and weekends' },
-  { id: 'rarely',    icon: '🌙', label: 'Rarely',             description: 'Just getting started' },
+  { id: 'instagram',  icon: '📸', label: 'Instagram' },
+  { id: 'tiktok',     icon: '🎵', label: 'TikTok' },
+  { id: 'youtube',    icon: '▶️',  label: 'YouTube' },
+  { id: 'friend',     icon: '👯', label: 'Friend or family' },
+  { id: 'influencer', icon: '💄', label: 'Influencer / creator' },
+  { id: 'search',     icon: '🔍', label: 'App Store search' },
+  { id: 'other',      icon: '✨', label: 'Other' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];
 
-export default function FrequencyScreen() {
+export default function WhereHeardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<Id | null>(null);
@@ -27,24 +30,23 @@ export default function FrequencyScreen() {
 
     setSelected(id);
     Haptics.selectionAsync();
-    AsyncStorage.setItem('@remake_frequency', id);
+    AsyncStorage.setItem('@remake_source', id);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/where-heard'), 480);
+    timerRef.current = setTimeout(() => router.push('/(onboarding)/tried-apps'), 480);
   };
 
   return (
     <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingHeader step={2} total={18} onBack={() => router.back()} />
+      <OnboardingHeader step={3} total={18} onBack={() => router.back()} />
       <View style={styles.body}>
-        <Text style={styles.title}>How often do you{'\n'}wear makeup?</Text>
-        <Text style={styles.sub}>Tells us how often to check in with you.</Text>
+        <Text style={styles.title}>Where did you{'\n'}hear about us?</Text>
+        <Text style={styles.sub}>Helps us reach more people like you.</Text>
         <View style={styles.options}>
           {OPTIONS.map((o, i) => (
             <CalCard
               key={o.id}
               icon={o.icon}
               label={o.label}
-              description={o.description}
               active={selected === o.id}
               onPress={() => handleSelect(o.id)}
 

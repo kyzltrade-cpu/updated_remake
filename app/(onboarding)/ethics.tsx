@@ -1,82 +1,95 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { ob } from '@/components/onboarding-styles';
 import { OnboardingHeader } from '@/components/onboarding-header';
-import { SelectCard } from '@/components/select-card';
-import { GlassButton } from '@/components/glass-button';
+import { CalCard } from '@/components/cal-card';
 import { saveGloField } from '@/lib/glo-profile';
+import { tokens } from '@/components/theme';
 
 const OPTIONS = [
-  { id: 'cruelty_free', label: 'Cruelty-free',     description: 'Never tested on animals' },
-  { id: 'vegan',        label: 'Vegan',             description: 'No animal-derived ingredients' },
-  { id: 'eco',          label: 'Eco / Sustainable', description: 'Recyclable packaging, reef-safe formulas' },
+  { id: 'vegan',         icon: '🌱', label: 'Vegan',          description: 'No animal-derived ingredients' },
+  { id: 'cruelty_free',  icon: '🐰', label: 'Cruelty-free',   description: 'Not tested on animals' },
+  { id: 'clean',         icon: '🧼', label: 'Clean beauty',   description: 'Free from harmful chemicals' },
+  { id: 'sustainable',   icon: '♻️', label: 'Sustainable',    description: 'Eco-friendly packaging & practices' },
+  { id: 'none',          icon: '✨', label: 'No preference',  description: 'Any formula works for me' },
 ] as const;
 
-type EthicId = (typeof OPTIONS)[number]['id'];
+type Id = typeof OPTIONS[number]['id'];
 
 export default function EthicsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState<Set<EthicId>>(new Set());
+  const [selected, setSelected] = useState<Set<Id>>(new Set());
 
-  const toggle = (id: EthicId) => {
+  const toggle = (id: Id) => {
     Haptics.selectionAsync();
+    if (id === 'none') {
+      setSelected(new Set(['none']));
+      return;
+    }
     setSelected(prev => {
       const next = new Set(prev);
+      next.delete('none');
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
 
-  const advance = async (values: EthicId[]) => {
-    await saveGloField({ ethics: values });
-    router.push('/(onboarding)/foundation-pain');
+  const handleContinue = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await saveGloField({ ethics: Array.from(selected) });
+    router.push('/(onboarding)/uv-tracker');
   };
 
   return (
-    <View style={[ob.root, { paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingHeader step={8} total={11} onBack={() => router.back()} />
-
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={ob.header}>
-        <Text style={ob.title}>What matters{'\n'}to you?</Text>
-        <Text style={ob.sub}>Select all that apply — or skip.</Text>
-      </Animated.View>
-
-      <View style={ob.options}>
-        {OPTIONS.map((opt, i) => (
-          <Animated.View key={opt.id} entering={FadeInUp.delay(160 + i * 60).duration(400)}>
-            <SelectCard
-              label={opt.label}
-              description={opt.description}
-              active={selected.has(opt.id)}
-              onPress={() => toggle(opt.id)}
+    <View style={[styles.root, { paddingBottom: insets.bottom + 24 }]}>
+      <OnboardingHeader step={15} total={18} onBack={() => router.back()} />
+      <View style={styles.body}>
+        <Text style={styles.title}>Any product{'\n'}values?</Text>
+        <Text style={styles.sub}>We'll filter recommendations to match. Select all that apply.</Text>
+        <View style={styles.options}>
+          {OPTIONS.map((o, i) => (
+            <CalCard
+              key={o.id}
+              icon={o.icon}
+              label={o.label}
+              description={o.description}
+              active={selected.has(o.id)}
+              onPress={() => toggle(o.id)}
+              index={i}
             />
-          </Animated.View>
-        ))}
+          ))}
+        </View>
       </View>
-
-      <View style={ob.spacer} />
-
-      <Animated.View entering={FadeInUp.delay(440).duration(500)} style={styles.bottom}>
-        <GlassButton
-          title="Continue"
-          onPress={() => advance(Array.from(selected))}
-          variant="primary"
-          style={styles.cta}
-        />
-        <Pressable onPress={() => advance([])}>
-          <Text style={ob.skipLink}>Skip for now</Text>
+      <View style={{ flex: 1 }} />
+      <View style={styles.bottom}>
+        <Pressable onPress={handleContinue} style={styles.cta}>
+          <Text style={styles.ctaText}>Continue</Text>
         </Pressable>
-      </Animated.View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bottom: { gap: 12 },
-  cta: { width: '100%' },
+  root: { flex: 1, backgroundColor: tokens.colors.cream },
+  body: { paddingHorizontal: 28, paddingTop: 20 },
+  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
+  sub: { fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '300', color: tokens.colors.gray, marginBottom: 28, lineHeight: 20 },
+  options: { gap: 10 },
+  bottom: { paddingHorizontal: 28 },
+  cta: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 50,
+    paddingVertical: 17,
+    alignItems: 'center',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    elevation: 7,
+  },
+  ctaText: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
 });

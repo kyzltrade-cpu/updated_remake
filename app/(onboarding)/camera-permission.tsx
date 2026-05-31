@@ -1,173 +1,146 @@
-import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Linking, Modal } from 'react-native';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { tokens } from '@/components/theme';
-import { ob } from '@/components/onboarding-styles';
-import { GlassButton } from '@/components/glass-button';
 import { OnboardingHeader } from '@/components/onboarding-header';
+import { tokens } from '@/components/theme';
 
 const BULLETS = [
-  '· Analysed on-device — not uploaded',
-  '· Never accessed in the background',
-  '· Delete your data anytime from Settings',
+  { icon: '📷', text: 'Used only to analyse your makeup — nothing is stored remotely.' },
+  { icon: '🛡️', text: 'Analysis runs on-device. Your face stays on your phone.' },
+  { icon: '⚙️', text: 'Revoke camera access from Settings at any time.' },
 ];
 
 export default function CameraPermissionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [permission, requestPermission] = useCameraPermissions();
-  const [showDenied, setShowDenied] = useState(false);
 
-  useEffect(() => {
-    if (permission?.granted) {
-      router.replace('/(onboarding)/lighting');
-    }
-  }, [permission]);
+  const advance = () => router.push('/(onboarding)/profile-building');
+  const [, requestPermission] = useCameraPermissions();
 
-  const handleRequest = async () => {
+
+  const handleAllow = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const result = await requestPermission();
-    if (!result.granted) setShowDenied(true);
+    await requestPermission();
+    advance();
   };
 
   return (
-    <View style={[ob.root, { paddingBottom: insets.bottom + 40 }]}>
-      <OnboardingHeader step={0} total={0} />
+    <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>
+      <OnboardingHeader step={0} total={0} onBack={() => router.back()} />
+      <View style={styles.body}>
+        <Animated.Text entering={FadeInUp.delay(80).duration(500)} style={styles.eyebrow}>
+          ONE LAST THING
+        </Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(160).duration(500)} style={styles.title}>
+          {'Allow camera\naccess to scan.'}
+        </Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(220).duration(500)} style={styles.sub}>
+          REMAKE uses your camera to analyse your makeup in real time.
+        </Animated.Text>
 
-      <View style={styles.content}>
-        <Animated.View entering={FadeIn.delay(100).duration(600)} style={ob.permIcon}>
-          <View style={styles.cameraBody}>
-            <View style={styles.cameraLens} />
-            <View style={styles.cameraFlash} />
-          </View>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.delay(220).duration(500)} style={ob.permHeader}>
-          <Text style={ob.permTitle}>One photo.{'\n'}That's all we need.</Text>
-          <Text style={ob.permBody}>
-            REMAKE reads your makeup and face through your camera.
-            Your photo is never stored or shared.
-          </Text>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.delay(340).duration(500)} style={ob.permBullets}>
-          {BULLETS.map(b => (
-            <Text key={b} style={ob.permBullet}>{b}</Text>
+        <View style={styles.bulletCard}>
+          {BULLETS.map((b, i) => (
+            <Animated.View
+              key={b.icon}
+              entering={FadeInUp.delay(300 + i * 60).duration(450)}
+              style={[styles.bulletRow, i > 0 && styles.bulletRowBorder]}
+            >
+              <Text style={styles.bulletIcon}>{b.icon}</Text>
+              <Text style={styles.bulletText}>{b.text}</Text>
+            </Animated.View>
           ))}
-        </Animated.View>
+        </View>
       </View>
 
-      <View style={ob.spacer} />
+      <View style={{ flex: 1 }} />
 
-      <Animated.View entering={FadeInUp.delay(460).duration(500)} style={styles.bottom}>
-        <GlassButton
-          title="Allow Camera Access"
-          onPress={handleRequest}
-          variant="primary"
-          style={styles.cta}
-        />
-        <Text style={ob.footnote}>Your camera is never accessed in the background.</Text>
+      <Animated.View entering={FadeInUp.delay(500).duration(500)} style={styles.bottom}>
+        <Pressable onPress={handleAllow} style={styles.ctaPrimary}>
+          <Text style={styles.ctaText}>Allow Camera</Text>
+        </Pressable>
+        <Pressable onPress={advance} hitSlop={8}>
+          <Text style={styles.skip}>Not now</Text>
+        </Pressable>
       </Animated.View>
-
-      <Modal visible={showDenied} transparent animationType="fade">
-        <View style={styles.overlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Camera access denied</Text>
-            <Text style={styles.modalBody}>
-              REMAKE needs camera access to work. Please enable it in Settings to continue.
-            </Text>
-            <Pressable style={styles.modalBtn} onPress={() => Linking.openSettings()}>
-              <Text style={styles.modalBtnText}>Open Settings</Text>
-            </Pressable>
-            <Pressable style={styles.modalSecondary} onPress={() => setShowDenied(false)}>
-              <Text style={styles.modalSecondaryText}>Try again</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { alignItems: 'center', paddingTop: 12 },
-  cameraBody: {
-    width: 48,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 3,
-    borderColor: tokens.colors.pinkDeep,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
+  root: { flex: 1, backgroundColor: tokens.colors.cream, paddingHorizontal: 28 },
+  body: {},
+  eyebrow: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 3,
+    color: tokens.colors.pinkDeep,
+    marginBottom: 14,
   },
-  cameraLens: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2.5,
-    borderColor: tokens.colors.pinkDeep,
-  },
-  cameraFlash: {
-    position: 'absolute',
-    top: -6,
-    left: 8,
-    width: 10,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: tokens.colors.white,
-    borderWidth: 2,
-    borderColor: tokens.colors.pinkDeep,
-  },
-  bottom: { gap: 10, alignItems: 'center' },
-  cta: { width: '100%' },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'flex-end',
-    padding: 16,
-    paddingBottom: 50,
-  },
-  modal: {
-    backgroundColor: tokens.colors.white,
-    borderRadius: 24,
-    padding: 28,
-    gap: 14,
-  },
-  modalTitle: {
+  title: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 22,
+    fontSize: 34,
     fontWeight: '400',
     color: tokens.colors.text,
+    lineHeight: 44,
+    marginBottom: 10,
   },
-  modalBody: {
+  sub: {
     fontFamily: tokens.fonts.regular,
     fontSize: 14,
     fontWeight: '300',
     color: tokens.colors.gray,
     lineHeight: 21,
+    marginBottom: 28,
   },
-  modalBtn: {
-    backgroundColor: tokens.colors.text,
-    borderRadius: 50,
-    paddingVertical: 16,
-    alignItems: 'center',
+  bulletCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.07)',
+    overflow: 'hidden',
   },
-  modalBtnText: {
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+    gap: 14,
+  },
+  bulletRowBorder: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)' },
+  bulletIcon: { fontSize: 20, marginTop: 1 },
+  bulletText: {
+    flex: 1,
     fontFamily: tokens.fonts.regular,
     fontSize: 14,
-    fontWeight: '600',
-    color: tokens.colors.white,
-    letterSpacing: 0.5,
+    fontWeight: '400',
+    color: tokens.colors.text,
+    lineHeight: 20,
   },
-  modalSecondary: { alignItems: 'center', paddingVertical: 8 },
-  modalSecondaryText: {
+  bottom: { gap: 14 },
+  ctaPrimary: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 50,
+    paddingVertical: 17,
+    alignItems: 'center',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    elevation: 7,
+  },
+  ctaText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  skip: {
     fontFamily: tokens.fonts.regular,
     fontSize: 13,
     color: tokens.colors.gray,
+    textAlign: 'center',
   },
 });

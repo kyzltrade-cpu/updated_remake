@@ -1,76 +1,101 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { ob } from '@/components/onboarding-styles';
 import { OnboardingHeader } from '@/components/onboarding-header';
-import { SelectCard } from '@/components/select-card';
-import { GlassButton } from '@/components/glass-button';
-import { saveOnboardingField, type PriorityCategory } from '@/lib/onboarding-store';
+import { CalCard } from '@/components/cal-card';
+import { saveGloField } from '@/lib/glo-profile';
+import { tokens } from '@/components/theme';
 
-const OPTIONS: { value: PriorityCategory; label: string; description: string }[] = [
-  { value: 'Blending',       label: 'Blending',       description: 'Eyeshadow transitions and gradient edges' },
-  { value: 'Symmetry',       label: 'Symmetry',        description: 'Matching both sides — eyes, brows, lips' },
-  { value: 'Colour Harmony', label: 'Colour Harmony',  description: 'Shades that work with my skin tone' },
-  { value: 'Coverage',       label: 'Coverage',        description: 'Even foundation and concealer application' },
-  { value: 'Brow Framing',   label: 'Brow Framing',    description: 'Shape, symmetry, and placement' },
-];
+const OPTIONS = [
+  { id: 'shade_match',  icon: '🎨', label: 'Shade matching',        description: 'Products look different on my skin' },
+  { id: 'breakouts',    icon: '🔬', label: 'Breakouts & reactions',  description: 'Products irritate or clog my pores' },
+  { id: 'longevity',    icon: '⏱️', label: 'Doesn\'t last',         description: 'Fades or transfers by midday' },
+  { id: 'price',        icon: '💸', label: 'Wasting money',          description: 'Buying products that don\'t work' },
+  { id: 'overwhelmed',  icon: '😵', label: 'Too many choices',       description: 'Can\'t decide what to buy' },
+  { id: 'consistency',  icon: '📊', label: 'Lack of consistency',    description: 'My routine changes too often' },
+] as const;
+
+type Id = typeof OPTIONS[number]['id'];
 
 export default function PainPointScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState<PriorityCategory[]>([]);
+  const [selected, setSelected] = useState<Set<Id>>(new Set());
 
-  const toggle = (cat: PriorityCategory) => {
+  const toggle = (id: Id) => {
     Haptics.selectionAsync();
-    setSelected(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat],
-    );
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   };
 
   const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await saveOnboardingField('priorityCategory', JSON.stringify(selected));
-    router.push('/(onboarding)/skin-goals');
+    await saveGloField({ pain_points: Array.from(selected) });
+    router.push('/(onboarding)/allergies');
   };
 
   return (
-    <View style={[ob.root, { paddingBottom: insets.bottom + 32 }]}>
-      <OnboardingHeader step={4} total={11} onBack={() => router.back()} />
+    <View style={[styles.root, { paddingBottom: insets.bottom + 24 }]}>
+      <OnboardingHeader step={13} total={18} onBack={() => router.back()} />
 
-      <Animated.View entering={FadeInUp.delay(80).duration(500)} style={ob.header}>
-        <Text style={ob.title}>What do you struggle{'\n'}with most?</Text>
-        <Text style={ob.sub}>Pick as many as apply — we give these extra weight.</Text>
-      </Animated.View>
-
-      <View style={ob.options}>
-        {OPTIONS.map((opt, i) => (
-          <Animated.View key={opt.value} entering={FadeInUp.delay(160 + i * 55).duration(400)}>
-            <SelectCard
-              label={opt.label}
-              description={opt.description}
-              active={selected.includes(opt.value)}
-              onPress={() => toggle(opt.value)}
-            />
-          </Animated.View>
-        ))}
+      <View style={styles.header}>
+        <Text style={styles.title}>What's stopping{'\n'}you right now?</Text>
+        <Text style={styles.sub}>Select all that apply.</Text>
       </View>
 
-      <View style={ob.spacer} />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {OPTIONS.map((o, i) => (
+          <CalCard
+            key={o.id}
+            icon={o.icon}
+            label={o.label}
+            description={o.description}
+            active={selected.has(o.id)}
+            onPress={() => toggle(o.id)}
+            index={i}
+          />
+        ))}
+      </ScrollView>
 
-      <Animated.View entering={FadeInUp.delay(500).duration(500)}>
-        <GlassButton
-          title="Continue"
+      <View style={styles.bottom}>
+        <Pressable
           onPress={handleContinue}
-          variant="primary"
-          style={styles.cta}
-          disabled={selected.length === 0}
-        />
-      </Animated.View>
+          style={[styles.cta, selected.size === 0 && styles.ctaDim]}
+        >
+          <Text style={styles.ctaText}>
+            {selected.size === 0 ? 'None of these' : `Continue (${selected.size} selected)`}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({ cta: { width: '100%' } });
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: tokens.colors.cream },
+  header: { paddingHorizontal: 28, paddingTop: 20, paddingBottom: 16 },
+  title: { fontFamily: tokens.fonts.serif, fontSize: 32, fontWeight: '400', color: tokens.colors.text, lineHeight: 42, marginBottom: 8 },
+  sub: { fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '300', color: tokens.colors.gray, lineHeight: 20 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 28, gap: 10, paddingBottom: 16 },
+  bottom: { paddingHorizontal: 28, paddingTop: 12 },
+  cta: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 50,
+    paddingVertical: 17,
+    alignItems: 'center',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    elevation: 7,
+  },
+  ctaDim: { backgroundColor: tokens.colors.grayLight, shadowOpacity: 0 },
+  ctaText: { fontFamily: tokens.fonts.regular, fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+});

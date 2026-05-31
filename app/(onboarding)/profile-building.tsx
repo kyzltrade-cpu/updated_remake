@@ -1,148 +1,163 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
-  FadeInUp,
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  withSequence,
-  Easing,
+  useSharedValue, useAnimatedStyle, withTiming, FadeIn, FadeInUp, Easing,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
-import { ob } from '@/components/onboarding-styles';
+
+const { width: SW } = Dimensions.get('window');
+const PADDING = 28;
+const TRACK_W = SW - PADDING * 2;
 
 const STEPS = [
-  'Skin profile mapped',
-  'Allergen filters set',
-  'Shade matching calibrated',
-  'Style direction noted',
-  'Personalising your results…',
+  'Analysing your skin profile…',
+  'Matching your undertone…',
+  'Screening ingredients…',
+  'Building your colour season…',
+  'Calibrating shade range…',
+  'Finalising your Beauty DNA…',
 ];
 
-const DURATION = 3000;
+const BULLETS = [
+  'Foundation shade match',
+  'Skin compatibility score',
+  'Colour season',
+  'Beauty archetype',
+  'Product recommendations',
+];
 
 export default function ProfileBuildingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const [pct, setPct] = useState(0);
+  const [stepIdx, setStepIdx] = useState(0);
 
-  // Pulsing sparkle
-  const sparkleScale = useSharedValue(1);
-  const sparkleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: sparkleScale.value }],
-  }));
-
-  // Progress bar
-  const barWidth = useSharedValue(0);
-  const barStyle = useAnimatedStyle(() => ({
-    width: barWidth.value * (width - 56),
-  }));
+  const barW = useSharedValue(0);
+  const barStyle = useAnimatedStyle(() => ({ width: barW.value }));
 
   useEffect(() => {
-    sparkleScale.value = withRepeat(
-      withSequence(
-        withTiming(1.18, { duration: 700, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1.0,  { duration: 700, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      false,
-    );
+    barW.value = withTiming(TRACK_W, { duration: 3200, easing: Easing.out(Easing.cubic) });
 
-    barWidth.value = withTiming(1, { duration: DURATION, easing: Easing.inOut(Easing.ease) });
+    const intervals: ReturnType<typeof setInterval>[] = [];
 
-    const t = setTimeout(() => {
+    const pctInterval = setInterval(() => {
+      setPct(p => {
+        if (p >= 100) { clearInterval(pctInterval); return 100; }
+        return p + 2;
+      });
+    }, 64);
+    intervals.push(pctInterval);
+
+    const stepInterval = setInterval(() => {
+      setStepIdx(i => (i + 1) % STEPS.length);
+    }, 700);
+    intervals.push(stepInterval);
+
+    const done = setTimeout(() => {
+      intervals.forEach(clearInterval);
       router.replace('/(onboarding)/profile-reveal');
-    }, DURATION + 200);
+    }, 3400);
 
-    return () => clearTimeout(t);
+    return () => {
+      intervals.forEach(clearInterval);
+      clearTimeout(done);
+    };
   }, []);
 
   return (
-    <View style={[ob.rootDark, styles.root, { paddingBottom: insets.bottom + 40 }]}>
-      {/* Sparkle */}
-      <Animated.Text style={[styles.sparkle, sparkleStyle]}>✦</Animated.Text>
+    <View style={[styles.root, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 40 }]}>
+      <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
+        <Text style={styles.pct}>{pct}%</Text>
+        <Text style={styles.headline}>We're setting{'\n'}everything up for you</Text>
 
-      {/* Headline */}
-      <Animated.Text entering={FadeInUp.delay(100).duration(500)} style={ob.titleItalicDark}>
-        Building your{'\n'}scanner…
-      </Animated.Text>
-
-      {/* Checklist */}
-      <View style={styles.list}>
-        {STEPS.map((step, i) => (
-          <Animated.View
-            key={step}
-            entering={FadeInUp.delay(300 + i * 420).duration(400)}
-            style={styles.row}
-          >
-            <Text style={styles.check}>{i < STEPS.length - 1 ? '✓' : '✦'}</Text>
-            <Text style={[styles.stepText, i === STEPS.length - 1 && styles.stepTextLast]}>
-              {step}
-            </Text>
+        <View style={styles.barTrack}>
+          <Animated.View style={[styles.barFill, barStyle]}>
+            <LinearGradient
+              colors={[tokens.colors.pinkDeep, tokens.colors.gold, tokens.colors.pinkRich]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={StyleSheet.absoluteFill}
+            />
           </Animated.View>
-        ))}
-      </View>
+        </View>
 
-      <View style={ob.spacer} />
+        <Text style={styles.step} key={stepIdx}>{STEPS[stepIdx]}</Text>
 
-      {/* Progress bar */}
-      <View style={[styles.track, { width: width - 56 }]}>
-        <Animated.View style={[styles.fill, barStyle]} />
-      </View>
+        <View style={styles.bulletSection}>
+          <Text style={styles.bulletTitle}>Building your profile for:</Text>
+          {BULLETS.map((b, i) => (
+            <Animated.View key={b} entering={FadeInUp.delay(i * 180).duration(400)} style={styles.bulletRow}>
+              <Text style={styles.bullet}>·</Text>
+              <Text style={styles.bulletText}>{b}</Text>
+            </Animated.View>
+          ))}
+        </View>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    justifyContent: 'flex-start',
-    paddingTop: 100,
+    flex: 1,
+    backgroundColor: tokens.colors.cream,
+    paddingHorizontal: PADDING,
   },
-  sparkle: {
-    fontSize: 48,
-    color: tokens.colors.gold,
-    textAlign: 'center',
+  content: { flex: 1 },
+  pct: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 72,
+    fontWeight: '400',
+    color: tokens.colors.pinkDeep,
+    marginBottom: 4,
+  },
+  headline: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 18,
+    fontWeight: '600',
+    color: tokens.colors.text,
+    lineHeight: 26,
+    marginBottom: 24,
+  },
+  barTrack: {
+    height: 8,
+    width: TRACK_W,
+    backgroundColor: tokens.colors.border,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  barFill: {
+    height: 8,
+    borderRadius: 4,
+  },
+  step: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    fontWeight: '400',
+    color: tokens.colors.gray,
     marginBottom: 32,
   },
-  list: {
-    marginTop: 32,
-    gap: 14,
+  bulletSection: { gap: 4 },
+  bulletTitle: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '600',
+    color: tokens.colors.grayLight,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: 8,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  check: {
+  bulletRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  bullet: { color: tokens.colors.pinkDeep, fontSize: 18, lineHeight: 24 },
+  bulletText: {
     fontFamily: tokens.fonts.regular,
     fontSize: 14,
-    color: tokens.colors.pinkDeep,
-    width: 18,
-    textAlign: 'center',
-  },
-  stepText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 15,
-    fontWeight: '300',
-    color: 'rgba(255,255,255,0.7)',
-  },
-  stepTextLast: {
-    color: tokens.colors.gold,
     fontWeight: '400',
-  },
-  track: {
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 2,
-    overflow: 'hidden',
-    alignSelf: 'center',
-  },
-  fill: {
-    height: 2,
-    backgroundColor: tokens.colors.pinkDeep,
-    borderRadius: 2,
+    color: tokens.colors.text,
+    lineHeight: 22,
   },
 });

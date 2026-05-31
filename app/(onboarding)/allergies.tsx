@@ -59,6 +59,7 @@ export default function AllergiesScreen() {
   const handleContinue = async () => {
     await saveGloField({ allergies: [...Array.from(toggled), ...customList] });
     router.push('/(onboarding)/ethics');
+
   };
 
   return (
