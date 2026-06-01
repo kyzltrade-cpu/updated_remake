@@ -110,6 +110,7 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
   } else {
     result = await nimVision<NimDiagnosisResponse>(imageBase64, prompt);
   }
+  console.log('[Diagnosis] Successfully fetched real NIM Vision payload!', JSON.stringify(result));
 
   const categories: CategoryAnalysis[] = (Object.keys(CATEGORY_WEIGHTS) as SixCategory[]).map(name => {
     const found = result.categories.find(c => c.name === name);
