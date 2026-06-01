@@ -5,12 +5,12 @@ export function hasNimKey(): boolean {
   return NIM_API_KEY.length > 10;
 }
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export async function uriToBase64(uri: string): Promise<string> {
   try {
     return await FileSystem.readAsStringAsync(uri, {
-      encoding: 'base64',
+      encoding: FileSystem.EncodingType.Base64,
     });
   } catch (e) {
     console.error('Error converting URI to Base64:', e);
