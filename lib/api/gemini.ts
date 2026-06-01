@@ -106,7 +106,7 @@ export async function geminiVisionDual<T>(image1Base64: string, image2Base64: st
   }
 }
 
-export async function geminiVision<T>(imageBase64: string, prompt: string): Promise<T> {
+export async function geminiVision<T>(imageBase64: string, prompt: string, schema?: any): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 28000);
 
@@ -126,6 +126,7 @@ export async function geminiVision<T>(imageBase64: string, prompt: string): Prom
           temperature: 0.1,
           maxOutputTokens: 1500,
           responseMimeType: 'application/json',
+          ...(schema ? { responseSchema: schema } : {}),
         },
       }),
     });
