@@ -20,7 +20,7 @@ export async function openaiVisionJson<T>(imageBase64: string, schema: any): Pro
       },
       signal: controller.signal,
       body: JSON.stringify({
-        model: "openai/gpt-4o-mini",
+        model: "qwen/qwen-2-vl-7b-instruct",
         messages: [
           {
             role: "user",
