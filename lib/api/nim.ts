@@ -79,7 +79,7 @@ export async function nimTextJson<T>(prompt: string, maxTokens = 3000): Promise<
 
 export async function nimVisionDual<T>(image1Base64: string, image2Base64: string, prompt: string): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 35000);
+  const timer = setTimeout(() => controller.abort(), 90000);
   try {
     const res = await fetch(NIM_URL, {
       method: 'POST',
@@ -115,7 +115,7 @@ export async function nimVisionDual<T>(image1Base64: string, image2Base64: strin
 
 export async function nimVision<T>(imageBase64: string, prompt: string): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 35000);
+  const timer = setTimeout(() => controller.abort(), 90000);
 
   try {
     const res = await fetch(NIM_URL, {
