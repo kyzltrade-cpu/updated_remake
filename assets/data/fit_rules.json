@@ -1,0 +1,57 @@
+{
+  "matte": {
+    "foundation": { "score": 2, "reason": "Matte foundations give you a smooth, shine-free base that photographs beautifully." },
+    "concealer": { "score": 2, "reason": "Matte concealers set firmly and resist creasing throughout the day." },
+    "blush": { "score": 2, "reason": "Matte blush gives you a natural-looking flush with lasting definition." },
+    "eyeshadow": { "score": 3, "reason": "Matte eyeshadows are perfect for precise, sculpted eye looks." },
+    "lipstick": { "score": 3, "reason": "Matte lipstick delivers bold, long-wearing colour that won't budge." },
+    "lip gloss": { "score": 1, "reason": "A matte gloss offers a unique velvet finish — different from the typical shine." },
+    "mascara": { "score": 2, "reason": "This mascara delivers defined lashes without clumping." },
+    "skincare": { "score": 2, "reason": "Mattifying skincare helps control shine and keeps your base fresh all day." },
+    "other": { "score": 2, "reason": "A matte finish gives you a polished, understated look." }
+  },
+  "dewy": {
+    "foundation": { "score": 3, "reason": "Dewy foundations give you that coveted glass-skin glow from within." },
+    "concealer": { "score": 2, "reason": "A dewy concealer brightens and hydrates the under-eye area beautifully." },
+    "blush": { "score": 3, "reason": "Dewy blush melts into your skin for a fresh, just-pinched flush." },
+    "eyeshadow": { "score": 2, "reason": "Dewy eyeshadow gives your lids a luminous, editorial quality." },
+    "lipstick": { "score": 2, "reason": "A dewy lip adds youthful moisture and light-catching dimension." },
+    "lip gloss": { "score": 3, "reason": "Glossy, dewy finish on the lips is iconic — maximum shine and dimension." },
+    "mascara": { "score": 2, "reason": "This mascara gives your lashes a healthy, glossy finish." },
+    "skincare": { "score": 3, "reason": "Hydrating skincare is the perfect prep for your radiant glow." },
+    "other": { "score": 2, "reason": "A dewy finish adds a youthful, hydrated quality to your look." }
+  },
+  "satin": {
+    "foundation": { "score": 3, "reason": "Satin foundations give you the ideal balance — natural radiance without excess shine." },
+    "concealer": { "score": 3, "reason": "A satin concealer blends seamlessly and looks like real skin." },
+    "blush": { "score": 2, "reason": "Satin blush adds a soft, diffused glow to your cheeks." },
+    "eyeshadow": { "score": 2, "reason": "Satin eyeshadow offers subtle dimension that flatters every eye shape." },
+    "lipstick": { "score": 3, "reason": "Satin lipstick feels comfortable and gives your lips a luxurious finish." },
+    "lip gloss": { "score": 2, "reason": "A satin gloss gives you shine without the stickiness — elegant and wearable." },
+    "mascara": { "score": 2, "reason": "This mascara adds natural definition without being too dramatic." },
+    "skincare": { "score": 2, "reason": "This skincare gives your complexion a smooth, satin-like quality." },
+    "other": { "score": 2, "reason": "A satin finish is universally flattering and endlessly wearable." }
+  },
+  "shimmer": {
+    "foundation": { "score": 1, "reason": "Shimmer in a base product can emphasise texture — best for evening looks." },
+    "concealer": { "score": 1, "reason": "Shimmer concealers highlight and brighten but can settle into fine lines." },
+    "blush": { "score": 2, "reason": "Shimmer blush gives you a lit-from-within glow on the high points of your cheeks." },
+    "eyeshadow": { "score": 3, "reason": "Shimmer eyeshadow catches the light beautifully for glamorous, dimensional eyes." },
+    "lipstick": { "score": 2, "reason": "A shimmer lipstick adds sparkle and dimension to your lips." },
+    "lip gloss": { "score": 3, "reason": "Shimmer gloss gives your lips maximum sparkle and glass-like shine." },
+    "mascara": { "score": 1, "reason": "Shimmer mascara is a fun statement piece for special occasions." },
+    "skincare": { "score": 1, "reason": "Shimmer in skincare adds a subtle luminosity under or over makeup." },
+    "other": { "score": 2, "reason": "Shimmer adds sparkle and dimension to your look." }
+  },
+  "unknown": {
+    "foundation": { "score": 2, "reason": "This foundation works with your natural skin to create a polished base." },
+    "concealer": { "score": 2, "reason": "This concealer helps even out your complexion where you need it most." },
+    "blush": { "score": 2, "reason": "This blush adds a beautiful flush of colour to your cheeks." },
+    "eyeshadow": { "score": 2, "reason": "This eyeshadow complements your eye colour and personal style." },
+    "lipstick": { "score": 2, "reason": "This lipstick adds colour and definition to your lips." },
+    "lip gloss": { "score": 2, "reason": "This gloss gives your lips a beautiful, wearable finish." },
+    "mascara": { "score": 2, "reason": "This mascara enhances your natural lash shape and length." },
+    "skincare": { "score": 2, "reason": "This skincare product supports your skin's natural health and radiance." },
+    "other": { "score": 2, "reason": "This product complements your personal style." }
+  }
+}

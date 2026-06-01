@@ -2,6 +2,7 @@ import { geminiVision, geminiVisionDual, geminiTextJson, hasGeminiKey, uriToBase
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DnaResult } from './dna';
 import { loadGloDraft } from '@/lib/glo-profile';
+import { buildFreeResult } from './freeProductAnalysis';
 
 export interface ToneRow { label: string; value: string; pct: number; }
 export interface SkinFitRow { icon: string; label: string; desc: string; ok: boolean; }
@@ -44,6 +45,7 @@ interface OBFProduct {
   ingredients_text?: string;
   labels?: string;
   quantity?: string;
+  periods_after_opening?: string;
 }
 
 async function fetchOpenBeautyFacts(barcode: string): Promise<OBFProduct | null> {
@@ -275,30 +277,22 @@ export async function analyzeProduct(params: {
   uri?: string;
   referenceUri?: string;
 }): Promise<ProductScanResult> {
-  const dna = await loadDna();
-  return mockResult(dna, params.barcode ?? '');
-}
-
-async function analyzeProductReal(params: {
-  barcode?: string;
-  uri?: string;
-  referenceUri?: string;
-}): Promise<ProductScanResult> {
   const [dna, glo] = await Promise.all([loadDna(), loadGloDraft()]);
   const userAllergies: string[] = glo.allergies ?? [];
   let productInfo = '';
   let detectedBarcode = params.barcode ?? '';
+  let obfProduct: OBFProduct | null = null;
 
   if (params.barcode) {
     // Barcode path: look up Open Beauty Facts first
-    const obf = await fetchOpenBeautyFacts(params.barcode);
-    if (obf) {
+    obfProduct = await fetchOpenBeautyFacts(params.barcode);
+    if (obfProduct) {
       productInfo = [
-        `Brand: ${obf.brands ?? 'Unknown'}`,
-        `Product: ${obf.product_name ?? 'Unknown'}`,
-        `Category: ${obf.categories ?? 'Unknown'}`,
-        `Ingredients: ${obf.ingredients_text ?? 'Not listed'}`,
-        `Labels: ${obf.labels ?? 'None'}`,
+        `Brand: ${obfProduct.brands ?? 'Unknown'}`,
+        `Product: ${obfProduct.product_name ?? 'Unknown'}`,
+        `Category: ${obfProduct.categories ?? 'Unknown'}`,
+        `Ingredients: ${obfProduct.ingredients_text ?? 'Not listed'}`,
+        `Labels: ${obfProduct.labels ?? 'None'}`,
       ].join('\n');
     } else {
       productInfo = `Barcode: ${params.barcode}\nProduct data not found in database.`;
@@ -325,7 +319,10 @@ async function analyzeProductReal(params: {
     ].join('\n');
   }
 
-  if (!hasGeminiKey()) return mockResult(dna, detectedBarcode);
+  // No Gemini key: use free local analysis
+  if (!hasGeminiKey()) {
+    return await buildFreeResult(obfProduct, detectedBarcode, dna, userAllergies, glo.skin_type ?? '');
+  }
 
   try {
     let parsed: ProductScanResult;
@@ -347,67 +344,7 @@ async function analyzeProductReal(params: {
     parsed.shade.detected = dna?.skinToneHex ?? '#C9956A';
     return parsed;
   } catch (e) {
-    console.warn('[ProductScan] Gemini failed:', e);
-    return mockResult(dna, detectedBarcode);
+    console.warn('[ProductScan] Gemini failed, falling back to free analysis:', e);
+    return await buildFreeResult(obfProduct, detectedBarcode, dna, userAllergies, glo.skin_type ?? '');
   }
-}
-
-// ── Mock fallback ───────────────────────────────────────────────────────────
-
-function mockResult(dna: DnaResult | null, barcode: string): ProductScanResult {
-  return {
-    score: 87,
-    verdict: 'Great match for you',
-    reason: 'Strong shade alignment and formula fit. One flagged allergen (Parfum) lowers your score.',
-    category: 'Foundation',
-    barcode,
-    productName: 'Pro Filt\'r Soft Matte',
-    brand: 'Fenty Beauty',
-    shade: {
-      pct: 94,
-      detected: dna?.skinToneHex ?? '#C8956A',
-      product: '#C4885F',
-      name: '220N — Warm Almond',
-      deltaE: 1.4,
-      sub: 'near-perfect warmth',
-      tones: [
-        { label: 'Undertone', value: 'Warm ✓', pct: 96 },
-        { label: 'Depth', value: 'Medium ✓', pct: 91 },
-        { label: 'Saturation', value: 'Balanced ✓', pct: 89 },
-        { label: 'Oxidation', value: 'Low shift', pct: 85 },
-      ],
-    },
-    coverage: [
-      { label: 'Coverage', value: 'Medium–Full' },
-      { label: 'Finish', value: 'Dewy' },
-      { label: 'Wear Time', value: '10–12h' },
-      { label: 'SPF', value: 'None' },
-    ],
-    spf: { level: null, flashback: false, note: 'No built-in sun protection — apply a dedicated SPF 30+ underneath.' },
-    pao: '12M',
-    skinFit: [
-      { icon: 'opacity',  label: 'Dry Skin',      desc: 'Hydrating formula supports moisture barrier.', ok: true },
-      { icon: 'wb-sunny', label: 'Sensitive Skin', desc: 'Fragrance present — patch test recommended.', ok: false },
-      { icon: 'loop',     label: 'Oily / Combo',   desc: 'Lightweight, non-comedogenic base.',          ok: true },
-      { icon: 'verified', label: 'Acne Safe',      desc: 'Non-comedogenic, low pore-clog risk.',        ok: true },
-    ],
-    styleFit: {
-      archetype: dna?.archetype ?? 'The Glazed Canvas',
-      desc: "Dewy finish aligns with your archetype's signature glow.",
-      palette: ['#D4A096', '#C97E8A', '#E8C4B0', '#F2DDD5', '#B8806A'],
-    },
-    allergy: 'Parfum',
-    ingredients: [
-      { name: 'Water (Aqua)',       func: 'Solvent',     safe: true },
-      { name: 'Hyaluronic Acid',    func: 'Humectant',   safe: true },
-      { name: 'Parfum (Fragrance)', func: 'Allergen',    safe: false },
-      { name: 'Niacinamide',        func: 'Brightening', safe: true },
-      { name: 'Tocopherol',         func: 'Antioxidant', safe: true },
-    ],
-    ethics: [
-      { icon: 'pets',      label: 'Cruelty Free', value: 'Certified' },
-      { icon: 'eco',       label: 'Vegan',        value: '100%' },
-      { icon: 'autorenew', label: 'Eco-Friendly', value: 'Recyclable' },
-    ],
-  };
 }

@@ -1,0 +1,131 @@
+{
+  "l'oreal": {
+    "true match": { "finish": "Satin", "coverage": "Medium", "wearTime": "12h", "oxidises": true },
+    "infallible fresh wear": { "finish": "Matte", "coverage": "Full", "wearTime": "24h", "oxidises": false },
+    "age perfect": { "finish": "Satin", "coverage": "Medium", "wearTime": "8h", "oxidises": false }
+  },
+  "maybelline": {
+    "fit me matte": { "finish": "Matte", "coverage": "Medium", "wearTime": "12h", "oxidises": true },
+    "fit me dewy": { "finish": "Dewy", "coverage": "Medium", "wearTime": "8h", "oxidises": true },
+    "super stay": { "finish": "Matte", "coverage": "Full", "wearTime": "24h", "oxidises": false },
+    "instant age rewind": { "finish": "Satin", "coverage": "Medium", "wearTime": "8h", "oxidises": false }
+  },
+  "fenty beauty": {
+    "pro filt'r soft matte": { "finish": "Matte", "coverage": "Full", "wearTime": "12h", "oxidises": false },
+    "pro filt'r hydrating": { "finish": "Dewy", "coverage": "Medium", "wearTime": "8h", "oxidises": false },
+    "eaze drop": { "finish": "Satin", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "gloss bomb": { "finish": "Dewy", "coverage": "Light", "wearTime": "4h", "oxidises": false }
+  },
+  "mac": {
+    "studio fix fluid": { "finish": "Matte", "coverage": "Full", "wearTime": "12h", "oxidises": true },
+    "face and body": { "finish": "Satin", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "pro longwear": { "finish": "Satin", "coverage": "Full", "wearTime": "16h", "oxidises": false },
+    "studio radiance": { "finish": "Dewy", "coverage": "Medium", "wearTime": "10h", "oxidises": false }
+  },
+  "nars": {
+    "sheer glow": { "finish": "Dewy", "coverage": "Medium", "wearTime": "10h", "oxidises": false },
+    "natural radiant longwear": { "finish": "Satin", "coverage": "Full", "wearTime": "16h", "oxidises": false },
+    "light reflecting": { "finish": "Dewy", "coverage": "Medium", "wearTime": "12h", "oxidises": false },
+    "all day luminous": { "finish": "Satin", "coverage": "Full", "wearTime": "16h", "oxidises": false }
+  },
+  "charlotte tilbury": {
+    "airbrush flawless": { "finish": "Matte", "coverage": "Full", "wearTime": "16h", "oxidises": false },
+    "beautiful skin": { "finish": "Dewy", "coverage": "Medium", "wearTime": "8h", "oxidises": false },
+    "magic foundation": { "finish": "Satin", "coverage": "Full", "wearTime": "12h", "oxidises": false },
+    "hollywood flawless filter": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "urban decay": {
+    "stay naked": { "finish": "Satin", "coverage": "Medium", "wearTime": "12h", "oxidises": false },
+    "all nighter": { "finish": "Matte", "coverage": "Full", "wearTime": "16h", "oxidises": false },
+    "hydromaniac": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "too faced": {
+    "born this way": { "finish": "Satin", "coverage": "Medium", "wearTime": "12h", "oxidises": false },
+    "peach perfect": { "finish": "Matte", "coverage": "Full", "wearTime": "14h", "oxidises": false },
+    "born this way ethereal light": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "tarte": {
+    "amazonian clay": { "finish": "Matte", "coverage": "Full", "wearTime": "12h", "oxidises": true },
+    "shape tape": { "finish": "Matte", "coverage": "Full", "wearTime": "16h", "oxidises": false },
+    "face tape": { "finish": "Satin", "coverage": "Full", "wearTime": "12h", "oxidises": false },
+    "maracuja juicy glow": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "bare minerals": {
+    "original loose powder": { "finish": "Satin", "coverage": "Buildable", "wearTime": "8h", "oxidises": false },
+    "complexion rescue": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "barepro": { "finish": "Matte", "coverage": "Full", "wearTime": "12h", "oxidises": false }
+  },
+  "the ordinary": {
+    "serum foundation": { "finish": "Satin", "coverage": "Light", "wearTime": "6h", "oxidises": false },
+    "coverage foundation": { "finish": "Satin", "coverage": "Full", "wearTime": "8h", "oxidises": false }
+  },
+  "cerave": {
+    "skin renewing cream": { "finish": "Dewy", "coverage": "Light", "wearTime": "12h", "oxidises": false },
+    "moisturizing cream": { "finish": "Dewy", "coverage": "Light", "wearTime": "12h", "oxidises": false }
+  },
+  "neutrogena": {
+    "hydro boost": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "skin clearing": { "finish": "Matte", "coverage": "Medium", "wearTime": "8h", "oxidises": false },
+    "healthy skin": { "finish": "Satin", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "covergirl": {
+    "simply ageless": { "finish": "Satin", "coverage": "Medium", "wearTime": "8h", "oxidises": true },
+    "clean fresh skin milk": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "outlast extreme wear": { "finish": "Matte", "coverage": "Full", "wearTime": "24h", "oxidises": false }
+  },
+  "revlon": {
+    "colorstay": { "finish": "Matte", "coverage": "Full", "wearTime": "16h", "oxidises": true },
+    "colorstay combo oily": { "finish": "Matte", "coverage": "Full", "wearTime": "16h", "oxidises": true },
+    "candid natural finish": { "finish": "Satin", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "elf": {
+    "flawless finish": { "finish": "Satin", "coverage": "Medium", "wearTime": "10h", "oxidises": false },
+    "camo cc cream": { "finish": "Satin", "coverage": "Medium", "wearTime": "10h", "oxidises": false },
+    "power grip primer": { "finish": "Satin", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "halo glow": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "nyx": {
+    "can't stop won't stop": { "finish": "Matte", "coverage": "Full", "wearTime": "16h", "oxidises": false },
+    "bare with me": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "total control drop": { "finish": "Satin", "coverage": "Buildable", "wearTime": "10h", "oxidises": false }
+  },
+  "rimmel": {
+    "lasting finish": { "finish": "Satin", "coverage": "Medium", "wearTime": "12h", "oxidises": true },
+    "match perfection": { "finish": "Satin", "coverage": "Medium", "wearTime": "10h", "oxidises": true },
+    "clean finish": { "finish": "Matte", "coverage": "Medium", "wearTime": "8h", "oxidises": false }
+  },
+  "essence": {
+    "pretty natural": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "skin tint": { "finish": "Dewy", "coverage": "Light", "wearTime": "6h", "oxidises": false },
+    "fresh fit": { "finish": "Satin", "coverage": "Medium", "wearTime": "10h", "oxidises": false }
+  },
+  "catrice": {
+    "true skin": { "finish": "Satin", "coverage": "Medium", "wearTime": "12h", "oxidises": false },
+    "hd liquid coverage": { "finish": "Satin", "coverage": "Full", "wearTime": "12h", "oxidises": false },
+    "one drop coverage": { "finish": "Satin", "coverage": "Buildable", "wearTime": "10h", "oxidises": false }
+  },
+  "makeup revolution": {
+    "conceal and define": { "finish": "Matte", "coverage": "Full", "wearTime": "12h", "oxidises": false },
+    "irl filter": { "finish": "Dewy", "coverage": "Medium", "wearTime": "8h", "oxidises": false },
+    "skin silk": { "finish": "Satin", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "huda beauty": {
+    "faux filter": { "finish": "Matte", "coverage": "Full", "wearTime": "12h", "oxidises": false },
+    "glowish": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false },
+    "#fauxfilter luminous matte": { "finish": "Matte", "coverage": "Full", "wearTime": "14h", "oxidises": false }
+  },
+  "pat mcgrath": {
+    "skin fetish sublime perfection": { "finish": "Satin", "coverage": "Medium", "wearTime": "12h", "oxidises": false },
+    "skin fetish highlighter": { "finish": "Shimmer", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "armani beauty": {
+    "luminous silk": { "finish": "Satin", "coverage": "Medium", "wearTime": "12h", "oxidises": false },
+    "power fabric": { "finish": "Matte", "coverage": "Full", "wearTime": "16h", "oxidises": false },
+    "neo nude": { "finish": "Dewy", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  },
+  "dior beauty": {
+    "forever": { "finish": "Matte", "coverage": "Full", "wearTime": "24h", "oxidises": false },
+    "forever skin glow": { "finish": "Dewy", "coverage": "Medium", "wearTime": "12h", "oxidises": false },
+    "backstage face and body": { "finish": "Satin", "coverage": "Light", "wearTime": "8h", "oxidises": false }
+  }
+}

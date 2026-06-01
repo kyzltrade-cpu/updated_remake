@@ -1,0 +1,786 @@
+[
+  {
+    "name": "Water",
+    "aliases": ["water", "aqua", "eau"],
+    "func": "Solvent",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Universal solvent base for cosmetics."
+  },
+  {
+    "name": "Glycerin",
+    "aliases": ["glycerin", "glycerine", "glycerol"],
+    "func": "Humectant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Draws moisture to the skin; well-tolerated."
+  },
+  {
+    "name": "Niacinamide",
+    "aliases": ["niacinamide", "nicotinamide", "vitamin b3"],
+    "func": "Brightening",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Reduces hyperpigmentation and improves barrier function."
+  },
+  {
+    "name": "Hyaluronic Acid",
+    "aliases": ["hyaluronic acid", "sodium hyaluronate", "hyaluronan"],
+    "func": "Humectant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Holds up to 1000x its weight in water; deeply hydrating."
+  },
+  {
+    "name": "Tocopherol",
+    "aliases": ["tocopherol", "tocopheryl acetate", "vitamin e"],
+    "func": "Antioxidant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Protects skin from free radical damage."
+  },
+  {
+    "name": "Dimethicone",
+    "aliases": ["dimethicone", "dimethylpolysiloxane"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Silicone that smooths and protects skin."
+  },
+  {
+    "name": "Cyclopentasiloxane",
+    "aliases": ["cyclopentasiloxane", "cyclomethicone"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Lightweight silicone carrier; evaporates quickly."
+  },
+  {
+    "name": "Butylene Glycol",
+    "aliases": ["butylene glycol", "1,3-butanediol"],
+    "func": "Humectant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Conditioning agent that also enhances product texture."
+  },
+  {
+    "name": "Cetearyl Alcohol",
+    "aliases": ["cetearyl alcohol", "cetostearyl alcohol"],
+    "func": "Emulsifier",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Fatty alcohol used as an emollient and thickener; not a drying alcohol."
+  },
+  {
+    "name": "Titanium Dioxide",
+    "aliases": ["titanium dioxide", "ci 77891", "titanium oxide"],
+    "func": "UV Filter / Pigment",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Physical sunscreen agent; may cause flashback in photography."
+  },
+  {
+    "name": "Zinc Oxide",
+    "aliases": ["zinc oxide"],
+    "func": "UV Filter",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Physical sunscreen agent; may leave a white cast."
+  },
+  {
+    "name": "Squalane",
+    "aliases": ["squalane", "squalene"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Lightweight oil that mimics skin's natural lipids."
+  },
+  {
+    "name": "Panthenol",
+    "aliases": ["panthenol", "dexpanthenol", "d-panthenol", "provitamin b5"],
+    "func": "Conditioning",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Moisturizes and soothes irritated skin."
+  },
+  {
+    "name": "Aloe Barbadensis Leaf Juice",
+    "aliases": ["aloe barbadensis leaf juice", "aloe vera", "aloe barbadensis"],
+    "func": "Soothing",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Anti-inflammatory botanical extract."
+  },
+  {
+    "name": "Phenoxyethanol",
+    "aliases": ["phenoxyethanol"],
+    "func": "Preservative",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Common preservative; generally well-tolerated."
+  },
+  {
+    "name": "Cetyl Alcohol",
+    "aliases": ["cetyl alcohol"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Fatty alcohol used to thicken and stabilize formulas."
+  },
+  {
+    "name": "Stearic Acid",
+    "aliases": ["stearic acid"],
+    "func": "Emulsifier",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Naturally occurring fatty acid used to thicken products."
+  },
+  {
+    "name": "Caprylic/Capric Triglyceride",
+    "aliases": ["caprylic/capric triglyceride", "caprylic capric triglyceride"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Coconut-derived oil that softens skin."
+  },
+  {
+    "name": "Ethylhexylglycerin",
+    "aliases": ["ethylhexylglycerin"],
+    "func": "Preservative Booster",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Deodorant and preservative enhancer."
+  },
+  {
+    "name": "Shea Butter",
+    "aliases": ["butyrospermum parkii butter", "shea butter", "butyrospermum parkii"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Rich moisturizer from shea tree nuts."
+  },
+  {
+    "name": "Parfum",
+    "aliases": ["parfum", "fragrance", "aroma", "fragrance/parfum"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Umbrella term for scent compounds; common sensitizer and top contact allergen."
+  },
+  {
+    "name": "Limonene",
+    "aliases": ["limonene", "d-limonene"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Citrus-derived fragrance allergen; must be declared above 0.001% in leave-on products."
+  },
+  {
+    "name": "Linalool",
+    "aliases": ["linalool"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Floral fragrance component; oxidizes to form skin sensitizers."
+  },
+  {
+    "name": "Citronellol",
+    "aliases": ["citronellol"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Rose-scented fragrance allergen."
+  },
+  {
+    "name": "Geraniol",
+    "aliases": ["geraniol"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Sweet floral fragrance allergen; potent sensitizer."
+  },
+  {
+    "name": "Coumarin",
+    "aliases": ["coumarin"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Vanilla-like fragrance compound; EU-regulated allergen."
+  },
+  {
+    "name": "Methylparaben",
+    "aliases": ["methylparaben", "methyl paraben", "methyl 4-hydroxybenzoate"],
+    "func": "Preservative",
+    "allergen_flags": ["parabens"],
+    "safe_default": false,
+    "notes": "Paraben preservative; potential endocrine disruptor and contact allergen."
+  },
+  {
+    "name": "Propylparaben",
+    "aliases": ["propylparaben", "propyl paraben", "propyl 4-hydroxybenzoate"],
+    "func": "Preservative",
+    "allergen_flags": ["parabens"],
+    "safe_default": false,
+    "notes": "Paraben preservative with higher concern due to chain length."
+  },
+  {
+    "name": "Butylparaben",
+    "aliases": ["butylparaben", "butyl paraben"],
+    "func": "Preservative",
+    "allergen_flags": ["parabens"],
+    "safe_default": false,
+    "notes": "Long-chain paraben with stronger estrogenic activity."
+  },
+  {
+    "name": "Ethylparaben",
+    "aliases": ["ethylparaben", "ethyl paraben"],
+    "func": "Preservative",
+    "allergen_flags": ["parabens"],
+    "safe_default": false,
+    "notes": "Short-chain paraben preservative."
+  },
+  {
+    "name": "Isobutylparaben",
+    "aliases": ["isobutylparaben", "isobutyl paraben"],
+    "func": "Preservative",
+    "allergen_flags": ["parabens"],
+    "safe_default": false,
+    "notes": "Branched paraben variant with sensitizing potential."
+  },
+  {
+    "name": "Sodium Lauryl Sulfate",
+    "aliases": ["sodium lauryl sulfate", "sls", "sodium lauryl sulphate"],
+    "func": "Surfactant",
+    "allergen_flags": ["sulfates"],
+    "safe_default": false,
+    "notes": "Strong anionic surfactant; can strip natural oils and irritate skin."
+  },
+  {
+    "name": "Sodium Laureth Sulfate",
+    "aliases": ["sodium laureth sulfate", "sles", "sodium laureth sulphate"],
+    "func": "Surfactant",
+    "allergen_flags": ["sulfates"],
+    "safe_default": false,
+    "notes": "Milder than SLS but can still irritate sensitive skin with prolonged exposure."
+  },
+  {
+    "name": "Ammonium Lauryl Sulfate",
+    "aliases": ["ammonium lauryl sulfate", "ammonium lauryl sulphate"],
+    "func": "Surfactant",
+    "allergen_flags": ["sulfates"],
+    "safe_default": false,
+    "notes": "Sulfate surfactant similar in irritation potential to SLS."
+  },
+  {
+    "name": "Ammonium Laureth Sulfate",
+    "aliases": ["ammonium laureth sulfate", "ammonium laureth sulphate"],
+    "func": "Surfactant",
+    "allergen_flags": ["sulfates"],
+    "safe_default": false,
+    "notes": "Sulfate-based cleanser; can be drying for sensitive skin types."
+  },
+  {
+    "name": "Sodium Coco-Sulfate",
+    "aliases": ["sodium coco-sulfate", "sodium coco sulfate"],
+    "func": "Surfactant",
+    "allergen_flags": ["sulfates"],
+    "safe_default": false,
+    "notes": "Coconut-derived sulfate; marketed as gentler but still a sulfate."
+  },
+  {
+    "name": "FD&C Yellow No. 5",
+    "aliases": ["fd&c yellow no. 5", "tartrazine", "ci 19140", "yellow 5", "fd&c yellow 5"],
+    "func": "Colorant",
+    "allergen_flags": ["synthetic dyes"],
+    "safe_default": false,
+    "notes": "Azo dye linked to hypersensitivity reactions, especially in aspirin-sensitive individuals."
+  },
+  {
+    "name": "FD&C Red No. 40",
+    "aliases": ["fd&c red no. 40", "allura red", "ci 16035", "red 40", "fd&c red 40"],
+    "func": "Colorant",
+    "allergen_flags": ["synthetic dyes"],
+    "safe_default": false,
+    "notes": "Widely used azo dye; potential allergen and irritant."
+  },
+  {
+    "name": "FD&C Blue No. 1",
+    "aliases": ["fd&c blue no. 1", "brilliant blue", "ci 42090", "blue 1", "fd&c blue 1"],
+    "func": "Colorant",
+    "allergen_flags": ["synthetic dyes"],
+    "safe_default": false,
+    "notes": "Synthetic triphenylmethane dye; can cause contact sensitization."
+  },
+  {
+    "name": "D&C Red No. 6",
+    "aliases": ["d&c red no. 6", "ci 15850", "red 6", "lithol rubine"],
+    "func": "Colorant",
+    "allergen_flags": ["synthetic dyes"],
+    "safe_default": false,
+    "notes": "Common lip colorant; may cause irritation in sensitive individuals."
+  },
+  {
+    "name": "D&C Red No. 7",
+    "aliases": ["d&c red no. 7", "ci 15850:1", "red 7"],
+    "func": "Colorant",
+    "allergen_flags": ["synthetic dyes"],
+    "safe_default": false,
+    "notes": "Calcium lake of Red 6; used extensively in lip products."
+  },
+  {
+    "name": "FD&C Yellow No. 6",
+    "aliases": ["fd&c yellow no. 6", "sunset yellow", "ci 15985", "yellow 6", "fd&c yellow 6"],
+    "func": "Colorant",
+    "allergen_flags": ["synthetic dyes"],
+    "safe_default": false,
+    "notes": "Azo dye that may cause allergic reactions in some individuals."
+  },
+  {
+    "name": "Lanolin",
+    "aliases": ["lanolin", "adeps lanae", "wool wax", "wool fat"],
+    "func": "Emollient",
+    "allergen_flags": ["lanolin"],
+    "safe_default": false,
+    "notes": "Sheep wool-derived wax; common contact allergen causing eczematous reactions."
+  },
+  {
+    "name": "Lanolin Alcohol",
+    "aliases": ["lanolin alcohol", "wool wax alcohol", "laneth"],
+    "func": "Emollient",
+    "allergen_flags": ["lanolin"],
+    "safe_default": false,
+    "notes": "Derivative of lanolin; retains allergenic potential."
+  },
+  {
+    "name": "Lanolin Oil",
+    "aliases": ["lanolin oil", "lanolin acid"],
+    "func": "Emollient",
+    "allergen_flags": ["lanolin"],
+    "safe_default": false,
+    "notes": "Refined lanolin fraction; lower but still present allergen risk."
+  },
+  {
+    "name": "Acetylated Lanolin",
+    "aliases": ["acetylated lanolin", "acetylated lanolin alcohol"],
+    "func": "Emollient",
+    "allergen_flags": ["lanolin"],
+    "safe_default": false,
+    "notes": "Chemically modified lanolin; may still trigger sensitivity."
+  },
+  {
+    "name": "Hydrogenated Lanolin",
+    "aliases": ["hydrogenated lanolin"],
+    "func": "Emollient",
+    "allergen_flags": ["lanolin"],
+    "safe_default": false,
+    "notes": "Processed lanolin with reduced but not eliminated allergen potential."
+  },
+  {
+    "name": "Nickel",
+    "aliases": ["nickel", "nickel sulfate", "nickel chloride"],
+    "func": "Contaminant",
+    "allergen_flags": ["nickel"],
+    "safe_default": false,
+    "notes": "Metal contaminant in cosmetics; #1 cause of contact dermatitis worldwide."
+  },
+  {
+    "name": "CI 77510",
+    "aliases": ["ci 77510", "ferric ferrocyanide", "iron blue"],
+    "func": "Colorant",
+    "allergen_flags": ["nickel"],
+    "safe_default": false,
+    "notes": "Blue pigment that may contain trace nickel impurities."
+  },
+  {
+    "name": "Iron Oxides",
+    "aliases": ["iron oxides", "ci 77491", "ci 77492", "ci 77499"],
+    "func": "Colorant",
+    "allergen_flags": ["nickel"],
+    "safe_default": false,
+    "notes": "Common pigments that can contain trace nickel as a manufacturing impurity."
+  },
+  {
+    "name": "Chromium Oxide Greens",
+    "aliases": ["chromium oxide greens", "ci 77288", "chromium oxide"],
+    "func": "Colorant",
+    "allergen_flags": ["nickel"],
+    "safe_default": false,
+    "notes": "Green pigment that may contain trace nickel."
+  },
+  {
+    "name": "DMDM Hydantoin",
+    "aliases": ["dmdm hydantoin", "1,3-dimethylol-5,5-dimethylhydantoin"],
+    "func": "Preservative",
+    "allergen_flags": ["formaldehyde-releasers"],
+    "safe_default": false,
+    "notes": "Formaldehyde-releasing preservative; known sensitizer."
+  },
+  {
+    "name": "Imidazolidinyl Urea",
+    "aliases": ["imidazolidinyl urea"],
+    "func": "Preservative",
+    "allergen_flags": ["formaldehyde-releasers"],
+    "safe_default": false,
+    "notes": "Releases formaldehyde over time; common allergen in patch testing."
+  },
+  {
+    "name": "Diazolidinyl Urea",
+    "aliases": ["diazolidinyl urea"],
+    "func": "Preservative",
+    "allergen_flags": ["formaldehyde-releasers"],
+    "safe_default": false,
+    "notes": "Formaldehyde donor; more potent releaser than imidazolidinyl urea."
+  },
+  {
+    "name": "Quaternium-15",
+    "aliases": ["quaternium-15", "quaternium 15", "dowicil"],
+    "func": "Preservative",
+    "allergen_flags": ["formaldehyde-releasers"],
+    "safe_default": false,
+    "notes": "Strongest formaldehyde releaser among cosmetic preservatives."
+  },
+  {
+    "name": "Bronopol",
+    "aliases": ["bronopol", "2-bromo-2-nitropropane-1,3-diol"],
+    "func": "Preservative",
+    "allergen_flags": ["formaldehyde-releasers"],
+    "safe_default": false,
+    "notes": "Formaldehyde releaser; may also form nitrosamines."
+  },
+  {
+    "name": "Sodium Hydroxymethylglycinate",
+    "aliases": ["sodium hydroxymethylglycinate"],
+    "func": "Preservative",
+    "allergen_flags": ["formaldehyde-releasers"],
+    "safe_default": false,
+    "notes": "Amino acid-derived formaldehyde releaser."
+  },
+  {
+    "name": "Lavandula Angustifolia Oil",
+    "aliases": ["lavandula angustifolia oil", "lavender oil", "lavandula angustifolia", "lavandula officinalis", "lavender essential oil"],
+    "func": "Fragrance / Essential Oil",
+    "allergen_flags": ["lavender oil", "fragrance"],
+    "safe_default": false,
+    "notes": "Contains linalool and linalyl acetate; photoallergenic and irritating at high concentrations."
+  },
+  {
+    "name": "Lavandula Hybrida Oil",
+    "aliases": ["lavandula hybrida oil", "lavandin oil", "lavandula hybrida"],
+    "func": "Fragrance / Essential Oil",
+    "allergen_flags": ["lavender oil", "fragrance"],
+    "safe_default": false,
+    "notes": "Lavandin hybrid oil with similar allergen profile to true lavender oil."
+  },
+  {
+    "name": "Lavandula Stoechas Extract",
+    "aliases": ["lavandula stoechas extract", "french lavender"],
+    "func": "Fragrance / Essential Oil",
+    "allergen_flags": ["lavender oil"],
+    "safe_default": false,
+    "notes": "Lavender species extract; can cause contact sensitization."
+  },
+  {
+    "name": "Lavender Water",
+    "aliases": ["lavender water", "lavandula angustifolia flower water", "lavender hydrosol"],
+    "func": "Fragrance / Essential Oil",
+    "allergen_flags": ["lavender oil"],
+    "safe_default": false,
+    "notes": "Distillation by-product of lavender; dilute but still contains allergens."
+  },
+  {
+    "name": "Mentha Piperita Oil",
+    "aliases": ["mentha piperita oil", "peppermint oil", "mentha piperita", "peppermint essential oil"],
+    "func": "Fragrance / Essential Oil",
+    "allergen_flags": ["peppermint oil", "fragrance"],
+    "safe_default": false,
+    "notes": "Contains menthol and pulegone; can cause contact dermatitis and burning."
+  },
+  {
+    "name": "Menthol",
+    "aliases": ["menthol", "l-menthol"],
+    "func": "Cooling Agent",
+    "allergen_flags": ["peppermint oil"],
+    "safe_default": false,
+    "notes": "Peppermint derivative; irritant at high concentrations, especially on sensitive skin."
+  },
+  {
+    "name": "Mentha Piperita Leaf Extract",
+    "aliases": ["mentha piperita leaf extract", "peppermint leaf extract", "peppermint extract"],
+    "func": "Botanical Extract",
+    "allergen_flags": ["peppermint oil"],
+    "safe_default": false,
+    "notes": "Peppermint extract with potential for skin sensitization."
+  },
+  {
+    "name": "Mentha Arvensis Leaf Oil",
+    "aliases": ["mentha arvensis leaf oil", "cornmint oil", "mentha arvensis"],
+    "func": "Fragrance / Essential Oil",
+    "allergen_flags": ["peppermint oil"],
+    "safe_default": false,
+    "notes": "Wild mint oil; high menthol content makes it a strong potential irritant."
+  },
+  {
+    "name": "Melaleuca Alternifolia Leaf Oil",
+    "aliases": ["melaleuca alternifolia leaf oil", "tea tree oil", "melaleuca alternifolia", "tea tree essential oil"],
+    "func": "Antimicrobial / Essential Oil",
+    "allergen_flags": ["tea tree oil", "fragrance"],
+    "safe_default": false,
+    "notes": "Oxidizes rapidly into potent allergens; increasing contact allergy rates globally."
+  },
+  {
+    "name": "Melaleuca Alternifolia Extract",
+    "aliases": ["melaleuca alternifolia extract", "tea tree extract"],
+    "func": "Botanical Extract",
+    "allergen_flags": ["tea tree oil"],
+    "safe_default": false,
+    "notes": "Tea tree-derived extract; milder but shares oxidation-related sensitizing compounds."
+  },
+  {
+    "name": "Melaleuca Leucadendra Oil",
+    "aliases": ["melaleuca leucadendra oil", "cajeput oil"],
+    "func": "Essential Oil",
+    "allergen_flags": ["tea tree oil"],
+    "safe_default": false,
+    "notes": "Related Melaleuca species; cross-reacts with tea tree oil allergens."
+  },
+  {
+    "name": "Tea Tree Leaf Water",
+    "aliases": ["melaleuca alternifolia leaf water", "tea tree water", "tea tree hydrosol"],
+    "func": "Botanical Extract",
+    "allergen_flags": ["tea tree oil"],
+    "safe_default": false,
+    "notes": "Dilute tea tree distillate; lower potency but retains sensitizing terpenes."
+  },
+  {
+    "name": "Retinol",
+    "aliases": ["retinol", "vitamin a", "retinyl palmitate"],
+    "func": "Anti-Aging",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Vitamin A derivative; can cause initial irritation but is not an allergen."
+  },
+  {
+    "name": "Salicylic Acid",
+    "aliases": ["salicylic acid", "bha", "beta hydroxy acid"],
+    "func": "Exfoliant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "BHA exfoliant; effective for acne-prone skin."
+  },
+  {
+    "name": "Glycolic Acid",
+    "aliases": ["glycolic acid"],
+    "func": "Exfoliant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "AHA exfoliant that promotes cell turnover."
+  },
+  {
+    "name": "Ascorbic Acid",
+    "aliases": ["ascorbic acid", "vitamin c", "l-ascorbic acid"],
+    "func": "Antioxidant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Potent antioxidant for brightening and collagen synthesis."
+  },
+  {
+    "name": "Ceramide NP",
+    "aliases": ["ceramide np", "ceramide 3", "ceramides"],
+    "func": "Barrier Repair",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Skin-identical lipid that restores barrier function."
+  },
+  {
+    "name": "Centella Asiatica Extract",
+    "aliases": ["centella asiatica extract", "cica", "madecassoside", "asiaticoside"],
+    "func": "Soothing",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Anti-inflammatory botanical; popular in K-beauty for calming redness."
+  },
+  {
+    "name": "Allantoin",
+    "aliases": ["allantoin"],
+    "func": "Soothing",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Gentle skin protectant that promotes healing."
+  },
+  {
+    "name": "Mica",
+    "aliases": ["mica", "ci 77019"],
+    "func": "Colorant / Shimmer",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Natural mineral pigment that adds shimmer and opacity."
+  },
+  {
+    "name": "Talc",
+    "aliases": ["talc"],
+    "func": "Absorbent",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Mineral powder used for oil absorption and slip."
+  },
+  {
+    "name": "Kaolin",
+    "aliases": ["kaolin", "china clay"],
+    "func": "Absorbent",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Natural clay that absorbs excess oil."
+  },
+  {
+    "name": "Jojoba Oil",
+    "aliases": ["simmondsia chinensis seed oil", "jojoba oil", "simmondsia chinensis"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Wax ester similar to skin's natural sebum."
+  },
+  {
+    "name": "Rosehip Oil",
+    "aliases": ["rosa canina seed oil", "rosehip oil", "rosa canina fruit oil"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Rich in essential fatty acids and vitamin A."
+  },
+  {
+    "name": "Benzyl Alcohol",
+    "aliases": ["benzyl alcohol"],
+    "func": "Preservative",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Preservative and fragrance component; EU-listed allergen."
+  },
+  {
+    "name": "Cinnamal",
+    "aliases": ["cinnamal", "cinnamaldehyde", "cinnamic aldehyde"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Cinnamon-derived fragrance; potent contact sensitizer."
+  },
+  {
+    "name": "Eugenol",
+    "aliases": ["eugenol"],
+    "func": "Fragrance",
+    "allergen_flags": ["fragrance"],
+    "safe_default": false,
+    "notes": "Clove-derived fragrance allergen; EU-regulated."
+  },
+  {
+    "name": "Coconut Oil",
+    "aliases": ["cocos nucifera oil", "cocos nucifera", "coconut oil"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Highly moisturizing plant oil, but known to be highly comedogenic (pore-clogging)."
+  },
+  {
+    "name": "Cocoa Butter",
+    "aliases": ["theobroma cacao seed butter", "theobroma cacao", "cocoa butter"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Rich emollient butter, highly comedogenic."
+  },
+  {
+    "name": "Argan Oil",
+    "aliases": ["argania spinosa kernel oil", "argan oil", "argania spinosa"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Nourishing oil rich in antioxidants and fatty acids."
+  },
+  {
+    "name": "Isopropyl Myristate",
+    "aliases": ["isopropyl myristate"],
+    "func": "Emollient / Texture Enhancer",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Synthetic emollient that improves spreadability, highly comedogenic."
+  },
+  {
+    "name": "Isopropyl Palmitate",
+    "aliases": ["isopropyl palmitate"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Thickening agent and emollient, highly comedogenic."
+  },
+  {
+    "name": "Wheat Germ Oil",
+    "aliases": ["triticum vulgare germ oil", "wheat germ oil", "triticum vulgare"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Nutrient-rich oil, highly comedogenic."
+  },
+  {
+    "name": "Linseed Oil",
+    "aliases": ["linum usitatissimum seed oil", "linseed oil", "flaxseed oil"],
+    "func": "Emollient",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Flax-derived oil rich in omega-3, highly comedogenic."
+  },
+  {
+    "name": "Silica",
+    "aliases": ["silica", "silicon dioxide"],
+    "func": "Absorbent / Opacifying",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Mineral powder that absorbs sweat and oil, improving product slip."
+  },
+  {
+    "name": "Zinc",
+    "aliases": ["zinc", "zinc pca", "zinc gluconate"],
+    "func": "Soothing / Acne Control",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Helps control sebum production and has anti-inflammatory properties."
+  },
+  {
+    "name": "Propylene Glycol",
+    "aliases": ["propylene glycol", "1,2-propanediol"],
+    "func": "Humectant / Solvent",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Common humectant that helps skin retain moisture and aids ingredient penetration."
+  },
+  {
+    "name": "Sodium Benzoate",
+    "aliases": ["sodium benzoate"],
+    "func": "Preservative",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Common food and cosmetic preservative, highly effective against fungi."
+  },
+  {
+    "name": "Potassium Sorbate",
+    "aliases": ["potassium sorbate"],
+    "func": "Preservative",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Mild preservative used as a paraben alternative."
+  },
+  {
+    "name": "Acrylates Copolymer",
+    "aliases": ["acrylates copolymer", "acrylates/c10-30 alkyl acrylate crosspolymer"],
+    "func": "Film Former / Viscosity Agent",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Synthetic polymer used to stabilize emulsions and create a water-resistant film."
+  },
+  {
+    "name": "Polyethylene Glycol",
+    "aliases": ["polyethylene glycol", "peg-100 stearate", "peg-8", "peg-40 hydrogenated castor oil"],
+    "func": "Emulsifier / Humectant",
+    "allergen_flags": [],
+    "safe_default": true,
+    "notes": "Broad family of polymers used to bind water and help mix oil and water."
+  }
+]
