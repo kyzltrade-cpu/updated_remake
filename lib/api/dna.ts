@@ -2,7 +2,6 @@ import type { PriorityCategory } from '@/lib/onboarding-store';
 import { hasGeminiKey, uriToBase64, geminiVision } from './gemini';
 import { ARCHETYPE_RECS } from './recommendations';
 import { loadGloDraft } from '@/lib/glo-profile';
-import { hasOpenAIKey, openaiVisionJson } from './openai';
 
 export type FaceShape = 'Oval' | 'Round' | 'Heart' | 'Square' | 'Oblong';
 export type ColorSeason = 'Warm Spring' | 'Light Spring' | 'Warm Autumn' | 'Deep Autumn' | 'Cool Summer' | 'Light Summer' | 'Deep Winter' | 'Cool Winter';
@@ -155,7 +154,7 @@ Analysis notes:
 - If a feature is not clearly visible, make a best-effort assessment
 `.trim();
 
-interface OpenAIDnaResponse {
+interface GeminiDnaResponse {
   face_detected: boolean;
   faceShape: string;
   skinToneHex: string;
@@ -226,34 +225,31 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
 }
 
 export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult> {
-  if (hasOpenAIKey()) {
+  if (hasGeminiKey()) {
     try {
       const [imageBase64, glo] = await Promise.all([uriToBase64(request.imageUri), loadGloDraft()]);
-
+      const hints = [
+        glo.skin_type ? `User self-reported skin type: ${glo.skin_type}` : null,
+        glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
+      ].filter(Boolean).join('\n');
+      const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
+      
       const schema = {
-        type: "json_schema",
-        json_schema: {
-          name: "beauty_dna_analysis",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              face_detected: { type: "boolean" },
-              faceShape: { type: "string", enum: ["Oval", "Round", "Heart", "Square", "Oblong"] },
-              skinToneHex: { type: "string" },
-              colorSeason: { type: "string", enum: ["Warm Spring", "Light Spring", "Warm Autumn", "Deep Autumn", "Cool Summer", "Light Summer", "Deep Winter", "Cool Winter"] },
-              browShape: { type: "string", enum: ["Soft Arch", "High Arch", "Flat", "S-Curve", "Tapered"] },
-              browSymmetryPct: { type: "integer" },
-              lashProfile: { type: "string", enum: ["Long & Sparse", "Short & Full", "Long & Full", "Short & Sparse", "Curly", "Straight & Dense"] },
-              energy: { type: "string", enum: ["Sharp", "Soft", "Balanced"] }
-            },
-            required: ["face_detected", "faceShape", "skinToneHex", "colorSeason", "browShape", "browSymmetryPct", "lashProfile", "energy"],
-            additionalProperties: false
-          }
-        }
+        type: "OBJECT",
+        properties: {
+          face_detected: { type: "BOOLEAN" },
+          faceShape: { type: "STRING", enum: ["Oval", "Round", "Heart", "Square", "Oblong"] },
+          skinToneHex: { type: "STRING" },
+          colorSeason: { type: "STRING", enum: ["Warm Spring", "Light Spring", "Warm Autumn", "Deep Autumn", "Cool Summer", "Light Summer", "Deep Winter", "Cool Winter"] },
+          browShape: { type: "STRING", enum: ["Soft Arch", "High Arch", "Flat", "S-Curve", "Tapered"] },
+          browSymmetryPct: { type: "INTEGER" },
+          lashProfile: { type: "STRING", enum: ["Long & Sparse", "Short & Full", "Long & Full", "Short & Sparse", "Curly", "Straight & Dense"] },
+          energy: { type: "STRING", enum: ["Sharp", "Soft", "Balanced"] }
+        },
+        required: ["face_detected", "faceShape", "skinToneHex", "colorSeason", "browShape", "browSymmetryPct", "lashProfile", "energy"]
       };
 
-      const raw = await openaiVisionJson<OpenAIDnaResponse>(imageBase64, schema);
+      const raw = await geminiVision<GeminiDnaResponse>(imageBase64, prompt, schema);
 
       if (raw.face_detected === false) {
         throw new Error("NO_FACE_DETECTED");
