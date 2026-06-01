@@ -1,4 +1,4 @@
-import { geminiVision, geminiVisionDual, geminiTextJson, hasGeminiKey, uriToBase64 } from './gemini';
+import { nimVision, nimVisionDual, nimTextJson, hasNimKey, uriToBase64 } from './nim';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DnaResult } from './dna';
 import { loadGloDraft } from '@/lib/glo-profile';
@@ -71,7 +71,7 @@ async function loadDna(): Promise<DnaResult | null> {
   }
 }
 
-// ── Gemini analysis prompt ──────────────────────────────────────────────────
+// ── NIM analysis prompt ──────────────────────────────────────────────────
 
 function buildAnalysisPrompt(
   productInfo: string,
@@ -303,10 +303,10 @@ async function analyzeProductReal(params: {
     } else {
       productInfo = `Barcode: ${params.barcode}\nProduct data not found in database.`;
     }
-  } else if (params.uri && hasGeminiKey()) {
-    // Photo path: extract product info via Gemini Vision
+  } else if (params.uri && hasNimKey()) {
+    // Photo path: extract product info via NIM Vision
     const imageBase64 = await uriToBase64(params.uri);
-    const extracted = await geminiVision<{
+    const extracted = await nimVision<{
       brand?: string; productName?: string; shade?: string;
       category?: string; barcode?: string; ingredients?: string;
       spfLevel?: number | null; pao?: string; labels?: string;
@@ -325,29 +325,29 @@ async function analyzeProductReal(params: {
     ].join('\n');
   }
 
-  if (!hasGeminiKey()) return mockResult(dna, detectedBarcode);
+  if (!hasNimKey()) return mockResult(dna, detectedBarcode);
 
   try {
     let parsed: ProductScanResult;
 
     if (params.uri && params.referenceUri) {
-      // Visual comparison: send product photo + skin reference photo to Gemini
+      // Visual comparison: send product photo + skin reference photo to NIM
       const [productB64, skinB64] = await Promise.all([
         uriToBase64(params.uri),
         uriToBase64(params.referenceUri),
       ]);
       const dualPrompt = buildDualVisionPrompt(productInfo, dna, userAllergies);
-      parsed = await geminiVisionDual<ProductScanResult>(productB64, skinB64, dualPrompt);
+      parsed = await nimVisionDual<ProductScanResult>(productB64, skinB64, dualPrompt);
     } else {
       const prompt = buildAnalysisPrompt(productInfo, dna, userAllergies);
-      parsed = await geminiTextJson<ProductScanResult>(prompt);
+      parsed = await nimTextJson<ProductScanResult>(prompt);
     }
 
     parsed.barcode = detectedBarcode;
     parsed.shade.detected = dna?.skinToneHex ?? '#C9956A';
     return parsed;
   } catch (e) {
-    console.warn('[ProductScan] Gemini failed:', e);
+    console.warn('[ProductScan] NIM failed:', e);
     return mockResult(dna, detectedBarcode);
   }
 }
