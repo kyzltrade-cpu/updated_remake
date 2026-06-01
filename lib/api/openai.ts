@@ -1,5 +1,5 @@
-export const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY ?? '';
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+export const OPENAI_API_KEY=process.env.EXPO_PUBLIC_OPENAI_API_KEY ?? '';
+const OPENAI_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 export function hasOpenAIKey(): boolean {
   return OPENAI_API_KEY.length > 10;
@@ -14,11 +14,13 @@ export async function openaiVisionJson<T>(imageBase64: string, schema: any): Pro
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'HTTP-Referer': 'https://remake.app',
+        'X-Title': 'Remake App'
       },
       signal: controller.signal,
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "openai/gpt-4o-mini",
         messages: [
           {
             role: "user",
@@ -44,13 +46,13 @@ export async function openaiVisionJson<T>(imageBase64: string, schema: any): Pro
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`OpenAI ${res.status}: ${errText}`);
+      throw new Error(`OpenRouter ${res.status}: ${errText}`);
     }
 
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content ?? '';
     
-    if (!text) throw new Error('Empty OpenAI response');
+    if (!text) throw new Error('Empty OpenRouter response');
 
     return JSON.parse(text) as T;
   } finally {
