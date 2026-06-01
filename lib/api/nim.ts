@@ -5,16 +5,17 @@ export function hasNimKey(): boolean {
   return NIM_API_KEY.length > 10;
 }
 
+import * as FileSystem from 'expo-file-system';
+
 export async function uriToBase64(uri: string): Promise<string> {
-  const res = await fetch(uri);
-  const buf = await res.arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  const CHUNK = 8192;
-  const parts: string[] = [];
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    parts.push(String.fromCharCode(...Array.from(bytes.subarray(i, i + CHUNK))));
+  try {
+    return await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+  } catch (e) {
+    console.error('Error converting URI to Base64:', e);
+    throw new Error('Failed to read image file');
   }
-  return btoa(parts.join(''));
 }
 
 export async function nimText(prompt: string, maxTokens = 200): Promise<string> {
