@@ -1,0 +1,99 @@
+const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY ?? process.env.EXPO_PUBLIC_OPENAI_API_KEY ?? '';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+export function hasOpenRouterKey(): boolean {
+  return OPENROUTER_API_KEY.length > 10;
+}
+
+export async function uriToBase64(uri: string): Promise<string> {
+  const res = await fetch(uri);
+  const buf = await res.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  const CHUNK = 8192;
+  const parts: string[] = [];
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    parts.push(String.fromCharCode(...Array.from(bytes.subarray(i, i + CHUNK))));
+  }
+  return btoa(parts.join(''));
+}
+
+export async function openRouterVisionDual<T>(image1Base64: string, image2Base64: string, prompt: string): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 35000);
+  try {
+    const res = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://remake.app',
+        'X-Title': 'Remake App'
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image1Base64}` } },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image2Base64}` } }
+          ]
+        }],
+        temperature: 0.1,
+        response_format: { type: 'json_object' }
+      }),
+    });
+    if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${await res.text()}`);
+    const data = await res.json() as any;
+    const text = data?.choices?.[0]?.message?.content ?? '';
+    if (!text) throw new Error('Empty OpenRouter response');
+    const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(cleaned) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function openRouterVision<T>(imageBase64: string, prompt: string): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 35000);
+
+  try {
+    const res = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://remake.app',
+        'X-Title': 'Remake App'
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+          ]
+        }],
+        temperature: 0.1,
+        response_format: { type: 'json_object' }
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`OpenRouter ${res.status}: ${errText}`);
+    }
+
+    const data = await res.json() as any;
+    const text = data?.choices?.[0]?.message?.content ?? '';
+    if (!text) throw new Error('Empty OpenRouter response');
+    const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(cleaned) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}

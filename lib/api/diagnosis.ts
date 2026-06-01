@@ -1,6 +1,6 @@
 import type { AnalyzeImageRequest, DiagnosisResult, DiagnosisProvider, CategoryAnalysis, SixCategory, Verdict } from './types';
 import { isSafeImageUri } from '@/lib/validation';
-import { hasGeminiKey, uriToBase64, geminiVision, geminiVisionDual } from './gemini';
+import { hasOpenRouterKey, uriToBase64, openRouterVision, openRouterVisionDual } from './openrouter';
 
 const CATEGORY_WEIGHTS: Record<SixCategory, number> = {
   Blending: 25,
@@ -86,7 +86,7 @@ Return ONLY this JSON (no markdown, no extra text):
 Scoring guide: 90-100 = professional, 75-89 = good, 60-74 = average, 40-59 = needs work, below 40 = major issues.
 `.trim();
 
-interface GeminiDiagnosisResponse {
+interface OpenRouterDiagnosisResponse {
   categories: Array<{
     name: string;
     score: number;
@@ -95,7 +95,7 @@ interface GeminiDiagnosisResponse {
   }>;
 }
 
-async function analyzeWithGemini(request: AnalyzeImageRequest): Promise<DiagnosisResult> {
+async function analyzeWithOpenRouter(request: AnalyzeImageRequest): Promise<DiagnosisResult> {
   const priority = request.priorityCategory ?? 'Blending';
   const skill = request.skillLevel ?? 'Intermediate';
   const hasReference = !!request.referenceUri && isSafeImageUri(request.referenceUri);
@@ -103,12 +103,12 @@ async function analyzeWithGemini(request: AnalyzeImageRequest): Promise<Diagnosi
   const imageBase64 = await uriToBase64(request.imageUri);
   const prompt = DIAGNOSIS_PROMPT(priority, skill, hasReference);
 
-  let result: GeminiDiagnosisResponse;
+  let result: OpenRouterDiagnosisResponse;
   if (hasReference) {
     const refBase64 = await uriToBase64(request.referenceUri!);
-    result = await geminiVisionDual<GeminiDiagnosisResponse>(imageBase64, refBase64, prompt);
+    result = await openRouterVisionDual<OpenRouterDiagnosisResponse>(imageBase64, refBase64, prompt);
   } else {
-    result = await geminiVision<GeminiDiagnosisResponse>(imageBase64, prompt);
+    result = await openRouterVision<OpenRouterDiagnosisResponse>(imageBase64, prompt);
   }
 
   const categories: CategoryAnalysis[] = (Object.keys(CATEGORY_WEIGHTS) as SixCategory[]).map(name => {
@@ -161,9 +161,9 @@ class SixCategoryDiagnosisProvider implements DiagnosisProvider {
       throw new Error('Invalid image URI');
     }
 
-    if (hasGeminiKey()) {
+    if (hasOpenRouterKey()) {
       try {
-        return await analyzeWithGemini(request);
+        return await analyzeWithOpenRouter(request);
       } catch (e) {
         console.warn('[Diagnosis] Gemini failed, using mock:', e);
       }
