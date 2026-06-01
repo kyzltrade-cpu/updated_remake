@@ -10,7 +10,7 @@ import * as FileSystem from 'expo-file-system';
 export async function uriToBase64(uri: string): Promise<string> {
   try {
     return await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: 'base64',
     });
   } catch (e) {
     console.error('Error converting URI to Base64:', e);
