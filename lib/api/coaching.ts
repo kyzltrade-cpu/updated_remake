@@ -1,5 +1,5 @@
 import type { GetCoachingRequest, CoachingResult } from './types';
-import { hasGeminiKey, geminiText } from './gemini';
+import { hasNimKey, nimText } from './nim';
 import { getOnboardingData } from '@/lib/onboarding-store';
 import { loadGloDraft } from '@/lib/glo-profile';
 
@@ -48,16 +48,16 @@ function fallbackCompliment(score: number): string {
 }
 
 export async function getCoaching(request: GetCoachingRequest): Promise<CoachingResult> {
-  if (hasGeminiKey()) {
+  if (hasNimKey()) {
     try {
       const prompt = await buildPrompt(request);
-      const compliment = await geminiText(prompt);
+      const compliment = await nimText(prompt);
       return {
         compliment: typeof compliment === 'string' ? compliment.trim() : fallbackCompliment(request.diagnosis.overallScore),
         verdict: request.diagnosis.verdict,
       };
     } catch (e) {
-      console.warn('[Coaching] Gemini failed, using fallback:', e);
+      console.warn('[Coaching] NIM failed, using fallback:', e);
     }
   }
 
