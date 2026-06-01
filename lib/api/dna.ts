@@ -2,6 +2,7 @@ import type { PriorityCategory } from '@/lib/onboarding-store';
 import { hasGeminiKey, uriToBase64, geminiVision } from './gemini';
 import { ARCHETYPE_RECS } from './recommendations';
 import { loadGloDraft } from '@/lib/glo-profile';
+import { hasOpenAIKey, openaiVisionJson } from './openai';
 
 export type FaceShape = 'Oval' | 'Round' | 'Heart' | 'Square' | 'Oblong';
 export type ColorSeason = 'Warm Spring' | 'Light Spring' | 'Warm Autumn' | 'Deep Autumn' | 'Cool Summer' | 'Light Summer' | 'Deep Winter' | 'Cool Winter';
@@ -122,37 +123,8 @@ const VALID_LASH_PROFILES = new Set<LashProfile>([
 ]);
 const VALID_ENERGIES = new Set<EnergyType>(['Sharp', 'Soft', 'Balanced']);
 
-const DNA_PROMPT = `
-You are a professional beauty analyst. Carefully study this face photo.
-
-Return ONLY this JSON (no markdown, no extra text):
-{
-  "faceShape": "Oval",
-  "skinToneHex": "#C9956A",
-  "colorSeason": "Warm Autumn",
-  "browShape": "Soft Arch",
-  "browSymmetryPct": 86,
-  "lashProfile": "Long & Sparse",
-  "energy": "Balanced"
-}
-
-Field rules — use EXACTLY one of these values:
-- faceShape: Oval | Round | Heart | Square | Oblong
-- skinToneHex: 6-digit hex matching the person's skin tone (sample cheek/forehead, include #)
-- colorSeason: Warm Spring | Light Spring | Warm Autumn | Deep Autumn | Cool Summer | Light Summer | Deep Winter | Cool Winter
-- browShape: Soft Arch | High Arch | Flat | S-Curve | Tapered
-- browSymmetryPct: integer 70-100 (how closely brows match)
-- lashProfile: Long & Sparse | Short & Full | Long & Full | Short & Sparse | Curly | Straight & Dense
-- energy: Sharp | Soft | Balanced
-
-Analysis notes:
-- Face shape: compare forehead width, cheekbone width, jawline width, and face length ratios
-- Color season: warm vs cool undertone first, then depth (light / medium / deep)
-- Energy: Sharp = angular jaw/features, Soft = rounded features, Balanced = mix
-- If a feature is not clearly visible, make a best-effort assessment
-`.trim();
-
-interface GeminiDnaResponse {
+interface OpenAIDnaResponse {
+  face_detected: boolean;
   faceShape: string;
   skinToneHex: string;
   colorSeason: string;
@@ -222,15 +194,38 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
 }
 
 export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult> {
-  if (hasGeminiKey()) {
+  if (hasOpenAIKey()) {
     try {
       const [imageBase64, glo] = await Promise.all([uriToBase64(request.imageUri), loadGloDraft()]);
-      const hints = [
-        glo.skin_type ? `User self-reported skin type: ${glo.skin_type}` : null,
-        glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
-      ].filter(Boolean).join('\n');
-      const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
-      const raw = await geminiVision<GeminiDnaResponse>(imageBase64, prompt);
+
+      const schema = {
+        type: "json_schema",
+        json_schema: {
+          name: "beauty_dna_analysis",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              face_detected: { type: "boolean" },
+              faceShape: { type: "string", enum: ["Oval", "Round", "Heart", "Square", "Oblong"] },
+              skinToneHex: { type: "string" },
+              colorSeason: { type: "string", enum: ["Warm Spring", "Light Spring", "Warm Autumn", "Deep Autumn", "Cool Summer", "Light Summer", "Deep Winter", "Cool Winter"] },
+              browShape: { type: "string", enum: ["Soft Arch", "High Arch", "Flat", "S-Curve", "Tapered"] },
+              browSymmetryPct: { type: "integer" },
+              lashProfile: { type: "string", enum: ["Long & Sparse", "Short & Full", "Long & Full", "Short & Sparse", "Curly", "Straight & Dense"] },
+              energy: { type: "string", enum: ["Sharp", "Soft", "Balanced"] }
+            },
+            required: ["face_detected", "faceShape", "skinToneHex", "colorSeason", "browShape", "browSymmetryPct", "lashProfile", "energy"],
+            additionalProperties: false
+          }
+        }
+      };
+
+      const raw = await openaiVisionJson<OpenAIDnaResponse>(imageBase64, schema);
+
+      if (!raw.face_detected) {
+        throw new Error("NO_FACE_DETECTED");
+      }
 
       const faceShape = VALID_FACE_SHAPES.has(raw.faceShape as FaceShape)
         ? (raw.faceShape as FaceShape)

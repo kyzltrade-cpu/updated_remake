@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { LoadingScreen } from '@/components/loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
 import { analyzeDna } from '@/lib/api/dna';
@@ -42,17 +43,23 @@ export default function LoadingPage() {
       }
 
       try {
+        const compressedImage = await ImageManipulator.manipulateAsync(
+          validUri,
+          [{ resize: { width: 512 } }],
+          { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
         const { priorityCategory, skillLevel } = await getOnboardingData();
         const referenceUri = settings.referencePhoto ?? undefined;
         const [diagnosis, dna] = await Promise.all([
           analyzeImage({
-            imageUri: validUri,
+            imageUri: compressedImage.uri,
             priorityCategory: priorityCategory ?? 'Blending',
             skillLevel: skillLevel ?? 'Intermediate',
             referenceUri,
           }),
           analyzeDna({
-            imageUri: validUri,
+            imageUri: compressedImage.uri,
             priorityCategory: priorityCategory ?? 'Blending',
           }),
         ]);
@@ -70,10 +77,16 @@ export default function LoadingPage() {
             coaching: JSON.stringify(coaching),
           },
         });
-      } catch {
-        Alert.alert('Analysis failed', 'Please try again.', [
-          { text: 'OK', onPress: () => router.replace('/(main)/scan') },
-        ]);
+      } catch (e: any) {
+        if (e.message === 'NO_FACE_DETECTED') {
+          Alert.alert('No Face Detected', 'Please take a clear selfie of your face.', [
+            { text: 'OK', onPress: () => router.replace('/(main)/scan') },
+          ]);
+        } else {
+          Alert.alert('Analysis failed', 'Please try again.', [
+            { text: 'OK', onPress: () => router.replace('/(main)/scan') },
+          ]);
+        }
       }
     };
 
