@@ -97,3 +97,66 @@ export async function openRouterVision<T>(imageBase64: string, prompt: string): 
     clearTimeout(timer);
   }
 }
+
+export async function openRouterText(prompt: string, maxTokens = 200): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
+  try {
+    const res = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://remake.app',
+        'X-Title': 'Remake App'
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: maxTokens,
+      }),
+    });
+    if (!res.ok) throw new Error(`OpenRouter ${res.status}`);
+    const data = await res.json() as any;
+    return data?.choices?.[0]?.message?.content?.trim() ?? '';
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function openRouterTextJson<T>(prompt: string, maxTokens = 3000): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://remake.app',
+        'X-Title': 'Remake App'
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.4,
+        max_tokens: maxTokens,
+        response_format: { type: 'json_object' }
+      }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`OpenRouter ${res.status}: ${errText}`);
+    }
+    const data = await res.json() as any;
+    const raw = data?.choices?.[0]?.message?.content ?? '';
+    if (!raw) throw new Error('Empty OpenRouter response');
+    const text = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(text) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}

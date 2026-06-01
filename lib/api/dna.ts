@@ -1,5 +1,5 @@
 import type { PriorityCategory } from '@/lib/onboarding-store';
-import { hasGeminiKey, uriToBase64, geminiVision } from './gemini';
+import { hasOpenRouterKey, uriToBase64, openRouterVision } from './openrouter';
 import { ARCHETYPE_RECS } from './recommendations';
 import { loadGloDraft } from '@/lib/glo-profile';
 
@@ -152,7 +152,7 @@ Analysis notes:
 - If a feature is not clearly visible, make a best-effort assessment
 `.trim();
 
-interface GeminiDnaResponse {
+interface OpenRouterDnaResponse {
   faceShape: string;
   skinToneHex: string;
   colorSeason: string;
@@ -222,7 +222,7 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
 }
 
 export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult> {
-  if (hasGeminiKey()) {
+  if (hasOpenRouterKey()) {
     try {
       const [imageBase64, glo] = await Promise.all([uriToBase64(request.imageUri), loadGloDraft()]);
       const hints = [
@@ -230,7 +230,7 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
         glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
       ].filter(Boolean).join('\n');
       const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
-      const raw = await geminiVision<GeminiDnaResponse>(imageBase64, prompt);
+      const raw = await openRouterVision<OpenRouterDnaResponse>(imageBase64, prompt);
 
       const faceShape = VALID_FACE_SHAPES.has(raw.faceShape as FaceShape)
         ? (raw.faceShape as FaceShape)
@@ -271,7 +271,7 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
         recommendations: ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'],
       };
     } catch (e) {
-      console.warn('[DNA] Gemini failed, using mock:', e);
+      console.warn('[DNA] OpenRouter failed, using mock:', e);
     }
   }
 

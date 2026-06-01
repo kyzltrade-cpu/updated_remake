@@ -1,5 +1,5 @@
 import type { GetCoachingRequest, CoachingResult } from './types';
-import { hasGeminiKey, geminiText } from './gemini';
+import { hasOpenRouterKey, openRouterText } from './openrouter';
 import { getOnboardingData } from '@/lib/onboarding-store';
 import { loadGloDraft } from '@/lib/glo-profile';
 
@@ -48,16 +48,16 @@ function fallbackCompliment(score: number): string {
 }
 
 export async function getCoaching(request: GetCoachingRequest): Promise<CoachingResult> {
-  if (hasGeminiKey()) {
+  if (hasOpenRouterKey()) {
     try {
       const prompt = await buildPrompt(request);
-      const compliment = await geminiText(prompt);
+      const compliment = await openRouterText(prompt);
       return {
         compliment: typeof compliment === 'string' ? compliment.trim() : fallbackCompliment(request.diagnosis.overallScore),
         verdict: request.diagnosis.verdict,
       };
     } catch (e) {
-      console.warn('[Coaching] Gemini failed, using fallback:', e);
+      console.warn('[Coaching] OpenRouter failed, using fallback:', e);
     }
   }
 
