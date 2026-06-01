@@ -127,6 +127,7 @@ You are a professional beauty analyst. Carefully study this face photo.
 
 Return ONLY this JSON (no markdown, no extra text):
 {
+  "face_detected": true,
   "faceShape": "Oval",
   "skinToneHex": "#C9956A",
   "colorSeason": "Warm Autumn",
@@ -137,6 +138,7 @@ Return ONLY this JSON (no markdown, no extra text):
 }
 
 Field rules — use EXACTLY one of these values:
+- face_detected: true if a clear human face is visible, false if it is a random object or wall. If false, return null or empty strings for all other fields.
 - faceShape: Oval | Round | Heart | Square | Oblong
 - skinToneHex: 6-digit hex matching the person's skin tone (sample cheek/forehead, include #)
 - colorSeason: Warm Spring | Light Spring | Warm Autumn | Deep Autumn | Cool Summer | Light Summer | Deep Winter | Cool Winter
@@ -232,22 +234,7 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
       ].filter(Boolean).join('\n');
       const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
       
-      const schema = {
-        type: "OBJECT",
-        properties: {
-          face_detected: { type: "BOOLEAN" },
-          faceShape: { type: "STRING", enum: ["Oval", "Round", "Heart", "Square", "Oblong"] },
-          skinToneHex: { type: "STRING" },
-          colorSeason: { type: "STRING", enum: ["Warm Spring", "Light Spring", "Warm Autumn", "Deep Autumn", "Cool Summer", "Light Summer", "Deep Winter", "Cool Winter"] },
-          browShape: { type: "STRING", enum: ["Soft Arch", "High Arch", "Flat", "S-Curve", "Tapered"] },
-          browSymmetryPct: { type: "INTEGER" },
-          lashProfile: { type: "STRING", enum: ["Long & Sparse", "Short & Full", "Long & Full", "Short & Sparse", "Curly", "Straight & Dense"] },
-          energy: { type: "STRING", enum: ["Sharp", "Soft", "Balanced"] }
-        },
-        required: ["face_detected", "faceShape", "skinToneHex", "colorSeason", "browShape", "browSymmetryPct", "lashProfile", "energy"]
-      };
-
-      const raw = await geminiVision<GeminiDnaResponse>(imageBase64, prompt, schema);
+      const raw = await geminiVision<GeminiDnaResponse>(imageBase64, prompt);
 
       if (raw.face_detected === false) {
         throw new Error("NO_FACE_DETECTED");

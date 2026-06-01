@@ -126,7 +126,6 @@ export async function geminiVision<T>(imageBase64: string, prompt: string, schem
           temperature: 0.1,
           maxOutputTokens: 1500,
           responseMimeType: 'application/json',
-          ...(schema ? { responseSchema: schema } : {}),
         },
       }),
     });
@@ -143,7 +142,8 @@ export async function geminiVision<T>(imageBase64: string, prompt: string, schem
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     if (!text) throw new Error('Empty Gemini response');
 
-    return JSON.parse(text) as T;
+    const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(cleaned) as T;
   } finally {
     clearTimeout(timer);
   }

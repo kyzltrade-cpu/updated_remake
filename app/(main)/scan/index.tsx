@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View, Text, StyleSheet, Pressable, Alert, Image,
   Modal,
@@ -175,6 +176,7 @@ export default function ScanScreen() {
   const [showLowLight, setShowLowLight] = useState(false);
   const [showUV, setShowUV] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const lastBarcodeRef = useRef<string | null>(null);
   const { settings, profilePhoto } = useSettings();
 
   const pillX = useSharedValue(0);
@@ -186,6 +188,18 @@ export default function ScanScreen() {
   useEffect(() => {
     if (permission === null) requestPermission();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Reset scan state when returning to the camera screen
+      setScanned(false);
+      // Clear the last barcode after 3 seconds so they can scan the same item again if they want
+      const timer = setTimeout(() => {
+        lastBarcodeRef.current = null;
+      }, 3000);
+      return () => clearTimeout(timer);
+    }, [])
+  );
 
   const switchMode = (next: ScanMode) => {
     if (next === mode) return;
@@ -283,7 +297,8 @@ export default function ScanScreen() {
   }, [settings.hapticsEnabled]);
 
   const handleBarcode = ({ data, type }: { data: string; type: string }) => {
-    if (scanned || mode !== 'product') return;
+    if (scanned || mode !== 'product' || data === lastBarcodeRef.current) return;
+    lastBarcodeRef.current = data;
     setScanned(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     if (comparing) {
