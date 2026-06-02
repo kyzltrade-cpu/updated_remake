@@ -7,13 +7,14 @@ import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { saveGloField } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
+import { Clock, Gem, Droplets, Leaf, Sun } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'natural_glow',  icon: '🌿', label: 'Natural Glow',   description: 'Effortless, skin-first looks' },
-  { id: 'full_coverage', icon: '🫧', label: 'Full Coverage',  description: 'Flawless and long-lasting' },
-  { id: 'glass_skin',    icon: '💎', label: 'Glass Skin',     description: 'Dewy, luminous, radiant' },
-  { id: 'long_wear',     icon: '⏱️', label: 'Long-Wear',      description: 'Stays perfect all day' },
-  { id: 'spf_protect',   icon: '☀️', label: 'SPF Protection', description: 'Skin health while I wear makeup' },
+  { id: 'natural_glow',  icon: (active: boolean) => <Leaf size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Natural Glow',   description: 'Effortless, skin-first looks' },
+  { id: 'full_coverage', icon: (active: boolean) => <Droplets size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Full Coverage',  description: 'Flawless and long-lasting' },
+  { id: 'glass_skin',    icon: (active: boolean) => <Gem size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Glass Skin',     description: 'Dewy, luminous, radiant' },
+  { id: 'long_wear',     icon: (active: boolean) => <Clock size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Long-Wear',      description: 'Stays perfect all day' },
+  { id: 'spf_protect',   icon: (active: boolean) => <Sun size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'SPF Protection', description: 'Skin health while I wear makeup' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

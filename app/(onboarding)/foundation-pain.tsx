@@ -7,13 +7,14 @@ import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { saveGloField } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
+import { Clock, Palette, FlaskConical, Droplets, Sparkles } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'shade_match',  icon: '🎨', label: 'Finding my shade',          description: 'Always too light, too dark, or wrong tone' },
-  { id: 'coverage',     icon: '🫧', label: 'Getting the right coverage', description: 'Too cakey or doesn\'t cover enough' },
-  { id: 'longevity',    icon: '⏱️', label: 'It doesn\'t last',           description: 'Fades, oxidises, or transfers' },
-  { id: 'ingredients',  icon: '🧪', label: 'Ingredients & breakouts',    description: 'Reacts to formulas or clogs pores' },
-  { id: 'no_problem',   icon: '✨', label: 'No issues',                  description: 'Foundation works well for me' },
+  { id: 'shade_match',  icon: (active: boolean) => <Palette size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Finding my shade',          description: 'Always too light, too dark, or wrong tone' },
+  { id: 'coverage',     icon: (active: boolean) => <Droplets size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Getting the right coverage', description: 'Too cakey or doesn\'t cover enough' },
+  { id: 'longevity',    icon: (active: boolean) => <Clock size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'It doesn\'t last',           description: 'Fades, oxidises, or transfers' },
+  { id: 'ingredients',  icon: (active: boolean) => <FlaskConical size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Ingredients & breakouts',    description: 'Reacts to formulas or clogs pores' },
+  { id: 'no_problem',   icon: (active: boolean) => <Sparkles size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'No issues',                  description: 'Foundation works well for me' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

@@ -7,13 +7,14 @@ import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { saveGloField } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
+import { Star, Flame, Flower2, Leaf, Camera } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'natural',    icon: '🌿', label: 'Natural',    description: 'Minimal, skin-first, effortless' },
-  { id: 'glam',       icon: '💫', label: 'Glam',       description: 'Bold, dramatic, full glam' },
-  { id: 'editorial',  icon: '📸', label: 'Editorial',  description: 'Artistic, experimental, runway-inspired' },
-  { id: 'classic',    icon: '🌹', label: 'Classic',    description: 'Timeless, polished, refined' },
-  { id: 'streetwear', icon: '🔥', label: 'Streetwear', description: 'Cool, casual, urban edge' },
+  { id: 'natural',    icon: (active: boolean) => <Leaf size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Natural',    description: 'Minimal, skin-first, effortless' },
+  { id: 'glam',       icon: (active: boolean) => <Star size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Glam',       description: 'Bold, dramatic, full glam' },
+  { id: 'editorial',  icon: (active: boolean) => <Camera size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Editorial',  description: 'Artistic, experimental, runway-inspired' },
+  { id: 'classic',    icon: (active: boolean) => <Flower2 size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Classic',    description: 'Timeless, polished, refined' },
+  { id: 'streetwear', icon: (active: boolean) => <Flame size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Streetwear', description: 'Cool, casual, urban edge' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

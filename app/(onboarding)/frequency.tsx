@@ -7,12 +7,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { tokens } from '@/components/theme';
+import { PartyPopper, Moon, Calendar, Sunrise } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'daily',     icon: '🌅', label: 'Every day',          description: 'Part of my daily routine' },
-  { id: 'often',     icon: '📅', label: 'A few times a week', description: 'Most days but not always' },
-  { id: 'sometimes', icon: '🎉', label: 'Special occasions',  description: 'Events and weekends' },
-  { id: 'rarely',    icon: '🌙', label: 'Rarely',             description: 'Just getting started' },
+  { id: 'daily',     icon: (active: boolean) => <Sunrise size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Every day',          description: 'Part of my daily routine' },
+  { id: 'often',     icon: (active: boolean) => <Calendar size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'A few times a week', description: 'Most days but not always' },
+  { id: 'sometimes', icon: (active: boolean) => <PartyPopper size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Special occasions',  description: 'Events and weekends' },
+  { id: 'rarely',    icon: (active: boolean) => <Moon size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Rarely',             description: 'Just getting started' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

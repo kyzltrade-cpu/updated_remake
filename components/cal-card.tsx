@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue, useAnimatedStyle, withSpring, FadeInUp,
@@ -6,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { tokens } from './theme';
 
 interface CalCardProps {
-  icon?: string;
+  icon?: ReactNode | ((active: boolean) => ReactNode);
   label: string;
   description?: string;
   active: boolean;
@@ -36,7 +37,7 @@ export function CalCard({ icon, label, description, active, onPress, index = 0, 
       <Pressable onPress={handlePress} style={[styles.card, active && styles.cardActive, disabled && !active && styles.cardDisabled]}>
         {icon ? (
           <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
-            <Text style={styles.icon}>{icon}</Text>
+            {typeof icon === 'function' ? icon(active) : typeof icon === 'string' ? <Text style={styles.icon}>{icon}</Text> : icon}
           </View>
         ) : null}
         <View style={styles.text}>

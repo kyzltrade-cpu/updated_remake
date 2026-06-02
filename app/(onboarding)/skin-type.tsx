@@ -7,13 +7,14 @@ import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { saveGloField } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
+import { Leaf, Droplets, Sun, Sparkles, Flower2 } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'normal',      icon: '☀️', label: 'Normal',      description: 'Balanced, rarely breaks out' },
-  { id: 'oily',        icon: '💧', label: 'Oily',        description: 'Shiny by mid-morning' },
-  { id: 'dry',         icon: '🌿', label: 'Dry',         description: 'Tight, sometimes flaky' },
-  { id: 'combination', icon: '✨', label: 'Combination', description: 'Oily T-zone, dry cheeks' },
-  { id: 'sensitive',   icon: '🌸', label: 'Sensitive',   description: 'Reacts easily, prone to redness' },
+  { id: 'normal',      icon: (active: boolean) => <Sun size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Normal',      description: 'Balanced, rarely breaks out' },
+  { id: 'oily',        icon: (active: boolean) => <Droplets size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Oily',        description: 'Shiny by mid-morning' },
+  { id: 'dry',         icon: (active: boolean) => <Leaf size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Dry',         description: 'Tight, sometimes flaky' },
+  { id: 'combination', icon: (active: boolean) => <Sparkles size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Combination', description: 'Oily T-zone, dry cheeks' },
+  { id: 'sensitive',   icon: (active: boolean) => <Flower2 size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Sensitive',   description: 'Reacts easily, prone to redness' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

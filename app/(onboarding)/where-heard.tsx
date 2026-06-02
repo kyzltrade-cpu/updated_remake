@@ -7,15 +7,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { tokens } from '@/components/theme';
+import { Music, Users, PlayCircle, Search, Sparkles, Camera } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'instagram',  icon: '📸', label: 'Instagram' },
-  { id: 'tiktok',     icon: '🎵', label: 'TikTok' },
-  { id: 'youtube',    icon: '▶️',  label: 'YouTube' },
-  { id: 'friend',     icon: '👯', label: 'Friend or family' },
-  { id: 'influencer', icon: '💄', label: 'Influencer / creator' },
-  { id: 'search',     icon: '🔍', label: 'App Store search' },
-  { id: 'other',      icon: '✨', label: 'Other' },
+  { id: 'instagram',  icon: (active: boolean) => <Camera size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Instagram' },
+  { id: 'tiktok',     icon: (active: boolean) => <Music size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'TikTok' },
+  { id: 'youtube',    icon: (active: boolean) => <PlayCircle size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />,  label: 'YouTube' },
+  { id: 'friend',     icon: (active: boolean) => <Users size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Friend or family' },
+  { id: 'influencer', icon: (active: boolean) => <Sparkles size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Influencer / creator' },
+  { id: 'search',     icon: (active: boolean) => <Search size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'App Store search' },
+  { id: 'other',      icon: (active: boolean) => <Sparkles size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Other' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];
