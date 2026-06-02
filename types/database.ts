@@ -1,3 +1,5 @@
+import { GloProfileDraft } from '@/lib/glo-profile';
+
 // User profile linked to auth.users
 export interface Profile {
   id: string
@@ -5,7 +7,8 @@ export interface Profile {
   full_name: string | null
   avatar_url: string | null
   face_setup_completed: boolean
-  dna_result?: Record<string, unknown>
+  dna_result?: any
+  onboarding_data?: any
   created_at: string
   updated_at: string
 }

@@ -6,8 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { signUp, signInDev, DEV_BYPASS } from '@/lib/auth';
 import { isValidEmail, isValidPassword, sanitizeEmail } from '@/lib/validation';
-import { clearGloDraft } from '@/lib/glo-profile';
+import { loadGloDraft, clearGloDraft } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
+
+import { createClient } from '@/lib/supabase';
 
 const advance = (router: ReturnType<typeof useRouter>) => {
   router.replace('/(onboarding)/first-scan');
@@ -30,7 +32,12 @@ export default function CreateAccountScreen() {
 
   const handleDevOrCreate = async () => {
     if (DEV_BYPASS) {
-      await signInDev();
+      const { data } = await signInDev();
+      const draft = await loadGloDraft();
+      if (data?.session?.user?.id && Object.keys(draft).length > 0) {
+        const supabase = createClient() as any;
+        await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.session.user.id);
+      }
       await clearGloDraft();
       advance(router);
       return;
@@ -43,9 +50,17 @@ export default function CreateAccountScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
-      const { error } = await signUp(clean, password);
+      const { data, error } = await signUp(clean, password);
       if (error) { Alert.alert('Sign up failed', error.message); }
-      else { await clearGloDraft(); advance(router); }
+      else {
+        const draft = await loadGloDraft();
+        if (data?.user?.id && Object.keys(draft).length > 0) {
+          const supabase = createClient() as any;
+          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+        }
+        await clearGloDraft(); 
+        advance(router); 
+      }
     } catch { Alert.alert('Error', 'Something went wrong. Try again.'); }
     finally { setLoading(false); }
   };
