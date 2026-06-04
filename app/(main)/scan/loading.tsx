@@ -6,7 +6,7 @@ import { LoadingScreen } from '@/components/loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
 import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
-import { saveDnaResult } from '@/lib/api/scan-storage';
+import { saveDnaResult, saveScan } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/settings-context';
 
@@ -60,7 +60,15 @@ export default function LoadingPage() {
 
         // Store DNA result for DNA reveal screen and persist to Supabase
         await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
-        if (user?.id) saveDnaResult(user.id, dna).catch(() => null);
+        if (user?.id) {
+          saveDnaResult(user.id, dna).catch(() => null);
+          saveScan({
+            userId: user.id,
+            imageUri: validUri,
+            diagnosis,
+            coaching,
+          }).catch((err) => console.warn('[loading] saveScan failed:', err));
+        }
 
         router.replace({
           pathname: '/(main)/scan/results',
