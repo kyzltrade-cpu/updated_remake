@@ -7,13 +7,14 @@ import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { saveGloField } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
+import { Sparkles, Recycle, Leaf, Rabbit } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'vegan',         icon: '🌱', label: 'Vegan',          description: 'No animal-derived ingredients' },
-  { id: 'cruelty_free',  icon: '🐰', label: 'Cruelty-free',   description: 'Not tested on animals' },
-  { id: 'clean',         icon: '🧼', label: 'Clean beauty',   description: 'Free from harmful chemicals' },
-  { id: 'sustainable',   icon: '♻️', label: 'Sustainable',    description: 'Eco-friendly packaging & practices' },
-  { id: 'none',          icon: '✨', label: 'No preference',  description: 'Any formula works for me' },
+  { id: 'vegan',         icon: (active: boolean) => <Leaf size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Vegan',          description: 'No animal-derived ingredients' },
+  { id: 'cruelty_free',  icon: (active: boolean) => <Rabbit size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Cruelty-free',   description: 'Not tested on animals' },
+  { id: 'clean',         icon: (active: boolean) => <Sparkles size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Clean beauty',   description: 'Free from harmful chemicals' },
+  { id: 'sustainable',   icon: (active: boolean) => <Recycle size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Sustainable',    description: 'Eco-friendly packaging & practices' },
+  { id: 'none',          icon: (active: boolean) => <Sparkles size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'No preference',  description: 'Any formula works for me' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

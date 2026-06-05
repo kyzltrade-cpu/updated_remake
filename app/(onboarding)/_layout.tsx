@@ -10,6 +10,8 @@ export default function OnboardingLayout() {
         animation: 'slide_from_right',
         gestureEnabled: false,
       }}
-    />
+    >
+      <Stack.Screen name="index" options={{ animation: 'fade' }} />
+    </Stack>
   );
 }

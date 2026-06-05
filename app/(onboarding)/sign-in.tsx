@@ -9,6 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { signIn, signInDev, DEV_BYPASS } from '@/lib/auth';
 import { isValidEmail, sanitizeEmail } from '@/lib/validation';
+import { loadGloDraft, clearGloDraft } from '@/lib/glo-profile';
+import { createClient } from '@/lib/supabase';
 import { tokens } from '@/components/theme';
 
 export default function SignInScreen() {
@@ -24,7 +26,13 @@ export default function SignInScreen() {
 
   const handleSignIn = async () => {
     if (DEV_BYPASS) {
-      await signInDev();
+      const { data } = await signInDev();
+      const draft = await loadGloDraft();
+      if (data?.session?.user?.id && Object.keys(draft).length > 0) {
+        const supabase = createClient() as any;
+        await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.session.user.id);
+      }
+      await clearGloDraft();
       advance();
       return;
     }
@@ -48,10 +56,16 @@ export default function SignInScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
-      const { error } = await signIn(clean, password);
+      const { data, error } = await signIn(clean, password);
       if (error) {
         Alert.alert('Sign in failed', error.message);
       } else {
+        const draft = await loadGloDraft();
+        if (data?.user?.id && Object.keys(draft).length > 0) {
+          const supabase = createClient() as any;
+          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+        }
+        await clearGloDraft();
         advance();
       }
     } catch {

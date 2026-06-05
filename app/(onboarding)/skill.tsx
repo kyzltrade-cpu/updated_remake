@@ -24,6 +24,12 @@ const LEVELS = [
   { id: 'pro',        frac: 1,   icon: '✨', label: 'Pro',        desc: 'I create editorial-level looks' },
 ];
 
+const SNAP_SPRING_CONFIG = {
+  damping: 28,
+  stiffness: 300,
+  mass: 0.8,
+} as const;
+
 export default function SkillScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -40,8 +46,8 @@ export default function SkillScreen() {
       setLevelIdx(idx);
     }
     const targetThumbX = LEVELS[idx].frac * TRAVEL_W;
-    thumbX.value = withSpring(targetThumbX, { damping: 14, stiffness: 260 });
-    fillW.value  = withSpring(targetThumbX + THUMB_R, { damping: 14, stiffness: 260 });
+    thumbX.value = withSpring(targetThumbX, SNAP_SPRING_CONFIG);
+    fillW.value  = withSpring(targetThumbX + THUMB_R, SNAP_SPRING_CONFIG);
   }, [levelIdx]);
 
   const pan = Gesture.Pan()
@@ -52,14 +58,34 @@ export default function SkillScreen() {
       thumbX.value  = clamped;
       fillW.value   = clamped + THUMB_R;
       const frac = clamped / TRAVEL_W;
+      
       let best = 0;
-      LEVELS.forEach((l, i) => {
-        if (Math.abs(frac - l.frac) < Math.abs(frac - LEVELS[best].frac)) best = i;
-      });
+      for (let i = 0; i < LEVELS.length; i++) {
+        if (Math.abs(frac - LEVELS[i].frac) < Math.abs(frac - LEVELS[best].frac)) {
+          best = i;
+        }
+      }
       runOnJS(setLevelIdx)(best);
     })
     .onEnd(() => {
-      runOnJS(snapToIdx)(levelIdx);
+      const frac = thumbX.value / TRAVEL_W;
+
+      // Synchronously find the closest snap index on UI thread
+      let bestIdx = 1; // default middle
+      let minDistance = 999;
+      for (let i = 0; i < LEVELS.length; i++) {
+        const dist = Math.abs(frac - LEVELS[i].frac);
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestIdx = i;
+        }
+      }
+
+      runOnJS(setLevelIdx)(bestIdx);
+
+      const targetThumbX = LEVELS[bestIdx].frac * TRAVEL_W;
+      thumbX.value = withSpring(targetThumbX, SNAP_SPRING_CONFIG);
+      fillW.value  = withSpring(targetThumbX + THUMB_R, SNAP_SPRING_CONFIG);
     });
 
   const thumbStyle = useAnimatedStyle(() => ({
