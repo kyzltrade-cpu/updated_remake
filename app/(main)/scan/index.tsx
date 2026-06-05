@@ -19,7 +19,8 @@ import { FaceCorners } from '@/components/face-corners';
 import { EdgeFlashOverlay } from '@/components/edge-flash';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSettings } from '@/contexts/settings-context';
-import { type UVData } from '@/lib/uv';
+import { type UVData, fetchUVIndex } from '@/lib/uv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ScanMode = 'face' | 'product';
 
@@ -33,6 +34,17 @@ const MOCK_UV: UVData = {
   color: '#E88C39',
   spfRecommendation: 'Apply SPF 50',
   tanningAdvice: 'Brief sessions only — 15 min max',
+  tanningWindow: '10:00 am – 11:30 am',
+  tanningWindowNote: 'Low risk · 30 min max',
+  hourlyForecast: [
+    { hour: '6am',  uvi: 0, safe: true  },
+    { hour: '8am',  uvi: 1, safe: true  },
+    { hour: '10am', uvi: 3, safe: true  },
+    { hour: '12pm', uvi: 7, safe: false },
+    { hour: '2pm',  uvi: 9, safe: false },
+    { hour: '4pm',  uvi: 5, safe: false },
+    { hour: '6pm',  uvi: 2, safe: true  },
+  ],
 };
 
 // Hourly UV data for the bar chart (mock — replace with real API data when available)
@@ -53,7 +65,32 @@ const MAX_UVI   = 10;
 function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number }) {
   const [uv, setUV] = useState<UVData | null>(null);
 
-  useEffect(() => { setUV(MOCK_UV); }, []);
+  useEffect(() => {
+    let active = true;
+    async function loadUV() {
+      try {
+        let skinToneHex: string | undefined;
+        const rawDna = await AsyncStorage.getItem('dna_result');
+        if (rawDna) {
+          const parsed = JSON.parse(rawDna);
+          if (parsed && parsed.skinToneHex) {
+            skinToneHex = parsed.skinToneHex;
+          }
+        }
+        const data = await fetchUVIndex(skinToneHex);
+        if (active) {
+          setUV(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load UV data:', err);
+        if (active) {
+          setUV(MOCK_UV);
+        }
+      }
+    }
+    loadUV();
+    return () => { active = false; };
+  }, []);
 
   return (
     <Modal transparent animationType="none" onRequestClose={onClose}>
@@ -84,14 +121,14 @@ function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number 
                   end={{ x: 1, y: 0 }}
                   style={styles.uvWindowPill}
                 >
-                  <Text style={styles.uvWindowTime}>10:00 – 11:30 am</Text>
+                  <Text style={styles.uvWindowTime}>{uv.tanningWindow}</Text>
                 </LinearGradient>
-                <Text style={styles.uvWindowNote}>Low risk · 30 min max</Text>
+                <Text style={styles.uvWindowNote}>{uv.tanningWindowNote}</Text>
               </View>
 
               {/* ── Hourly bar chart ── */}
               <View style={styles.uvBarChart}>
-                {UV_HOURS.map(h => {
+                {uv.hourlyForecast.map(h => {
                   const barH = Math.max(4, (h.uvi / MAX_UVI) * MAX_BAR_H);
                   return (
                     <View key={h.hour} style={styles.uvBarItem}>
