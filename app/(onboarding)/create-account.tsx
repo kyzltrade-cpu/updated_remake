@@ -135,7 +135,13 @@ export default function CreateAccountScreen() {
               Already have an account? <Text style={styles.signInLinkBold}>Sign In</Text>
             </Text>
           </Pressable>
-          <Text style={styles.legal}>By continuing you agree to our Terms & Privacy Policy.</Text>
+          <Text style={styles.legal}>
+            By continuing you agree to our{' '}
+            <Text style={styles.legalLink} onPress={() => router.push('/(onboarding)/legal')}>
+              Terms & Privacy Policy
+            </Text>
+            .
+          </Text>
         </Animated.View>
       </View>
     </KeyboardAvoidingView>
@@ -288,5 +294,10 @@ const styles = StyleSheet.create({
     color: tokens.colors.grayLight,
     textAlign: 'center',
     lineHeight: 16,
+  },
+  legalLink: {
+    color: tokens.colors.pinkDeep,
+    textDecorationLine: 'underline',
+    fontWeight: '600',
   },
 });
