@@ -130,6 +130,11 @@ export default function CreateAccountScreen() {
         <View style={{ flex: 1 }} />
 
         <Animated.View entering={FadeInUp.delay(320).duration(500)} style={styles.footer}>
+          <Pressable onPress={() => router.push('/(onboarding)/sign-in')} hitSlop={12}>
+            <Text style={styles.signInLink}>
+              Already have an account? <Text style={styles.signInLinkBold}>Sign In</Text>
+            </Text>
+          </Pressable>
           <Text style={styles.legal}>By continuing you agree to our Terms & Privacy Policy.</Text>
         </Animated.View>
       </View>
@@ -265,15 +270,16 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'center',
   },
-  skip: {
+  signInLink: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 13,
+    fontSize: 14,
     color: tokens.colors.gray,
     textAlign: 'center',
+    marginBottom: 8,
   },
-  skipBold: {
+  signInLinkBold: {
     fontWeight: '700',
-    color: tokens.colors.text,
+    color: tokens.colors.pinkDeep,
     textDecorationLine: 'underline',
   },
   legal: {
