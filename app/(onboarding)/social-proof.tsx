@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -10,17 +10,23 @@ const REVIEWS = [
   {
     name: 'Mia T.',
     stars: 5,
-    text: 'First scan nailed my shade. I\'ve been buying the wrong foundation for three years.',
+    text: "First scan nailed my shade. I've been buying the wrong foundation for three years.",
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop',
+    color: '#E3A6A1', // dusty rose
   },
   {
     name: 'Sarah K.',
     stars: 5,
-    text: 'Stopped guessing, stopped wasting money. My routine finally makes sense.',
+    text: "Stopped guessing, stopped wasting money. My routine finally makes sense.",
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=120&auto=format&fit=crop',
+    color: '#D4C3B3', // warm taupe
   },
   {
     name: 'Priya R.',
     stars: 5,
-    text: 'The ingredient screening alone is worth it. My skin hasn\'t reacted once since I started using it.',
+    text: "The ingredient screening alone is worth it. My skin hasn't reacted once since I started using it.",
+    avatarUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=120&auto=format&fit=crop',
+    color: '#CEB8DC', // soft lavender
   },
 ];
 
@@ -52,8 +58,11 @@ export default function SocialProofScreen() {
               style={styles.reviewCard}
             >
               <View style={styles.reviewTop}>
-                <View style={styles.avatar}>
+                <View style={[styles.avatar, { backgroundColor: r.color }]}>
                   <Text style={styles.avatarLetter}>{r.name[0]}</Text>
+                  {r.avatarUrl && (
+                    <Image source={{ uri: r.avatarUrl }} style={styles.avatarImage} />
+                  )}
                 </View>
                 <View style={styles.reviewMeta}>
                   <Text style={styles.reviewName}>{r.name}</Text>
@@ -128,9 +137,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: tokens.colors.pinkDeep,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden', // clips the absolute-fill image to the circular border
+  },
+  avatarImage: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
   },
   avatarLetter: {
     fontFamily: tokens.fonts.regular,
