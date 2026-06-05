@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
 import Animated, { FadeInUp, FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -40,9 +40,14 @@ export default function ScanPrepScreen() {
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }]}>
-      {/* Top Header */}
-      <View style={styles.body}>
+    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom + 16 }]}>
+      {/* Scrollable Container for content */}
+      <ScrollView 
+        style={styles.scroll} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Header */}
         <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
           <Text style={styles.sparkleIcon}>✦</Text>
           <Text style={styles.title}>Preparing your{'\n'}first scan.</Text>
@@ -51,7 +56,7 @@ export default function ScanPrepScreen() {
           </Text>
         </Animated.View>
 
-        {/* Guidelines List */}
+        {/* Guidelines List (Minimal Luxury Rows) */}
         <View style={styles.guidelines}>
           {GUIDELINES.map((item, i) => (
             <Animated.View
@@ -76,11 +81,9 @@ export default function ScanPrepScreen() {
             🔒 Secure Scan: Your photo is encrypted, processed in-memory, and is never stored permanently on our servers.
           </Text>
         </Animated.View>
-      </View>
+      </ScrollView>
 
-      <View style={{ flex: 1 }} />
-
-      {/* Button */}
+      {/* Floating CTA Button at the bottom */}
       <Animated.View entering={FadeInUp.delay(650).duration(500)} style={styles.bottom}>
         <Pressable onPress={handleStart} style={styles.cta}>
           <Text style={styles.ctaText}>Start Scan  ✦</Text>
@@ -95,81 +98,84 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.cream,
   },
-  body: {
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 28,
+    paddingTop: 24,
+    paddingBottom: 20,
   },
   header: {
-    marginBottom: 32,
-    gap: 10,
+    marginBottom: 20,
+    gap: 6,
   },
   sparkleIcon: {
-    fontSize: 24,
+    fontSize: 22,
     color: tokens.colors.pinkDeep,
   },
   title: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 36,
+    fontSize: 30,
     fontWeight: '400',
     color: tokens.colors.text,
-    lineHeight: 46,
+    lineHeight: 38,
   },
   sub: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '300',
     color: tokens.colors.gray,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   guidelines: {
-    gap: 12,
+    gap: 2,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0,0,0,0.06)',
-    gap: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.04)',
+    gap: 14,
   },
   iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: tokens.colors.cream,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(217,138,150,0.08)', // subtle brand pink hue
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.03)',
+    borderColor: 'rgba(0,0,0,0.02)',
   },
   iconText: {
-    fontSize: 22,
+    fontSize: 18,
   },
   cardText: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   cardTitle: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: tokens.colors.text,
   },
   cardDesc: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '300',
     color: tokens.colors.gray,
-    lineHeight: 18,
+    lineHeight: 16,
   },
   privacyNote: {
-    marginTop: 24,
+    marginTop: 16,
     backgroundColor: 'rgba(0,0,0,0.02)',
     borderRadius: 12,
-    padding: 12,
+    padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.04)',
+    borderColor: 'rgba(0,0,0,0.03)',
   },
   privacyText: {
     fontFamily: tokens.fonts.regular,
@@ -180,6 +186,7 @@ const styles = StyleSheet.create({
   },
   bottom: {
     paddingHorizontal: 28,
+    marginTop: 8,
   },
   cta: {
     backgroundColor: tokens.colors.pinkDeep,
