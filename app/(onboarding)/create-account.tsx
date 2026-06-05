@@ -23,6 +23,13 @@ export default function CreateAccountScreen() {
   const [emailErr, setEmailErr] = useState('');
   const [passErr, setPassErr] = useState('');
 
+  const handleDevAutoFill = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const rand = Math.floor(Math.random() * 1000000);
+    setEmail(`test_${rand}@remake.beauty`);
+    setPassword('TestPassword123!');
+  };
+
   const handleDevOrCreate = async () => {
     if (DEV_BYPASS) {
       const { data } = await signInDev();
@@ -67,6 +74,14 @@ export default function CreateAccountScreen() {
         <Animated.Text entering={FadeInUp.delay(140).duration(500)} style={styles.sub}>
           Don't lose your Beauty DNA. Save it now.
         </Animated.Text>
+
+        {__DEV__ && (
+          <Animated.View entering={FadeInUp.delay(180).duration(500)} style={styles.devRow}>
+            <Pressable onPress={handleDevAutoFill} style={styles.devBtn}>
+              <Text style={styles.devBtnText}>⚡ Auto-Fill Dummy Account</Text>
+            </Pressable>
+          </Animated.View>
+        )}
 
         <Animated.View entering={FadeInUp.delay(220).duration(500)} style={styles.formContainer}>
           {/* Email Form */}
@@ -169,6 +184,24 @@ const styles = StyleSheet.create({
     color: tokens.colors.gray,
     marginBottom: 28,
     lineHeight: 22,
+  },
+  devRow: {
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  devBtn: {
+    backgroundColor: 'rgba(217,138,150,0.12)', // light soft pink
+    borderColor: tokens.colors.pinkRich,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  devBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    color: tokens.colors.pinkRich,
+    fontWeight: '700',
   },
   formContainer: {
     gap: 14,
