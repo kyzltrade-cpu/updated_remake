@@ -52,9 +52,6 @@ export default function ProfileScreen() {
     getOnboardingData().then(data => { if (data.name) setOnboardingName(data.name); });
   }, []);
 
-  const rawName: string = user?.user_metadata?.full_name ?? onboardingName ?? user?.email?.split('@')[0] ?? '';
-  const firstName = rawName.split(' ')[0] || 'Glowgetter';
-
   const handleViewDna = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(main)/dna-reveal');
@@ -174,7 +171,7 @@ export default function ProfileScreen() {
 
           <View style={styles.userInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.userName}>Hi, {firstName} ✨</Text>
+              <Text style={styles.userName}>hi, bestie ✨</Text>
               <View style={[styles.proBadge, isPro && styles.proBadgeActive]}>
                 <Text style={styles.proBadgeText}>{isPro ? 'PRO ✦' : 'FREE'}</Text>
               </View>
