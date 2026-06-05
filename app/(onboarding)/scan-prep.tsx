@@ -9,6 +9,11 @@ const { width: SW } = Dimensions.get('window');
 
 const GUIDELINES = [
   {
+    icon: '🧼',
+    title: 'Bare Face / No Makeup',
+    desc: 'Make sure your face is 100% clean and makeup-free so the scanner reads your true skin tone and shade.',
+  },
+  {
     icon: '☀️',
     title: 'Natural Lighting',
     desc: 'Face a window or a well-lit area. Avoid strong shadows or heavy backlight.',
