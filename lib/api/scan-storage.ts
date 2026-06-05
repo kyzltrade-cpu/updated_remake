@@ -98,3 +98,15 @@ export async function saveDnaResult(userId: string, dna: DnaResult): Promise<voi
     .eq('id', userId);
   if (error) console.warn('[scan-storage] saveDnaResult failed:', error.message);
 }
+
+export async function getScanById(scanId: string): Promise<any | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
+  const { data, error } = await supabase
+    .from('scans')
+    .select('*')
+    .eq('id', scanId)
+    .maybeSingle();
+  if (error) console.warn('[scan-storage] getScanById failed:', error.message);
+  return data ?? null;
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Linking,
+  View, Text, StyleSheet, ScrollView, Pressable, Linking, ActivityIndicator,
 } from 'react-native';
 import Animated, {
   FadeIn, FadeInUp,
@@ -14,7 +14,7 @@ import { ScoreRing } from '@/components/score-ring';
 import * as Haptics from 'expo-haptics';
 import type { DiagnosisResult, CoachingResult, CategoryAnalysis } from '@/lib/api/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { saveScan, getLastScan } from '@/lib/api/scan-storage';
+import { saveScan, getLastScan, getScanById } from '@/lib/api/scan-storage';
 
 const SCORE_GREEN = '#2D7D46';
 const SCORE_GOLD  = '#B8820A';
@@ -98,15 +98,45 @@ function CategoryCard({ cat, index }: { cat: CategoryAnalysis; index: number }) 
 export default function ResultsScreen() {
   const router   = useRouter();
   const insets   = useSafeAreaInsets();
-  const params   = useLocalSearchParams<{ uri?: string; diagnosis?: string; coaching?: string }>();
+  const params   = useLocalSearchParams<{ uri?: string; diagnosis?: string; coaching?: string; scanId?: string }>();
   const [diagnosis,  setDiagnosis]  = useState<DiagnosisResult | null>(null);
   const [coaching,   setCoaching]   = useState<CoachingResult | null>(null);
   const [scoreDelta, setScoreDelta] = useState<number>(5);
   const [lastScore,  setLastScore]  = useState<number>(78);
+  const [isLoadingRecord, setIsLoadingRecord] = useState<boolean>(false);
   const { user } = useAuth();
   const savedRef = useRef(false);
 
   useEffect(() => {
+    if (params.scanId) {
+      setIsLoadingRecord(true);
+      getScanById(params.scanId)
+        .then(record => {
+          if (record) {
+            const fetchedDiagnosis: DiagnosisResult = {
+              overallScore: Number(record.overall_score),
+              verdict: record.verdict,
+              categories: record.category_scores,
+            };
+            const fetchedCoaching: CoachingResult = {
+              compliment: record.coaching_compliment,
+              verdict: record.verdict,
+            };
+            setDiagnosis(fetchedDiagnosis);
+            setCoaching(fetchedCoaching);
+            setScoreDelta(0);
+            setLastScore(Number(record.overall_score));
+          }
+        })
+        .catch(e => {
+          console.warn('[Results] Failed to fetch historical scan:', e);
+        })
+        .finally(() => {
+          setIsLoadingRecord(false);
+        });
+      return;
+    }
+
     let parsed: { diagnosis: DiagnosisResult | null; coaching: CoachingResult | null } = {
       diagnosis: null, coaching: null,
     };
@@ -131,7 +161,18 @@ export default function ResultsScreen() {
     if (!user || !parsed.diagnosis || !parsed.coaching || savedRef.current) return;
     savedRef.current = true;
     saveScan({ userId: user.id, imageUri: params.uri ?? '', diagnosis: parsed.diagnosis, coaching: parsed.coaching });
-  }, [params.diagnosis, params.coaching, user]);
+  }, [params.diagnosis, params.coaching, params.scanId, user]);
+
+  if (isLoadingRecord) {
+    return (
+      <View style={[s.root, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={tokens.colors.pinkDeep} />
+        <Text style={{ marginTop: 12, fontFamily: tokens.fonts.regular, color: tokens.colors.grayLight }}>
+          Accessing secure vault...
+        </Text>
+      </View>
+    );
+  }
 
   const score      = diagnosis?.overallScore ?? 0;
   const categories = diagnosis?.categories ?? [];
