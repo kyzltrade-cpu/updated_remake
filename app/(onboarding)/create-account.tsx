@@ -23,11 +23,6 @@ export default function CreateAccountScreen() {
   const [emailErr, setEmailErr] = useState('');
   const [passErr, setPassErr] = useState('');
 
-  const handleSkip = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    advance(router);
-  };
-
   const handleDevOrCreate = async () => {
     if (DEV_BYPASS) {
       const { data } = await signInDev();
@@ -135,9 +130,6 @@ export default function CreateAccountScreen() {
         <View style={{ flex: 1 }} />
 
         <Animated.View entering={FadeInUp.delay(320).duration(500)} style={styles.footer}>
-          <Pressable onPress={handleSkip} hitSlop={8}>
-            <Text style={styles.skip}>Would you like to sign in later? <Text style={styles.skipBold}>Skip</Text></Text>
-          </Pressable>
           <Text style={styles.legal}>By continuing you agree to our Terms & Privacy Policy.</Text>
         </Animated.View>
       </View>
