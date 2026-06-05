@@ -11,7 +11,7 @@ import { tokens } from '@/components/theme';
 import { createClient } from '@/lib/supabase';
 
 const advance = (router: ReturnType<typeof useRouter>) => {
-  router.replace('/(onboarding)/first-scan');
+  router.replace('/(onboarding)/scan-prep');
 };
 
 export default function CreateAccountScreen() {
