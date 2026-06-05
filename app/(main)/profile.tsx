@@ -451,7 +451,7 @@ export default function ProfileScreen() {
                           if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           router.push({
                             pathname: '/(main)/scan/results',
-                            params: { last_scan_only: 'true' }
+                            params: { scanId: scan.id }
                           });
                         }}
                         style={[styles.actionSubBtn, styles.actionSubBtnPrimary]}
