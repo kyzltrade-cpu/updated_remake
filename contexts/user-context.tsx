@@ -10,11 +10,13 @@ export interface UserProfile {
   name: string;
   email: string;
   initials: string;
+  onboarding_data?: Record<string, unknown> | null;
 }
 
 interface UserContextValue {
   user: UserProfile | null;
   isLoggedIn: boolean;
+  refreshProfile: () => Promise<void>;
   logout: () => void;
 }
 
@@ -24,6 +26,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
 
+  const refreshProfile = useCallback(async () => {
+    if (!authUser) return;
+    try {
+      const supabase = createClient() as any;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('onboarding_data')
+        .eq('id', authUser.id)
+        .single();
+      
+      setUser(prev => prev ? { ...prev, onboarding_data: data?.onboarding_data } : prev);
+    } catch (err) {
+      console.warn('Failed to fetch profile', err);
+    }
+  }, [authUser]);
+
   useEffect(() => {
     if (!authUser) {
       setUser(null);
@@ -32,8 +50,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const name = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User';
     const email = authUser.email || '';
     const initials = name.trim().split(/\s+/).map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-    setUser({ name, email, initials });
-  }, [authUser]);
+    setUser({ name, email, initials, onboarding_data: null });
+    
+    // Fetch detailed profile info like onboarding_data
+    refreshProfile();
+  }, [authUser, refreshProfile]);
 
   const logout = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -52,7 +73,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, isLoggedIn: !!authUser, logout }}>
+    <UserContext.Provider value={{ user, isLoggedIn: !!authUser, refreshProfile, logout }}>
       {children}
     </UserContext.Provider>
   );

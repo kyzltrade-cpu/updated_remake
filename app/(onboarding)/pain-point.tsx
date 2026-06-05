@@ -8,14 +8,15 @@ import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { saveGloField } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
+import { Clock, Palette, BarChart2, Banknote, HelpCircle, Microscope } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'shade_match',  icon: '🎨', label: 'Shade matching',        description: 'Products look different on my skin' },
-  { id: 'breakouts',    icon: '🔬', label: 'Breakouts & reactions',  description: 'Products irritate or clog my pores' },
-  { id: 'longevity',    icon: '⏱️', label: 'Doesn\'t last',         description: 'Fades or transfers by midday' },
-  { id: 'price',        icon: '💸', label: 'Wasting money',          description: 'Buying products that don\'t work' },
-  { id: 'overwhelmed',  icon: '😵', label: 'Too many choices',       description: 'Can\'t decide what to buy' },
-  { id: 'consistency',  icon: '📊', label: 'Lack of consistency',    description: 'My routine changes too often' },
+  { id: 'shade_match',  icon: (active: boolean) => <Palette size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Shade matching',        description: 'Products look different on my skin' },
+  { id: 'breakouts',    icon: (active: boolean) => <Microscope size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Breakouts & reactions',  description: 'Products irritate or clog my pores' },
+  { id: 'longevity',    icon: (active: boolean) => <Clock size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Doesn\'t last',         description: 'Fades or transfers by midday' },
+  { id: 'price',        icon: (active: boolean) => <Banknote size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Wasting money',          description: 'Buying products that don\'t work' },
+  { id: 'overwhelmed',  icon: (active: boolean) => <HelpCircle size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Too many choices',       description: 'Can\'t decide what to buy' },
+  { id: 'consistency',  icon: (active: boolean) => <BarChart2 size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Lack of consistency',    description: 'My routine changes too often' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

@@ -7,10 +7,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingHeader } from '@/components/onboarding-header';
 import { CalCard } from '@/components/cal-card';
 import { tokens } from '@/components/theme';
+import { ThumbsUp, ThumbsDown } from 'lucide-react-native';
 
 const OPTIONS = [
-  { id: 'no',  icon: '👎', label: 'No',  description: 'First time trying something like this' },
-  { id: 'yes', icon: '👍', label: 'Yes', description: 'I\'ve used other beauty apps before' },
+  { id: 'no',  icon: (active: boolean) => <ThumbsDown size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'No',  description: 'First time trying something like this' },
+  { id: 'yes', icon: (active: boolean) => <ThumbsUp size={20} color={active ? '#FFFFFF' : tokens.colors.pinkDeep} />, label: 'Yes', description: 'I\'ve used other beauty apps before' },
 ] as const;
 
 type Id = typeof OPTIONS[number]['id'];

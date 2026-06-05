@@ -28,6 +28,12 @@ const SNAPS = [
   { frac: 1,    id: 'warm',          label: 'Warm',          desc: 'Yellow, peach, or golden tones', color: '#D4AF37' },
 ];
 
+const SNAP_SPRING_CONFIG = {
+  damping: 28,
+  stiffness: 300,
+  mass: 0.8,
+} as const;
+
 function getSnap(frac: number) {
   let best = SNAPS[0];
   let bestDist = Math.abs(frac - SNAPS[0].frac);
@@ -67,8 +73,21 @@ export default function ToneGuessScreen() {
       runOnJS(updateSnap)(clamped / TRAVEL_W);
     })
     .onEnd(() => {
-      const snap = SNAPS[snapIdx];
-      thumbX.value = withSpring(snap.frac * TRAVEL_W, { damping: 14, stiffness: 220 });
+      const frac = thumbX.value / TRAVEL_W;
+
+      // Thread-safe calculation of closest snap on UI thread to prevent stale closure bugs
+      let bestIdx = 2; // default neutral
+      let minDistance = 999;
+      for (let i = 0; i < SNAPS.length; i++) {
+        const dist = Math.abs(frac - SNAPS[i].frac);
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestIdx = i;
+        }
+      }
+
+      runOnJS(setSnapIdx)(bestIdx);
+      thumbX.value = withSpring(SNAPS[bestIdx].frac * TRAVEL_W, SNAP_SPRING_CONFIG);
     });
 
   const thumbStyle = useAnimatedStyle(() => ({
@@ -131,7 +150,7 @@ export default function ToneGuessScreen() {
               onPress={() => {
                 Haptics.selectionAsync();
                 setSnapIdx(i);
-                thumbX.value = withSpring(s.frac * TRAVEL_W, { damping: 14, stiffness: 220 });
+                thumbX.value = withSpring(s.frac * TRAVEL_W, SNAP_SPRING_CONFIG);
               }}
               style={[styles.swatch, { backgroundColor: s.color }, snapIdx === i && styles.swatchActive]}
             />

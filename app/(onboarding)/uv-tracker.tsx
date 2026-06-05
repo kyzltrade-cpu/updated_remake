@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
 import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
@@ -9,10 +9,11 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingHeader } from '@/components/onboarding-header';
 import { tokens } from '@/components/theme';
+import { type UVData, type HourlyUV, fetchUVIndex } from '@/lib/uv';
 
 const { width: SW } = Dimensions.get('window');
 
-const UV_HOURS = [
+const UV_HOURS: HourlyUV[] = [
   { hour: '6am',  uvi: 0, safe: true  },
   { hour: '8am',  uvi: 1, safe: true  },
   { hour: '10am', uvi: 3, safe: true  },
@@ -27,10 +28,11 @@ const MAX_UVI = 10;
 const BAR_AREA_H = 64;
 const LABEL_H    = 16;
 
-function UvChart() {
+function UvChart({ forecast }: { forecast?: HourlyUV[] }) {
+  const data = forecast || UV_HOURS;
   return (
     <View style={styles.uvChart}>
-      {UV_HOURS.map((h) => {
+      {data.map((h) => {
         const barH = Math.max(4, (h.uvi / MAX_UVI) * BAR_AREA_H);
         return (
           <View key={h.hour} style={styles.uvBar}>
@@ -57,6 +59,7 @@ export default function UvTrackerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [chosen, setChosen] = useState<'yes' | 'no' | null>(null);
+  const [uv, setUV] = useState<UVData | null>(null);
   const handledRef = useRef(false);
 
   // Reset every time the screen comes into focus (including back-navigation)
@@ -64,6 +67,22 @@ export default function UvTrackerScreen() {
     handledRef.current = false;
     setChosen(null);
   }, []));
+
+  useEffect(() => {
+    let active = true;
+    async function loadUV() {
+      try {
+        const data = await fetchUVIndex();
+        if (active) {
+          setUV(data);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch onboarding UV data:', err);
+      }
+    }
+    loadUV();
+    return () => { active = false; };
+  }, []);
 
   const advance = () => router.push('/(onboarding)/motivation');
 
@@ -97,12 +116,12 @@ export default function UvTrackerScreen() {
           <View style={styles.cardHeaderBlock}>
             <View style={styles.cardHeader}>
               <View>
-                <Text style={styles.cardEyebrow}>TODAY · LONDON</Text>
+                <Text style={styles.cardEyebrow}>{uv ? 'TODAY · YOUR LOCATION' : 'TODAY · LONDON'}</Text>
                 <Text style={styles.cardTitle}>Best tanning window</Text>
               </View>
-              <View style={styles.uvIndexBadge}>
-                <Text style={styles.uvIndexNum}>3</Text>
-                <Text style={styles.uvIndexLabel}>UV</Text>
+              <View style={[styles.uvIndexBadge, uv && { borderColor: uv.color + '40', backgroundColor: uv.color + '14' }]}>
+                <Text style={[styles.uvIndexNum, uv && { color: uv.color }]}>{uv ? uv.uvIndex : '3'}</Text>
+                <Text style={[styles.uvIndexLabel, uv && { color: uv.color }]}>UV</Text>
               </View>
             </View>
             <View style={styles.windowRow}>
@@ -112,14 +131,14 @@ export default function UvTrackerScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.windowPill}
               >
-                <Text style={styles.windowTime}>10:00 – 11:30 am</Text>
+                <Text style={styles.windowTime}>{uv ? uv.tanningWindow : '10:00 – 11:30 am'}</Text>
               </LinearGradient>
-              <Text style={styles.windowNote}>Low risk · 30 min max</Text>
+              <Text style={styles.windowNote}>{uv ? uv.tanningWindowNote : 'Low risk · 30 min max'}</Text>
             </View>
           </View>
 
           {/* UV chart */}
-          <UvChart />
+          <UvChart forecast={uv?.hourlyForecast} />
 
           {/* Safe / avoid legend */}
           <View style={styles.legendRow}>
