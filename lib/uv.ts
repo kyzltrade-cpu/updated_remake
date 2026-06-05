@@ -170,10 +170,28 @@ function calculateTanningWindow(
 }
 
 export async function fetchUVIndex(skinToneHex?: string): Promise<UVData> {
-  const location = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.Low,
-  });
-  const { latitude, longitude } = location.coords;
+  let latitude = 40.7128; // Default fallback to New York
+  let longitude = -74.0060;
+
+  try {
+    let { status } = await Location.getForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      const requested = await Location.requestForegroundPermissionsAsync();
+      status = requested.status;
+    }
+
+    if (status === 'granted') {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+      });
+      latitude = location.coords.latitude;
+      longitude = location.coords.longitude;
+    } else {
+      console.warn('Location permission denied, using fallback coordinates');
+    }
+  } catch (err) {
+    console.warn('Location lookup failed, using fallback coordinates:', err);
+  }
 
   const url =
     `https://api.open-meteo.com/v1/forecast` +
