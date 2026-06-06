@@ -1527,6 +1527,13 @@ export default function DnaRevealScreen() {
   const { subscription } = useSubscription();
   const { user } = useAuth();
   const isPro = subscription?.plan === 'pro' || (__DEV__ && params.bypass === '1');
+
+  useEffect(() => {
+    if (!isPro) {
+      router.replace('/(main)/paywall');
+    }
+  }, [isPro]);
+
   const displayName = (() => {
     const raw = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? '';
     const first = raw.replace(/[^a-zA-Z ]/g, ' ').trim().split(' ')[0];

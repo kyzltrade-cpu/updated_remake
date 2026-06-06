@@ -210,14 +210,16 @@ export default function DnaLoadingScreen() {
     const run = async () => {
       if (params.uri) {
         await AsyncStorage.setItem('pending_dna_uri', params.uri);
-        await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
         await new Promise<void>(resolve => setTimeout(resolve, 3400));
-        router.replace('/(main)/dna-reveal');
+        router.replace('/(onboarding)/scan-success');
         return;
       }
       try {
         const pendingUri = await AsyncStorage.getItem('pending_dna_uri');
-        if (!pendingUri) { router.replace('/(main)/dna-reveal'); return; }
+        if (!pendingUri) {
+          router.replace('/(onboarding)/scan-success');
+          return;
+        }
         const { priorityCategory } = await getOnboardingData();
         const dna = await analyzeDna({
           imageUri: pendingUri,
@@ -225,9 +227,9 @@ export default function DnaLoadingScreen() {
         });
         await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
         if (user?.id) saveDnaResult(user.id, dna).catch(() => null);
-        router.replace('/(main)/dna-reveal');
+        router.replace('/(onboarding)/scan-success');
       } catch {
-        router.replace('/(main)/dna-reveal');
+        router.replace('/(onboarding)/scan-success');
       }
     };
     run();
