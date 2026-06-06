@@ -93,9 +93,11 @@ export async function nimVisionDual<T>(image1Base64: string, image2Base64: strin
         messages: [{
           role: 'user',
           content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image1Base64}` } },
-            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image2Base64}` } }
+            { 
+              type: 'text', 
+              text: prompt + '\n\n(Note: Due to API limits, only the primary image is provided. Please perform your evaluation based on this image and the provided text details.)' 
+            },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image1Base64}` } }
           ]
         }],
         temperature: 0.1,
