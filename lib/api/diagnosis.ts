@@ -67,19 +67,20 @@ ${hasReference ? '\nThe FIRST image is the user\'s current look. The SECOND imag
 User's skill level: ${skill}
 User's priority focus area: ${priority}
 
-Score each of the six categories 0–100 based solely on what is visible in the photo.
-Give varied, realistic scores. The "${priority}" category must receive the most detailed feedback.
+Evaluate the photo carefully and score each of the six categories 0–100 based solely on what is visible in the photo.
+CRITICAL: Do NOT copy the template scores (like 50) shown in the example JSON. You must generate unique, varied, and realistic scores that accurately reflect the user's actual makeup quality.
+The "${priority}" category must receive the most detailed feedback.
 If a category is not visible (e.g. no eyeshadow), score it 75 and note that in the tip.
 
 Return ONLY this JSON (no markdown, no extra text):
 {
   "categories": [
-    { "name": "Blending", "score": 82, "tip": "2-3 specific sentences referencing what you see. Tailored to ${skill} level.", "tipShort": "One clear action sentence." },
-    { "name": "Symmetry", "score": 78, "tip": "...", "tipShort": "..." },
-    { "name": "Colour Harmony", "score": 85, "tip": "...", "tipShort": "..." },
-    { "name": "Coverage", "score": 71, "tip": "...", "tipShort": "..." },
-    { "name": "Cleanliness", "score": 88, "tip": "...", "tipShort": "..." },
-    { "name": "Brow Framing", "score": 80, "tip": "...", "tipShort": "..." }
+    { "name": "Blending", "score": 50, "tip": "2-3 specific sentences referencing what you see in the photo. Tailored to ${skill} level.", "tipShort": "One clear action sentence." },
+    { "name": "Symmetry", "score": 50, "tip": "...", "tipShort": "..." },
+    { "name": "Colour Harmony", "score": 50, "tip": "...", "tipShort": "..." },
+    { "name": "Coverage", "score": 50, "tip": "...", "tipShort": "..." },
+    { "name": "Cleanliness", "score": 50, "tip": "...", "tipShort": "..." },
+    { "name": "Brow Framing", "score": 50, "tip": "...", "tipShort": "..." }
   ]
 }
 
