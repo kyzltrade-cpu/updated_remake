@@ -6,8 +6,8 @@ import {
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
+import { useAuth } from '@/contexts/AuthContext';
 
 type Plan = 'weekly' | 'monthly' | 'yearly';
 
@@ -45,6 +45,7 @@ const VALUE_BULLETS = [
 export default function PaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<Plan>('yearly');
   const [loading, setLoading] = useState(false);
 
@@ -57,10 +58,17 @@ export default function PaywallScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     // TODO: wire RevenueCat purchase flow
-    // After payment: create account → dna-loading (no URI = calls Gemini API)
     setTimeout(() => {
       setLoading(false);
-      router.replace('/(onboarding)/create-account');
+      if (user) {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace('/(main)/home');
+        }
+      } else {
+        router.replace('/(onboarding)/create-account');
+      }
     }, 1200);
   };
 
@@ -70,8 +78,15 @@ export default function PaywallScreen() {
   };
 
   const handleClose = () => {
-    // "Continue with Free" — skip paywall, go straight to account creation
-    router.replace('/(onboarding)/create-account');
+    if (user) {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(main)/home');
+      }
+    } else {
+      router.replace('/(onboarding)/create-account');
+    }
   };
 
   const handleDevBypass = () => {
