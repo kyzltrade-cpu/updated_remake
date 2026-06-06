@@ -1,30 +1,37 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import {
-  View, Text, StyleSheet, Pressable, Alert,
+  View, Text, StyleSheet, Pressable, Alert, ActivityIndicator, Dimensions
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as ImagePicker from 'expo-image-picker';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { FaceCorners } from '@/components/face-corners';
 import { EdgeFlashOverlay } from '@/components/edge-flash';
 import { useSettings } from '@/contexts/settings-context';
+import { useAuth } from '@/contexts/AuthContext';
+import { analyzeDna } from '@/lib/api/dna';
+import { getOnboardingData } from '@/lib/onboarding-store';
+import { saveDnaResult } from '@/lib/api/scan-storage';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
 
+const { width: W } = Dimensions.get('window');
 const LOW_LIGHT_EV_THRESHOLD = -0.5;
 
-export default function FirstScanScreen() {
+export default function RetakeScanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { updateSettings } = useSettings();
+  const { updateSettings, settings } = useSettings();
+  const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [flash, setFlash] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [showLowLight, setShowLowLight] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
@@ -32,17 +39,57 @@ export default function FirstScanScreen() {
     if (!permission?.granted) requestPermission();
   }, []);
 
-  const proceed = async (uri: string) => {
-    await AsyncStorage.setItem('@remake_pending_dna_uri', uri);
-    await AsyncStorage.setItem('pending_dna_uri', uri);
-    await updateSettings({ referencePhoto: uri, lastFaceScanTime: Date.now() });
-    router.push('/(onboarding)/dna-loading');
+  const processPhoto = async (uri: string) => {
+    setAnalyzing(true);
+    try {
+      // 1. Update settings context with the new reference photo and last scan time
+      await updateSettings({
+        referencePhoto: uri,
+        lastFaceScanTime: Date.now(),
+      });
+
+      // 2. Re-run DNA analysis in background to keep Beauty DNA synced
+      const { priorityCategory } = await getOnboardingData();
+      const dna = await analyzeDna({
+        imageUri: uri,
+        priorityCategory: priorityCategory ?? 'Blending',
+      });
+      
+      await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
+      if (user?.id) {
+        await saveDnaResult(user.id, dna).catch(() => null);
+      }
+
+      // Success feedback
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      Alert.alert(
+        'Scan Updated',
+        'Your initial face scan has been retaken, and your Beauty DNA was recalculated successfully!',
+        [{ text: 'Great!', onPress: () => router.back() }]
+      );
+    } catch (e) {
+      if (__DEV__) console.error('[Retake] Analysis failed:', e);
+      // Even if DNA analysis fails, we still updated their reference photo!
+      Alert.alert(
+        'Photo Updated',
+        'Your reference photo was updated, but we could not recalculate your Beauty DNA. Please try again later.',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+    } finally {
+      setAnalyzing(false);
+      setCapturing(false);
+    }
   };
 
   const takePhoto = async () => {
-    if (capturing || !cameraRef.current) return;
+    if (capturing || analyzing || !cameraRef.current) return;
     setCapturing(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
 
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.85, exif: true });
@@ -62,32 +109,21 @@ export default function FirstScanScreen() {
           'Move closer to a window or turn on more lights, then try again.',
           [
             { text: 'Retake', style: 'cancel', onPress: () => setCapturing(false) },
-            { text: 'Continue anyway', onPress: () => proceed(photo.uri) },
+            { text: 'Continue anyway', onPress: () => processPhoto(photo.uri) },
           ],
         );
       } else {
-        await proceed(photo.uri);
+        await processPhoto(photo.uri);
       }
-    } catch {
+    } catch (e) {
+      if (__DEV__) console.error('[Retake] Camera takePhoto failed:', e);
       Alert.alert('Camera error', 'Could not take photo. Please try again.');
       setCapturing(false);
     }
   };
 
-  const pickImage = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.85,
-      allowsEditing: true,
-    });
-    if (!result.canceled && result.assets[0]?.uri) {
-      await proceed(result.assets[0].uri);
-    }
-  };
-
   const toggleFlash = () => {
-    Haptics.selectionAsync();
+    if (settings.hapticsEnabled) Haptics.selectionAsync();
     setFlash(f => !f);
   };
 
@@ -101,7 +137,7 @@ export default function FirstScanScreen() {
         </View>
         <Text style={styles.permissionTitle}>Allow Camera Access</Text>
         <Text style={styles.permissionText}>
-          ReMake needs your camera to analyse your face shape and skin tone for your Beauty DNA.
+          ReMake needs your camera to retake your bare face scan to update your Beauty DNA.
         </Text>
         <Pressable style={styles.permissionBtn} onPress={requestPermission}>
           <Text style={styles.permissionBtnText}>Allow Access</Text>
@@ -126,16 +162,23 @@ export default function FirstScanScreen() {
         <Text style={styles.hint}>BARE FACE · NO MAKEUP</Text>
       </View>
 
-      {/* Top gradient — wordmark */}
+      {/* Top bar with back button */}
       <LinearGradient
         colors={['rgba(0,0,0,0.72)', 'rgba(0,0,0,0.28)', 'transparent']}
         locations={[0, 0.5, 1]}
         style={[styles.topGradient, { paddingTop: insets.top + 12 }]}
-        pointerEvents="none"
       >
-        <Animated.View entering={FadeIn.delay(150)} style={styles.topBar}>
-          <Text style={styles.wordmark}>REMAKE</Text>
-        </Animated.View>
+        <View style={styles.topBar}>
+          <Pressable 
+            onPress={() => router.back()} 
+            style={styles.backBtn}
+            disabled={analyzing}
+          >
+            <MaterialIcons name="arrow-back-ios" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+          </Pressable>
+          <Text style={styles.wordmark}>RETAKE FACE SCAN</Text>
+          <View style={{ width: 40 }} />
+        </View>
       </LinearGradient>
 
       {/* Bottom gradient + controls */}
@@ -146,19 +189,17 @@ export default function FirstScanScreen() {
         pointerEvents="box-none"
       >
         <Animated.View entering={FadeIn.delay(250)} style={styles.controls}>
-          <Pressable
-            onPress={pickImage}
-            style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
-          >
-            <View style={styles.sideBtnInner}>
-              <MaterialIcons name="photo-library" size={21} color="rgba(255,255,255,0.88)" />
-            </View>
-          </Pressable>
+          {/* Left space to match onboarding layout */}
+          <View style={styles.sideSpacer} />
 
           <Pressable
             onPress={takePhoto}
-            disabled={capturing}
-            style={({ pressed }) => [styles.shutterWrap, pressed && { transform: [{ scale: 0.94 }] }, capturing && { opacity: 0.5 }]}
+            disabled={capturing || analyzing}
+            style={({ pressed }) => [
+              styles.shutterWrap, 
+              pressed && { transform: [{ scale: 0.94 }] }, 
+              (capturing || analyzing) && { opacity: 0.5 }
+            ]}
           >
             <View style={styles.shutterRing}>
               <View style={styles.shutterInner} />
@@ -167,6 +208,7 @@ export default function FirstScanScreen() {
 
           <Pressable
             onPress={toggleFlash}
+            disabled={analyzing}
             style={({ pressed }) => [styles.sideBtn, pressed && { opacity: 0.65, transform: [{ scale: 0.92 }] }]}
           >
             <View style={[styles.sideBtnInner, flash && styles.sideBtnFlashOn]}>
@@ -179,6 +221,18 @@ export default function FirstScanScreen() {
           </Pressable>
         </Animated.View>
       </LinearGradient>
+
+      {/* Analyzing overlay */}
+      {analyzing && (
+        <View style={styles.loadingOverlay}>
+          <BlurView intensity={30} style={StyleSheet.absoluteFill} tint="dark" />
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color={tokens.colors.pinkDeep} />
+            <Text style={styles.loadingText}>Analyzing face scan...</Text>
+            <Text style={styles.loadingSubtext}>Recalculating Beauty DNA</Text>
+          </View>
+        </View>
+      )}
 
       {/* Low-light warning */}
       {showLowLight && (
@@ -218,13 +272,18 @@ const styles = StyleSheet.create({
     zIndex: 10, paddingHorizontal: 20, paddingBottom: 20,
   },
   topBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
   },
   wordmark: {
     fontFamily: tokens.fonts.serif,
-    fontSize: 17, fontWeight: '400',
-    color: 'rgba(255,255,255,0.82)',
-    letterSpacing: 0.12,
+    fontSize: 16, fontWeight: '400',
+    color: 'rgba(255,255,255,0.9)',
+    letterSpacing: 1.5,
   },
 
   bottomGradient: {
@@ -234,7 +293,10 @@ const styles = StyleSheet.create({
   controls: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'center', gap: 28,
+    width: '100%',
+    paddingHorizontal: 40,
   },
+  sideSpacer: { width: 52 },
   sideBtn: { width: 52, height: 52, justifyContent: 'center', alignItems: 'center' },
   sideBtnInner: {
     width: 50, height: 50, borderRadius: 25,
@@ -297,5 +359,35 @@ const styles = StyleSheet.create({
   },
   permissionBtnText: {
     fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '600', color: '#fff',
+  },
+
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingBox: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    gap: 12,
+  },
+  loadingText: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 18,
+    color: tokens.colors.text,
+    marginTop: 8,
+  },
+  loadingSubtext: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    color: tokens.colors.gray,
   },
 });

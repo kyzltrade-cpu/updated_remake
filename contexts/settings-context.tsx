@@ -10,6 +10,7 @@ export interface AppSettings {
   notificationsEnabled: boolean;
   mirrorPhotos: boolean;
   referencePhoto: string | null;
+  lastFaceScanTime: number | null;
   // profilePhoto handled separately via secure storage
 }
 
@@ -18,6 +19,7 @@ const defaults: AppSettings = {
   notificationsEnabled: true,
   mirrorPhotos: true,
   referencePhoto: null,
+  lastFaceScanTime: null,
 };
 
 interface SettingsContextValue {

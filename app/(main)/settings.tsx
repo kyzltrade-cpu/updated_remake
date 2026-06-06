@@ -6,7 +6,6 @@ import {
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
@@ -69,25 +68,52 @@ function Row({ label, sub, right, onPress }: {
 
 // ─── Reference photo section ─────────────────────────────────────────────────
 
+// ─── Reference photo section ─────────────────────────────────────────────────
+
+const canRetakeScan = (lastFaceScanTime: number | null): boolean => {
+  if (!lastFaceScanTime) return true;
+  const elapsed = Date.now() - lastFaceScanTime;
+  return elapsed >= 24 * 60 * 60 * 1000;
+};
+
+const getRemainingCooldownTime = (lastFaceScanTime: number | null): string => {
+  if (!lastFaceScanTime) return '';
+  const elapsed = Date.now() - lastFaceScanTime;
+  const remainingMs = (24 * 60 * 60 * 1000) - elapsed;
+  if (remainingMs <= 0) return '';
+  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
+};
+
 function ReferencePhotoCard({
   uri,
-  onPick,
-  onClear,
-}: { uri: string | null; onPick: () => void; onClear: () => void }) {
+  lastFaceScanTime,
+  onRetake,
+}: {
+  uri: string | null;
+  lastFaceScanTime: number | null;
+  onRetake: () => void;
+}) {
+  const isCooldown = !canRetakeScan(lastFaceScanTime);
+  const remaining = getRemainingCooldownTime(lastFaceScanTime);
+
   if (uri) {
     return (
       <View>
         {/* Photo with change-overlay */}
-        <Pressable onPress={onPick} style={styles.refPhotoWrap}>
+        <Pressable onPress={onRetake} style={styles.refPhotoWrap}>
           <Image source={{ uri }} style={styles.refPhoto} />
           {/* Dark gradient + edit badge at bottom of photo */}
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.55)']}
             style={styles.refPhotoOverlay}
           >
-            <View style={styles.refEditBadge}>
-              <MaterialIcons name="edit" size={13} color="#FFFFFF" />
-              <Text style={styles.refEditText}>Change photo</Text>
+            <View style={[styles.refEditBadge, isCooldown && styles.refEditBadgeDisabled]}>
+              <MaterialIcons name={isCooldown ? "lock" : "camera-alt"} size={13} color="#FFFFFF" />
+              <Text style={styles.refEditText}>
+                {isCooldown ? `Locked (retake in ${remaining})` : "Retake face scan"}
+              </Text>
             </View>
           </LinearGradient>
         </Pressable>
@@ -95,12 +121,15 @@ function ReferencePhotoCard({
         {/* Metadata row */}
         <View style={styles.refMetaRow}>
           <View style={styles.refMetaLeft}>
-            <MaterialIcons name="check-circle" size={14} color={tokens.colors.pinkDeep} />
-            <Text style={styles.refMetaText}>Reference photo set</Text>
+            <MaterialIcons 
+              name={isCooldown ? "access-time" : "check-circle"} 
+              size={14} 
+              color={isCooldown ? tokens.colors.gray : tokens.colors.pinkDeep} 
+            />
+            <Text style={styles.refMetaText}>
+              {isCooldown ? `Next retake available in ${remaining}` : "Face scan set • Ready to retake"}
+            </Text>
           </View>
-          <Pressable onPress={onClear} hitSlop={8}>
-            <Text style={styles.refRemoveText}>Remove</Text>
-          </Pressable>
         </View>
       </View>
     );
@@ -108,24 +137,23 @@ function ReferencePhotoCard({
 
   // Empty state
   return (
-    <Pressable onPress={onPick} style={styles.refEmpty}>
+    <Pressable onPress={onRetake} style={styles.refEmpty}>
       {/* Dashed photo-shaped preview */}
       <View style={styles.refEmptyPreview}>
         <View style={styles.refEmptyIcon}>
-          <MaterialIcons name="add-photo-alternate" size={28} color={tokens.colors.pinkDeep} />
+          <MaterialIcons name="camera-alt" size={28} color={tokens.colors.pinkDeep} />
         </View>
-        <Text style={styles.refEmptyAdd}>Add reference photo</Text>
+        <Text style={styles.refEmptyAdd}>Take Face Scan</Text>
       </View>
 
       {/* Explanation */}
       <View style={styles.refEmptyInfo}>
-        <Text style={styles.refEmptyTitle}>Track your progress over time</Text>
+        <Text style={styles.refEmptyTitle}>Initial face scan required</Text>
         <Text style={styles.refEmptyBody}>
-          A reference photo lets you compare side-by-side how your looks evolve with each scan.
-          Pick a well-lit photo in natural light.
+          Your face scan forms your Beauty DNA. Take a front-facing photo in natural, even light.
         </Text>
         <View style={styles.refAddBtn}>
-          <Text style={styles.refAddBtnText}>Choose from library</Text>
+          <Text style={styles.refAddBtnText}>Open Camera</Text>
         </View>
       </View>
     </Pressable>
@@ -140,40 +168,26 @@ export default function SettingsScreen() {
   const { settings, updateSettings, toggleSetting } = useSettings();
   const { user, logout, isLoggedIn } = useUser();
   const { subscription } = useSubscription();
-  const [pickingRef, setPickingRef] = useState(false);
 
   const isPro = subscription?.plan === 'pro';
 
-  const pickReference = async () => {
-    if (pickingRef) return;
-    setPickingRef(true);
-    if (settings.hapticsEnabled) Haptics.selectionAsync();
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.5,
-        allowsEditing: true,
-        aspect: [3, 4],
-      });
-      if (!result.canceled && result.assets[0]?.uri) {
-        updateSettings({ referencePhoto: result.assets[0].uri });
-      }
-    } finally {
-      setPickingRef(false);
-    }
-  };
+  const handleRetake = () => {
+    const isCooldown = !canRetakeScan(settings.lastFaceScanTime);
+    const remaining = getRemainingCooldownTime(settings.lastFaceScanTime);
 
-  const clearReference = () => {
-    Alert.alert('Remove reference photo?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove', style: 'destructive',
-        onPress: () => {
-          if (settings.hapticsEnabled) Haptics.selectionAsync();
-          updateSettings({ referencePhoto: null });
-        },
-      },
-    ]);
+    if (isCooldown) {
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      }
+      Alert.alert(
+        'Scan Cool-down',
+        `You can only update your face scan once every 24 hours to track consistent progress.\n\nNext scan available in ${remaining}.`,
+        [{ text: 'Got it' }]
+      );
+    } else {
+      if (settings.hapticsEnabled) Haptics.selectionAsync();
+      router.push('/(main)/retake-scan');
+    }
   };
 
   const handleSignOut = () => {
@@ -280,8 +294,8 @@ export default function SettingsScreen() {
         <Section title="Reference Photo" delay={210}>
           <ReferencePhotoCard
             uri={settings.referencePhoto ?? null}
-            onPick={pickReference}
-            onClear={clearReference}
+            lastFaceScanTime={settings.lastFaceScanTime ?? null}
+            onRetake={handleRetake}
           />
         </Section>
 
@@ -453,6 +467,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 50, paddingHorizontal: 12, paddingVertical: 6,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
+  },
+  refEditBadgeDisabled: {
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   refEditText: {
     fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '600', color: '#FFFFFF',
