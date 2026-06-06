@@ -238,9 +238,13 @@ export default function ProductCompareScreen() {
           <View style={s.duelRow}>
             {/* Product A */}
             <View style={[s.productHalf, winner === 'A' && s.productHalfWinner]}>
-              {winner === 'A' && (
+              {winner === 'A' ? (
                 <View style={[s.winnerBadge, { backgroundColor: `${COLOR_A}15`, borderColor: `${COLOR_A}35` }]}>
                   <Text style={[s.winnerBadgeText, { color: COLOR_A }]}>✦  Best match</Text>
+                </View>
+              ) : (
+                <View style={[s.winnerBadge, { opacity: 0 }]}>
+                  <Text style={s.winnerBadgeText}>✦  Best match</Text>
                 </View>
               )}
               <Text style={[s.scoreNum, { color: COLOR_A }]}>{productA.score}</Text>
@@ -256,9 +260,13 @@ export default function ProductCompareScreen() {
 
             {/* Product B */}
             <View style={[s.productHalf, s.productHalfRight, winner === 'B' && s.productHalfWinner]}>
-              {winner === 'B' && (
+              {winner === 'B' ? (
                 <View style={[s.winnerBadge, s.winnerBadgeRight, { backgroundColor: `${COLOR_B}15`, borderColor: `${COLOR_B}35` }]}>
                   <Text style={[s.winnerBadgeText, { color: COLOR_B }]}>✦  Best match</Text>
+                </View>
+              ) : (
+                <View style={[s.winnerBadge, s.winnerBadgeRight, { opacity: 0 }]}>
+                  <Text style={s.winnerBadgeText}>✦  Best match</Text>
                 </View>
               )}
               <Text style={[s.scoreNum, s.textRight, { color: COLOR_B }]}>{productB.score}</Text>

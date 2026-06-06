@@ -222,7 +222,7 @@ export default function ResultsScreen() {
           <View style={s.statsRow}>
             <View style={s.stat}>
               <Text style={s.statNum}>{score}</Text>
-              <Text style={s.statLabel}>Today</Text>
+              <Text style={s.statLabel}>Score</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
