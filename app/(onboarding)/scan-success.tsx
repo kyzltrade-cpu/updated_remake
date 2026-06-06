@@ -89,7 +89,7 @@ export default function ScanSuccessScreen() {
           onPress={handleProceed}
           style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
         >
-          <Text style={styles.ctaText}>Enter Vanity File ✦</Text>
+          <Text style={styles.ctaText}>Get Started ✦</Text>
         </Pressable>
       </Animated.View>
     </View>
