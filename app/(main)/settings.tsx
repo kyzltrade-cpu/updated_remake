@@ -70,34 +70,13 @@ function Row({ label, sub, right, onPress }: {
 
 // ─── Reference photo section ─────────────────────────────────────────────────
 
-const canRetakeScan = (lastFaceScanTime: number | null): boolean => {
-  if (!lastFaceScanTime) return true;
-  const elapsed = Date.now() - lastFaceScanTime;
-  return elapsed >= 24 * 60 * 60 * 1000;
-};
-
-const getRemainingCooldownTime = (lastFaceScanTime: number | null): string => {
-  if (!lastFaceScanTime) return '';
-  const elapsed = Date.now() - lastFaceScanTime;
-  const remainingMs = (24 * 60 * 60 * 1000) - elapsed;
-  if (remainingMs <= 0) return '';
-  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
-};
-
 function ReferencePhotoCard({
   uri,
-  lastFaceScanTime,
   onRetake,
 }: {
   uri: string | null;
-  lastFaceScanTime: number | null;
   onRetake: () => void;
 }) {
-  const isCooldown = !canRetakeScan(lastFaceScanTime);
-  const remaining = getRemainingCooldownTime(lastFaceScanTime);
-
   if (uri) {
     return (
       <View>
@@ -109,11 +88,9 @@ function ReferencePhotoCard({
             colors={['transparent', 'rgba(0,0,0,0.55)']}
             style={styles.refPhotoOverlay}
           >
-            <View style={[styles.refEditBadge, isCooldown && styles.refEditBadgeDisabled]}>
-              <MaterialIcons name={isCooldown ? "lock" : "camera-alt"} size={13} color="#FFFFFF" />
-              <Text style={styles.refEditText}>
-                {isCooldown ? `Locked (retake in ${remaining})` : "Retake face scan"}
-              </Text>
+            <View style={styles.refEditBadge}>
+              <MaterialIcons name="camera-alt" size={13} color="#FFFFFF" />
+              <Text style={styles.refEditText}>Retake face scan</Text>
             </View>
           </LinearGradient>
         </Pressable>
@@ -122,13 +99,11 @@ function ReferencePhotoCard({
         <View style={styles.refMetaRow}>
           <View style={styles.refMetaLeft}>
             <MaterialIcons 
-              name={isCooldown ? "access-time" : "check-circle"} 
+              name="check-circle" 
               size={14} 
-              color={isCooldown ? tokens.colors.gray : tokens.colors.pinkDeep} 
+              color={tokens.colors.pinkDeep} 
             />
-            <Text style={styles.refMetaText}>
-              {isCooldown ? `Next retake available in ${remaining}` : "Face scan set • Ready to retake"}
-            </Text>
+            <Text style={styles.refMetaText}>Face scan set • Ready to retake</Text>
           </View>
         </View>
       </View>
@@ -172,22 +147,8 @@ export default function SettingsScreen() {
   const isPro = subscription?.plan === 'pro';
 
   const handleRetake = () => {
-    const isCooldown = !canRetakeScan(settings.lastFaceScanTime);
-    const remaining = getRemainingCooldownTime(settings.lastFaceScanTime);
-
-    if (isCooldown) {
-      if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      }
-      Alert.alert(
-        'Scan Cool-down',
-        `You can only update your face scan once every 24 hours to track consistent progress.\n\nNext scan available in ${remaining}.`,
-        [{ text: 'Got it' }]
-      );
-    } else {
-      if (settings.hapticsEnabled) Haptics.selectionAsync();
-      router.push('/(main)/retake-scan');
-    }
+    if (settings.hapticsEnabled) Haptics.selectionAsync();
+    router.push('/(main)/retake-scan');
   };
 
   const handleSignOut = () => {
@@ -294,7 +255,6 @@ export default function SettingsScreen() {
         <Section title="Reference Photo" delay={210}>
           <ReferencePhotoCard
             uri={settings.referencePhoto ?? null}
-            lastFaceScanTime={settings.lastFaceScanTime ?? null}
             onRetake={handleRetake}
           />
         </Section>
