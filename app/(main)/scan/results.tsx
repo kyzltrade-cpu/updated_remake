@@ -14,7 +14,7 @@ import { ScoreRing } from '@/components/score-ring';
 import * as Haptics from 'expo-haptics';
 import type { DiagnosisResult, CoachingResult, CategoryAnalysis } from '@/lib/api/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { saveScan, getLastScan, getScanById } from '@/lib/api/scan-storage';
+import { getScanById } from '@/lib/api/scan-storage';
 
 const SCORE_GREEN = '#2D7D46';
 const SCORE_GOLD  = '#B8820A';
@@ -98,7 +98,7 @@ function CategoryCard({ cat, index }: { cat: CategoryAnalysis; index: number }) 
 export default function ResultsScreen() {
   const router   = useRouter();
   const insets   = useSafeAreaInsets();
-  const params   = useLocalSearchParams<{ uri?: string; diagnosis?: string; coaching?: string; scanId?: string }>();
+  const params   = useLocalSearchParams<{ uri?: string; diagnosis?: string; coaching?: string; scanId?: string; lastScore?: string }>();
   const [diagnosis,  setDiagnosis]  = useState<DiagnosisResult | null>(null);
   const [coaching,   setCoaching]   = useState<CoachingResult | null>(null);
   const [scoreDelta, setScoreDelta] = useState<number>(5);
@@ -150,18 +150,16 @@ export default function ResultsScreen() {
     if (parsed.coaching)  setCoaching(parsed.coaching);
 
     if (parsed.diagnosis) {
-      getLastScan(user?.id ?? 'guest').then(last => {
-        if (last) {
-          setLastScore(last.overall_score);
-          setScoreDelta(Math.round(parsed.diagnosis!.overallScore - last.overall_score));
-        }
-      });
+      if (params.lastScore) {
+        const prevScore = Number(params.lastScore);
+        setLastScore(prevScore);
+        setScoreDelta(Math.round(parsed.diagnosis.overallScore - prevScore));
+      } else {
+        setLastScore(parsed.diagnosis.overallScore);
+        setScoreDelta(0);
+      }
     }
-
-    if (!user || !parsed.diagnosis || !parsed.coaching || savedRef.current) return;
-    savedRef.current = true;
-    saveScan({ userId: user.id, imageUri: params.uri ?? '', diagnosis: parsed.diagnosis, coaching: parsed.coaching });
-  }, [params.diagnosis, params.coaching, params.scanId, user]);
+  }, [params.diagnosis, params.coaching, params.scanId, params.lastScore, user]);
 
   if (isLoadingRecord) {
     return (

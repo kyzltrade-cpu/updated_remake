@@ -6,7 +6,7 @@ import { LoadingScreen } from '@/components/loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
 import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
-import { saveDnaResult, saveScan } from '@/lib/api/scan-storage';
+import { saveDnaResult, saveScan, getLastScan } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/settings-context';
 
@@ -60,7 +60,14 @@ export default function LoadingPage() {
 
         // Store DNA result for DNA reveal screen and persist to Supabase
         await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
+        let lastScore: number | undefined;
         if (user?.id) {
+          try {
+            const last = await getLastScan(user.id);
+            if (last) lastScore = last.overall_score;
+          } catch (e) {
+            console.warn('[loading] failed to get last scan:', e);
+          }
           saveDnaResult(user.id, dna).catch(() => null);
           saveScan({
             userId: user.id,
@@ -76,6 +83,7 @@ export default function LoadingPage() {
             uri: validUri,
             diagnosis: JSON.stringify(diagnosis),
             coaching: JSON.stringify(coaching),
+            lastScore: lastScore !== undefined ? String(lastScore) : undefined,
           },
         });
       } catch {
