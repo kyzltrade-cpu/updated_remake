@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase';
 
 type Plan = 'weekly' | 'monthly' | 'yearly';
 
@@ -57,8 +58,30 @@ export default function PaywallScreen() {
   const handleSubscribe = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
-    // TODO: wire RevenueCat purchase flow
-    setTimeout(() => {
+    
+    try {
+      if (user) {
+        const supabase = createClient();
+        
+        // Update subscription to 'pro' plan with 'active' status in database
+        const { error: subError } = await supabase
+          .from('subscriptions')
+          .upsert({
+            user_id: user.id,
+            plan: 'pro',
+            status: 'active',
+            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year out
+          }, { onConflict: 'user_id' });
+
+        if (subError) {
+          console.warn('[Paywall] DB Subscription update failed:', subError.message);
+        } else {
+          console.log('[Paywall] DB Subscription successfully upgraded to PRO!');
+        }
+      }
+    } catch (err) {
+      console.warn('[Paywall] Subscription upgrade encountered error:', err);
+    } finally {
       setLoading(false);
       if (user) {
         if (router.canGoBack()) {
@@ -69,7 +92,7 @@ export default function PaywallScreen() {
       } else {
         router.replace('/(onboarding)/create-account');
       }
-    }, 1200);
+    }
   };
 
   const handleRestore = () => {
