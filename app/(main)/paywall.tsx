@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase';
+import { useSubscription } from '@/contexts/subscription-context';
 
 type Plan = 'weekly' | 'monthly' | 'yearly';
 
@@ -47,6 +48,7 @@ export default function PaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { refreshSubscription } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<Plan>('yearly');
   const [loading, setLoading] = useState(false);
 
@@ -77,6 +79,8 @@ export default function PaywallScreen() {
           console.warn('[Paywall] DB Subscription update failed:', subError.message);
         } else {
           console.log('[Paywall] DB Subscription successfully upgraded to PRO!');
+          // Force active state refresh on Subscription Context!
+          await refreshSubscription();
         }
       }
     } catch (err) {

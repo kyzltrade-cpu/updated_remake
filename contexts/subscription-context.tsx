@@ -6,11 +6,13 @@ import type { Subscription } from '@/types/database';
 interface SubscriptionContextValue {
   subscription: Subscription | null;
   isLoading: boolean;
+  refreshSubscription: () => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue>({
   subscription: null,
   isLoading: true,
+  refreshSubscription: async () => {},
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
@@ -18,18 +20,37 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchSubscription = async () => {
     if (!user) {
       setSubscription(null);
       setIsLoading(false);
       return;
     }
+    setIsLoading(true);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
+    if (error) {
+      console.error('[Subscription] fetch error:', error.message);
+    }
+    setSubscription(data ?? null);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
     let cancelled = false;
+    if (!user) {
+      setSubscription(null);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
 
     const supabase = createClient();
-
     supabase
       .from('subscriptions')
       .select('*')
@@ -50,7 +71,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <SubscriptionContext.Provider value={{ subscription, isLoading }}>
+    <SubscriptionContext.Provider value={{ subscription, isLoading, refreshSubscription: fetchSubscription }}>
       {children}
     </SubscriptionContext.Provider>
   );
