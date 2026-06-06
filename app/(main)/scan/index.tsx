@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Alert, Image,
@@ -19,6 +19,9 @@ import { FaceCorners } from '@/components/face-corners';
 import { EdgeFlashOverlay } from '@/components/edge-flash';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSettings } from '@/contexts/settings-context';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/subscription-context';
+import { getScanStats } from '@/lib/api/scan-storage';
 import { type UVData, fetchUVIndex } from '@/lib/uv';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -213,6 +216,29 @@ export default function ScanScreen() {
   const [showUV, setShowUV] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const { settings, profilePhoto } = useSettings();
+  const { user } = useAuth();
+  const { subscription } = useSubscription();
+  const [scanCount, setScanCount] = useState<number>(0);
+  const isPro = subscription?.plan === 'pro';
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id) return;
+      let active = true;
+      getScanStats(user.id)
+        .then(stats => {
+          if (active) {
+            setScanCount(stats.totalScans);
+          }
+        })
+        .catch(err => {
+          console.warn('Failed to fetch scan stats:', err);
+        });
+      return () => {
+        active = false;
+      };
+    }, [user?.id])
+  );
 
   const pillX = useSharedValue(0);
   const pillStyle = useAnimatedStyle(() => ({ transform: [{ translateX: pillX.value }] }));
@@ -251,6 +277,20 @@ export default function ScanScreen() {
   };
 
   const takePhoto = async () => {
+    if (mode === 'face' && !isPro && scanCount >= 1) {
+      Alert.alert(
+        "Scan Limit Reached",
+        "Upgrade to ReMake Pro to unlock unlimited face scans, custom coaching, and your full DNA profile analysis.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Upgrade Now", 
+            onPress: () => router.push('/(main)/paywall') 
+          }
+        ]
+      );
+      return;
+    }
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!cameraRef.current) return;
     try {
@@ -284,6 +324,20 @@ export default function ScanScreen() {
   };
 
   const pickImage = async () => {
+    if (mode === 'face' && !isPro && scanCount >= 1) {
+      Alert.alert(
+        "Scan Limit Reached",
+        "Upgrade to ReMake Pro to unlock unlimited face scans, custom coaching, and your full DNA profile analysis.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Upgrade Now", 
+            onPress: () => router.push('/(main)/paywall') 
+          }
+        ]
+      );
+      return;
+    }
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
