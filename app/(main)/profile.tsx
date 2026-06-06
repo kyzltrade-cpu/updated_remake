@@ -54,19 +54,24 @@ export default function ProfileScreen() {
 
   const handleViewDna = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(main)/dna-reveal');
+    if (isPro) {
+      router.push('/(main)/dna-reveal');
+    } else {
+      router.push('/(main)/paywall');
+    }
   };
 
   const loadData = async () => {
     if (!user) { setIsLoading(false); return; }
     try {
-      const [h, s, { data: profileData }] = await Promise.all([
+      const [h, s, supabaseRes] = await Promise.all([
         getScanHistory(user.id, 10),
         getScanStats(user.id),
         createClient().from('profiles').select('dna_result').eq('id', user.id).maybeSingle()
       ]);
       setHistory(h);
       setStats(s);
+      const profileData = supabaseRes.data as any;
       if (profileData?.dna_result) {
         setDna(profileData.dna_result);
       }
@@ -243,7 +248,7 @@ export default function ProfileScreen() {
         {/* Dynamic Panel */}
         <Animated.View entering={FadeInUp.delay(200).duration(500)}>
           {activeTab === 'dna' ? (
-            dna ? (
+            (dna && isPro) ? (
               <View style={styles.dnaActiveCard}>
                 <View style={styles.dnaHeader}>
                   <View>
@@ -311,14 +316,26 @@ export default function ProfileScreen() {
 
                 <Text style={styles.lockedTitle}>Your Beauty DNA is Sealed</Text>
                 <Text style={styles.lockedSubtitle}>
-                  Analyze your skin & facial symmetry to uncover your season, archetype, and perfect-match ingredients.
+                  {dna 
+                    ? "Your analysis is complete! Unlock PRO to reveal your color season, archetype, and perfect-match ingredients."
+                    : "Analyze your skin & facial symmetry to uncover your season, archetype, and perfect-match ingredients."
+                  }
                 </Text>
 
                 <Pressable 
-                  onPress={() => router.push('/(main)/scan')}
+                  onPress={() => {
+                    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    if (dna) {
+                      router.push('/(main)/paywall');
+                    } else {
+                      router.push('/(main)/scan');
+                    }
+                  }}
                   style={styles.lockedActionBtn}
                 >
-                  <Text style={styles.lockedActionText}>Unlock Beauty DNA ✨</Text>
+                  <Text style={styles.lockedActionText}>
+                    {dna ? "Reveal Beauty DNA ✦" : "Unlock Beauty DNA ✨"}
+                  </Text>
                 </Pressable>
               </View>
             )
