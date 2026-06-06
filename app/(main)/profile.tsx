@@ -408,7 +408,6 @@ export default function ProfileScreen() {
           )}
 
           {history.map((scan, i) => {
-            const isGo = scan.verdict === 'GO';
             const score = Math.round(scan.overall_score);
             const isExpanded = expandedScanId === scan.id;
 
@@ -420,11 +419,6 @@ export default function ProfileScreen() {
               >
                 <Pressable onPress={() => toggleExpandScan(scan.id)} style={styles.scanHeaderPress}>
                   <View style={styles.scanLeft}>
-                    <View style={[styles.verdictPill, isGo ? styles.pillGo : styles.pillFix]}>
-                      <Text style={[styles.verdictText, isGo ? styles.textGo : styles.textFix]}>
-                        {isGo ? 'GO ✅' : 'FIX ⚠️'}
-                      </Text>
-                    </View>
                     <View style={styles.scanMeta}>
                       <Text style={styles.scanDate}>{formatDate(scan.created_at)}</Text>
                       {scan.coaching_compliment && !isExpanded && (
