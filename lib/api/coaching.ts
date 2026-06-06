@@ -40,6 +40,30 @@ Write a single short coaching compliment (1-2 sentences max). Rules:
 `.trim();
 }
 
+/**
+ * Sanity check post-processor to ensure any AI-hallucinated or rounded scores
+ * mentioned in the coaching compliment text perfectly align with the actual score.
+ */
+function sanitizeCompliment(compliment: string, score: number): string {
+  let result = compliment;
+  
+  // 1. Standard pattern corrections (e.g., "score of 82" or "rating of 82")
+  result = result.replace(/score of \d+(\/100)?/gi, `score of ${score}`);
+  result = result.replace(/rating of \d+(\/100)?/gi, `rating of ${score}`);
+  
+  // 2. Scan and correct any standalone 2-digit number close to the score (+/- 3 points)
+  // to avoid LLM typo shifts or minor math rounding hallucinations.
+  result = result.replace(/\b\d+\b/g, (match) => {
+    const num = parseInt(match, 10);
+    if (!isNaN(num) && Math.abs(num - score) <= 3) {
+      return String(score);
+    }
+    return match;
+  });
+  
+  return result;
+}
+
 function fallbackCompliment(score: number): string {
   if (score >= 90) return 'Impeccable. Every category is working together — this is camera-ready.';
   if (score >= 80) return 'Beautiful technique. A few small refinements will take this to flawless.';
@@ -48,21 +72,24 @@ function fallbackCompliment(score: number): string {
 }
 
 export async function getCoaching(request: GetCoachingRequest): Promise<CoachingResult> {
+  const score = request.diagnosis.overallScore;
   if (hasNimKey()) {
     try {
       const prompt = await buildPrompt(request);
       const compliment = await nimText(prompt);
-      return {
-        compliment: typeof compliment === 'string' ? compliment.trim() : fallbackCompliment(request.diagnosis.overallScore),
-        verdict: request.diagnosis.verdict,
-      };
+      if (typeof compliment === 'string') {
+        return {
+          compliment: sanitizeCompliment(compliment.trim(), score),
+          verdict: request.diagnosis.verdict,
+        };
+      }
     } catch (e) {
       console.warn('[Coaching] NIM failed, using fallback:', e);
     }
   }
 
   return {
-    compliment: fallbackCompliment(request.diagnosis.overallScore),
+    compliment: fallbackCompliment(score),
     verdict: request.diagnosis.verdict,
   };
 }
