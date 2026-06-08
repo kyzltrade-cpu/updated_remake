@@ -10,6 +10,7 @@ export type BrowShape = 'Soft Arch' | 'High Arch' | 'Flat' | 'S-Curve' | 'Tapere
 export type EnergyType = 'Sharp' | 'Soft' | 'Balanced';
 export type LipColor = 'Warm Rose' | 'Cool Berry' | 'Nude' | 'Bold Red' | 'Coral';
 export type BlushColor = 'Peach' | 'Rose' | 'Mauve' | 'Berry' | 'Warm Rust';
+export type EyeShape = 'Siren Eye' | 'Doe Eye' | 'Almond Eye' | 'Hooded Eye' | 'Monolid Eye' | 'Dove Eye';
 
 export const ARCHETYPES = {
   Oval: {
@@ -104,6 +105,9 @@ export interface DnaResult {
   blushProfile?: string;
   foundationShade?: string;
   recommendations?: ProductRecommendation[];
+  eyeShape?: EyeShape;
+  eyeMakeup?: string;
+  celebrityLookalike?: string;
 }
 
 export interface DnaAnalysisRequest {
@@ -121,6 +125,7 @@ const VALID_LASH_PROFILES = new Set<LashProfile>([
   'Long & Sparse', 'Short & Full', 'Long & Full', 'Short & Sparse', 'Curly', 'Straight & Dense',
 ]);
 const VALID_ENERGIES = new Set<EnergyType>(['Sharp', 'Soft', 'Balanced']);
+const VALID_EYE_SHAPES = new Set<EyeShape>(['Siren Eye', 'Doe Eye', 'Almond Eye', 'Hooded Eye', 'Monolid Eye', 'Dove Eye']);
 
 const DNA_PROMPT = `
 You are a professional beauty analyst. Carefully study this face photo.
@@ -133,7 +138,8 @@ Return ONLY this JSON (no markdown, no extra text):
   "browShape": "Soft Arch",
   "browSymmetryPct": 86,
   "lashProfile": "Long & Sparse",
-  "energy": "Balanced"
+  "energy": "Balanced",
+  "eyeShape": "Almond Eye"
 }
 
 Field rules — use EXACTLY one of these values:
@@ -144,10 +150,12 @@ Field rules — use EXACTLY one of these values:
 - browSymmetryPct: integer 70-100 (how closely brows match)
 - lashProfile: Long & Sparse | Short & Full | Long & Full | Short & Sparse | Curly | Straight & Dense
 - energy: Sharp | Soft | Balanced
+- eyeShape: Siren Eye | Doe Eye | Almond Eye | Hooded Eye | Monolid Eye | Dove Eye
 
 Analysis notes:
 - Face shape: compare forehead width, cheekbone width, jawline width, and face length ratios
 - Color season: warm vs cool undertone first, then depth (light / medium / deep)
+- Eye shape: compare width-to-height ratio, presence of a lid fold, and corner angles (outer vs inner corner tilt)
 - Energy: Sharp = angular jaw/features, Soft = rounded features, Balanced = mix
 - If a feature is not clearly visible, make a best-effort assessment
 `.trim();
@@ -160,6 +168,7 @@ interface NimDnaResponse {
   browSymmetryPct: number;
   lashProfile: string;
   energy: string;
+  eyeShape: string;
 }
 
 const LIP_BY_SEASON: Record<ColorSeason, string> = {
@@ -187,6 +196,33 @@ const FOUNDATION_BY_SEASON: Record<ColorSeason, string> = {
   'Cool Winter': 'MAC Pro Longwear NC20 — crisp cool undertone',
 };
 
+export const EYE_MAKEUP_BY_SHAPE: Record<EyeShape, { makeup: string; celebrity: string }> = {
+  'Siren Eye': {
+    celebrity: 'Bella Hadid',
+    makeup: 'Long, outer-corner winged eyeliner, smoked-out shadow on the outer V, tight-lined waterline.',
+  },
+  'Doe Eye': {
+    celebrity: 'Sydney Sweeney',
+    makeup: 'Rounded puppy-eyeliner, bright champagne shimmer in the center of the lid, outer lash focus.',
+  },
+  'Almond Eye': {
+    celebrity: 'Kendall Jenner',
+    makeup: 'Classic cat-eye wing, halo eyeshadow blending, balanced upper and lower lash mascara.',
+  },
+  'Hooded Eye': {
+    celebrity: 'Jennifer Lawrence',
+    makeup: 'Floating liner visible when open, matte gradients blending upward past the fold, inner-corner highlighting.',
+  },
+  'Monolid Eye': {
+    celebrity: 'Yeji (ITZY)',
+    makeup: 'Smudged horizontal gradient shadow, extended thin wing, defined upper-lash volume.',
+  },
+  'Dove Eye': {
+    celebrity: 'Lily-Rose Depp',
+    makeup: 'Soft, downward-angled lash smudge, bright nude eyeliner in the waterline, feathered lashes.',
+  },
+};
+
 function randomFrom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -194,6 +230,7 @@ function randomFrom<T>(arr: T[]): T {
 function mockDna(request: DnaAnalysisRequest): DnaResult {
   const faceShape = randomFrom<FaceShape>(['Oval', 'Round', 'Heart', 'Square', 'Oblong']);
   const colorSeason = randomFrom<ColorSeason>(['Warm Autumn', 'Cool Summer', 'Deep Winter', 'Light Spring']);
+  const eyeShape = randomFrom<EyeShape>(['Siren Eye', 'Doe Eye', 'Almond Eye', 'Hooded Eye', 'Monolid Eye', 'Dove Eye']);
   const MOCK_HEXES: Record<ColorSeason, string> = {
     'Warm Spring': '#D4A574', 'Light Spring': '#E8C09A',
     'Warm Autumn': '#C8956A', 'Deep Autumn': '#9E6B4A',
@@ -218,6 +255,9 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
     archetype,
     archetypeDescription: ARCHETYPE_DESCRIPTIONS[archetype] ?? '',
     recommendations,
+    eyeShape,
+    eyeMakeup: EYE_MAKEUP_BY_SHAPE[eyeShape].makeup,
+    celebrityLookalike: EYE_MAKEUP_BY_SHAPE[eyeShape].celebrity,
   };
 }
 
@@ -251,6 +291,9 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
         ? raw.skinToneHex
         : '#C9956A';
       const browSymmetryPct = Math.min(100, Math.max(70, Math.round(raw.browSymmetryPct ?? 85)));
+      const eyeShape = VALID_EYE_SHAPES.has(raw.eyeShape as EyeShape)
+        ? (raw.eyeShape as EyeShape)
+        : 'Almond Eye';
 
       const archetype = (ARCHETYPES[faceShape] as Record<string, string>)[request.priorityCategory]
         ?? 'The Glazed Canvas';
@@ -269,6 +312,9 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
         archetype,
         archetypeDescription: ARCHETYPE_DESCRIPTIONS[archetype] ?? '',
         recommendations: ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'],
+        eyeShape,
+        eyeMakeup: EYE_MAKEUP_BY_SHAPE[eyeShape]?.makeup ?? '',
+        celebrityLookalike: EYE_MAKEUP_BY_SHAPE[eyeShape]?.celebrity ?? '',
       };
     } catch (e) {
       console.warn('[DNA] NIM failed, using mock:', e);

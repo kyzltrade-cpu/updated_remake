@@ -25,9 +25,12 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DnaShareCard, CARD_W, CARD_H } from '@/components/dna-share-card';
 import { findShades } from '@/lib/api/shades';
 import { getKitForDna, type CategoryKit, type ProductRec } from '@/lib/api/recommendations';
+import { LiquidBackdrop } from '@/components/liquid-backdrop';
+import { HolographicTracer } from '@/components/holographic-tracer';
+import { tokens } from '@/components/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
-const SLIDE_COUNT = 18; // +2 for welcome + opening slides
+const SLIDE_COUNT = 19; // +2 for welcome + opening slides, +1 for Eye Shape
 const SLIDE_DURATION = 9000;
 const SEG_GAP = 3;
 const SEG_PAD = 14;
@@ -815,15 +818,20 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
-        {/* Glyph spins in — rotation makes it feel completely different from any other slide */}
-        <SpinIn delay={0}>
-          <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>
-            {isLocked ? '⬭' : (GLYPHS[dna.faceShape] ?? '⬭')}
-          </Text>
-        </SpinIn>
-        <DropIn delay={600}>
+        <DropIn delay={100}>
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>FACE SHAPE</Text>
         </DropIn>
+
+        {isLocked ? (
+          <SpinIn delay={400}>
+            <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>⬭</Text>
+          </SpinIn>
+        ) : (
+          <RevealItem delay={400}>
+            <HolographicTracer shape={dna.faceShape} color={colors.accent} />
+          </RevealItem>
+        )}
+
         <RevealItem delay={1100}>
           <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Brow arch, highlight zones,\ncontour map —'}</Text>
         </RevealItem>
@@ -933,6 +941,83 @@ function SlideLashes({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lashProfile}</Text>
               </RevealPop>
             </>}
+      </View>
+    </View>
+  );
+}
+
+// ── Slide: Eye Shape ──────────────────────────────────────────────────────────
+
+function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+  return (
+    <View style={[ds.page, { backgroundColor: 'transparent' }]}>
+      <View style={ds.bodyWrap}>
+        <DropIn delay={100}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>EYE SHAPE & MAKEUP</Text>
+        </DropIn>
+
+        {isLocked ? (
+          <SpinIn delay={400}>
+            <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>○</Text>
+          </SpinIn>
+        ) : (
+          <RevealItem delay={400}>
+            <HolographicTracer shape={dna.eyeShape ?? 'Almond Eye'} color={colors.accent} />
+          </RevealItem>
+        )}
+
+        {isLocked ? (
+          <RevealItem delay={1100}>
+            <LockedValue size="lg" color={colors.muted} />
+          </RevealItem>
+        ) : (
+          <>
+            <RevealItem delay={1100}>
+              <Text style={[ds.narrativeHook, { color: colors.muted, textAlign: 'center' }]}>
+                {`Similar to ${dna.celebrityLookalike ?? 'Kendall Jenner'} with`}
+              </Text>
+            </RevealItem>
+            <RevealItem delay={1400}>
+              <Text style={[ds.narrativePunch, { color: colors.accent, fontSize: 32, lineHeight: 38 }]}>
+                {dna.eyeShape ?? 'Almond Eye'}
+              </Text>
+            </RevealItem>
+            <RevealItem delay={1900}>
+              <View style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                borderRadius: 16,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.12)',
+                marginTop: 18,
+                width: W - 56,
+                alignItems: 'center',
+              }}>
+                <Text style={{
+                  fontFamily: tokens.fonts.regular,
+                  fontSize: 14,
+                  fontWeight: '700',
+                  color: colors.text,
+                  marginBottom: 6,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1.5,
+                }}>
+                  ✨ Best Makeup Blueprint
+                </Text>
+                <Text style={{
+                  fontFamily: tokens.fonts.regular,
+                  fontSize: 13,
+                  fontWeight: '400',
+                  color: `${colors.text}aa`,
+                  textAlign: 'center',
+                  lineHeight: 18,
+                }}>
+                  {dna.eyeMakeup ?? 'Classic wing with highlighted crease.'}
+                </Text>
+              </View>
+            </RevealItem>
+          </>
+        )}
       </View>
     </View>
   );
@@ -1484,32 +1569,33 @@ function renderSlide(idx: number, dna: DnaResult, locked: boolean, onShare: () =
   if (idx === 0) return <DnaSlideWelcome name={name} />;
   if (idx === 1) return <DnaSlideOpening />;
   // Existing slides shifted by +2
-  // Kit slides shifted from 9-14 → 11-16
-  if (idx >= 11 && idx <= 16) {
+  // Kit slides shifted from 11-16 → 12-17
+  if (idx >= 12 && idx <= 17) {
     const kits = getKitForDna(dna.archetype);
-    const kit = kits[idx - 11] ?? kits[0];
+    const kit = kits[idx - 12] ?? kits[0];
     return (
       <SlideKitCategory
         kit={kit}
         isLocked={locked}
         colors={colors}
-        slideNum={idx - 10}
+        slideNum={idx - 11}
         totalSlides={KIT_CATEGORY_COUNT}
       />
     );
   }
-  // Existing content slides shifted by +2
+  // Existing content slides shifted by +2 with Eye Shape as Slide 7
   switch (idx) {
     case 2:  return <SlideCanvas dna={dna} isLocked={locked} colors={colors} />;
     case 3:  return <SlideSeason dna={dna} isLocked={locked} colors={colors} />;
     case 4:  return <SlideFaceShape dna={dna} isLocked={locked} colors={colors} />;
     case 5:  return <SlideBrows dna={dna} isLocked={locked} colors={colors} />;
     case 6:  return <SlideLashes dna={dna} isLocked={locked} colors={colors} />;
-    case 7:  return <SlideEnergy dna={dna} isLocked={locked} colors={colors} />;
-    case 8:  return <SlideArchetype dna={dna} isLocked={locked} colors={colors} />;
-    case 9:  return <SlideLips dna={dna} isLocked={locked} colors={colors} />;
-    case 10: return <SlideBlush dna={dna} isLocked={locked} colors={colors} />;
-    case 17: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
+    case 7:  return <SlideEyeShape dna={dna} isLocked={locked} colors={colors} />;
+    case 8:  return <SlideEnergy dna={dna} isLocked={locked} colors={colors} />;
+    case 9:  return <SlideArchetype dna={dna} isLocked={locked} colors={colors} />;
+    case 10: return <SlideLips dna={dna} isLocked={locked} colors={colors} />;
+    case 11: return <SlideBlush dna={dna} isLocked={locked} colors={colors} />;
+    case 18: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
     default: return null;
   }
 }
@@ -1665,19 +1751,18 @@ export default function DnaRevealScreen() {
     router.push('/(main)/paywall');
   };
 
-  // Free users see their real DNA on all analysis slides (0–8).
-  // Product pick slides (9–14) are the hard paywall — locked for free users.
+  // Free users see their real DNA on all analysis slides (0-9).
+  // Product pick slides (12-17) are the hard paywall — locked for free users.
   const displayDna = dna ?? PLACEHOLDER_DNA;
-  const isProductSlide = (idx: number) => idx >= 11 && idx <= 16;
+  const isProductSlide = (idx: number) => idx >= 12 && idx <= 17;
   const locked = !isPro && isProductSlide(current);
 
   return (
     <View style={ds.root}>
       {/* Persistent world — never remounts */}
-      <MorphingBackground fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
+      <LiquidBackdrop />
       <GrainOverlay />
       <DnaPulseOrb />
-      <PersistentAmbient fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
 
       {/* Content only — dissolves out then in */}
       {slideState.outgoing && (
