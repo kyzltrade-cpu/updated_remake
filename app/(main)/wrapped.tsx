@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions, Share } from 'react-native';
 import Animated, {
   FadeIn, FadeInUp, ZoomIn,
   useSharedValue, useAnimatedStyle, SharedValue,
@@ -15,6 +15,10 @@ import { tokens } from '@/components/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { getScanHistory, getScanStats } from '@/lib/api/scan-storage';
 import type { ScanRecord } from '@/lib/api/scan-storage';
+import { BlurView } from 'expo-blur';
+import { useUser } from '@/contexts/user-context';
+import { useSubscription } from '@/contexts/subscription-context';
+import { createClient } from '@/lib/supabase';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -406,6 +410,13 @@ export default function WrappedScreen() {
   const router   = useRouter();
   const insets   = useSafeAreaInsets();
   const { user } = useAuth();
+  
+  const { user: profileUser, refreshProfile } = useUser();
+  const { subscription } = useSubscription();
+
+  const [isLocked, setIsLocked] = useState(false);
+  const [referralCount, setReferralCount] = useState(0);
+
   // Extract first name from email (e.g. "kyle@..." → "Kyle")
   const firstName = user?.email
     ? user.email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim().split(' ')[0]
@@ -436,8 +447,59 @@ export default function WrappedScreen() {
       .catch(()=>null);
   }, [user?.id]);
 
-  // Start music immediately
   useEffect(() => {
+    const checkGating = async () => {
+      try {
+        if (user) {
+          const supabase = createClient();
+          const { count, error } = await supabase
+            .from('referrals')
+            .select('*', { count: 'exact', head: true })
+            .eq('referrer_id', user.id);
+          
+          if (!error && count !== null) {
+            setReferralCount(count);
+          }
+        }
+
+        const isPro = subscription?.plan === 'pro';
+        const isUnlockedByReferral = profileUser?.shelf_audit_unlocked === true || referralCount >= 3;
+
+        if (isPro || isUnlockedByReferral) {
+          setIsLocked(false);
+        } else {
+          setIsLocked(true);
+        }
+      } catch (err) {
+        console.warn('[Wrapped Gating] error checking status:', err);
+      }
+    };
+
+    checkGating();
+  }, [subscription, profileUser, referralCount, user]);
+
+  const handleShareReferral = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const refCode = profileUser?.referral_code || 'BESTIE';
+    const shareLink = `https://remake.app/join?ref=${refCode}`;
+    const shareMessage = `wait bestie scan your makeup on Remake immediately 😭 literally half my routine was NOT ACNE SAFE and clogging my pores. Scan your makeup here to see your Clean Girl Index!!: ${shareLink}`;
+
+    try {
+      const result = await Share.share({
+        message: shareMessage,
+      });
+      if (result.action === Share.sharedAction) {
+        await refreshProfile();
+      }
+    } catch (err) {
+      console.warn('[Referral] Share error:', err);
+    }
+  };
+
+  // Start music immediately if not locked
+  useEffect(() => {
+    if (isLocked) return;
+    
     let mounted = true;
     (async () => {
       try {
@@ -455,7 +517,7 @@ export default function WrappedScreen() {
       preloadRef.current?.unloadAsync().catch(()=>{});
       preloadRef.current = null;
     };
-  }, []);
+  }, [isLocked]);
 
   // Preload outro track, crossfade at slide 7
   useEffect(() => {
@@ -603,6 +665,45 @@ export default function WrappedScreen() {
           <Text style={s.closeTxt}>✕</Text>
         </Pressable>
       </View>
+
+      {isLocked && (
+        <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFillObject}>
+          <View style={s.lockContainer}>
+            <View style={s.lockCard}>
+              <View style={s.lockIconBg}>
+                <MaterialIcons name="lock-outline" size={40} color={tokens.colors.pinkDeep} />
+              </View>
+              <Text style={s.lockTitle}>Unlock Beauty Wrapped 🎀</Text>
+              <Text style={s.lockSubtitle}>
+                See your customized Clean Girl Index and pore-clogging routine analysis. Unlock now!
+              </Text>
+
+              <Pressable onPress={() => router.push('/(main)/paywall')} style={s.lockPrimaryBtn}>
+                <Text style={s.lockPrimaryBtnTxt}>Go Unlimited Premium ($29.99/yr) 👑</Text>
+              </Pressable>
+
+              <Pressable onPress={handleShareReferral} style={s.lockSecondaryBtn}>
+                <Text style={s.lockSecondaryBtnTxt}>Invite 3 Besties to Unlock Free 💖</Text>
+              </Pressable>
+
+              <View style={s.progressRow}>
+                <Text style={s.progressLbl}>Invite Progress: [{referralCount} / 3] Joined! 🎀</Text>
+                <View style={s.dotsGrid}>
+                  {[1, 2, 3].map(i => (
+                    <View 
+                      key={i} 
+                      style={[
+                        s.dot, 
+                        referralCount >= i ? s.dotActive : s.dotInactive
+                      ]} 
+                    />
+                  ))}
+                </View>
+              </View>
+            </View>
+          </View>
+        </BlurView>
+      )}
     </View>
   );
 }
@@ -758,4 +859,122 @@ const s = StyleSheet.create({
   // Shared bars
   barTrack: { height:5, borderRadius:2.5, backgroundColor:'rgba(255,255,255,0.1)', overflow:'hidden' },
   barFill:  { height:'100%', borderRadius:2.5 },
+
+  // Gated Lock Styles
+  lockContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(26, 4, 20, 0.65)',
+    zIndex: 999,
+  },
+  lockCard: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: tokens.colors.pinkMid,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  lockIconBg: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FFF0EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FFF0EB',
+  },
+  lockTitle: {
+    fontFamily: tokens.fonts.serif,
+    fontStyle: 'italic',
+    fontSize: 22,
+    fontWeight: '700',
+    color: tokens.colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  lockSubtitle: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    color: tokens.colors.gray,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  lockPrimaryBtn: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  lockPrimaryBtnTxt: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '700',
+    color: tokens.colors.white,
+  },
+  lockSecondaryBtn: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: tokens.colors.pinkMid,
+    marginBottom: 16,
+  },
+  lockSecondaryBtnTxt: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '700',
+    color: tokens.colors.pinkDeep,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.border,
+    paddingTop: 14,
+  },
+  progressLbl: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    fontWeight: '600',
+    color: tokens.colors.gray,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dotsGrid: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  dotActive: {
+    backgroundColor: tokens.colors.pinkDeep,
+  },
+  dotInactive: {
+    backgroundColor: '#E8DDD8',
+  },
 });
