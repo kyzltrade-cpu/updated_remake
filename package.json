@@ -18,6 +18,8 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "@remotion/cli": "^4.0.473",
+    "@remotion/player": "^4.0.473",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "expo": "~54.0.33",
@@ -56,7 +58,8 @@
     "react-native-svg": "15.12.1",
     "react-native-view-shot": "4.0.3",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.5.1"
+    "react-native-worklets": "0.5.1",
+    "remotion": "^4.0.473"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

@@ -33,8 +33,10 @@ const PHASES = [
 
 const SPARK_CHARS  = ['✦', '✧', '◉', '♡', '★', '✿'];
 const SPARK_COLORS = [
-  'rgba(232,57,154,0.35)', 'rgba(255,200,230,0.20)',
-  'rgba(212,175,55,0.30)',  'rgba(255,170,217,0.25)',
+  'rgba(232,57,154,0.50)',  // Rich pink
+  'rgba(217,138,150,0.45)', // Rhode pink
+  'rgba(212,175,55,0.50)',  // Gold sparkle
+  'rgba(244,143,177,0.55)', // Light rose pink
 ];
 
 function FloatSpark({ x, y, delay, color, char, size }: {
@@ -91,7 +93,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 function ScanRing() {
   const rotation  = useSharedValue(0);
   const progress  = useSharedValue(0);
-  const innerPulse = useSharedValue(0.6);
+  const innerPulse = useSharedValue(0.85);
 
   useEffect(() => {
     // Continuous rotation
@@ -105,7 +107,7 @@ function ScanRing() {
     innerPulse.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 1100, easing: Easing.out(Easing.sin) }),
-        withTiming(0.6, { duration: 1100, easing: Easing.in(Easing.sin) }),
+        withTiming(0.7, { duration: 1100, easing: Easing.in(Easing.sin) }),
       ),
       -1, false,
     );
@@ -121,15 +123,15 @@ function ScanRing() {
 
   return (
     <View style={{ width: RING_SIZE, height: RING_SIZE, alignItems: 'center', justifyContent: 'center' }}>
-      {/* Glow behind ring */}
+      {/* Soft halo glow behind ring */}
       <Animated.View style={[ls.ringGlow, innerStyle]} />
 
       {/* Static track */}
       <Svg width={RING_SIZE} height={RING_SIZE} style={StyleSheet.absoluteFill}>
         <Circle
           cx={cx} cy={cx} r={RING_R}
-          stroke="rgba(232,57,154,0.10)"
-          strokeWidth={2}
+          stroke="rgba(217,138,150,0.22)"
+          strokeWidth={2.5}
           fill="none"
         />
       </Svg>
@@ -141,7 +143,7 @@ function ScanRing() {
           <AnimatedCircle
             cx={cx} cy={cx} r={RING_R}
             stroke={tokens.colors.pinkDeep}
-            strokeWidth={2.5}
+            strokeWidth={3}
             fill="none"
             strokeLinecap="round"
             strokeDasharray={RING_CIRC}
@@ -153,7 +155,7 @@ function ScanRing() {
         </Svg>
       </Animated.View>
 
-      {/* Centre icon */}
+      {/* Centre icon in a premium white badge */}
       <Animated.View style={[ls.ringCenter, innerStyle]}>
         <Text style={ls.ringIcon}>✦</Text>
       </Animated.View>
@@ -238,7 +240,7 @@ export default function DnaLoadingScreen() {
   return (
     <View style={ls.root}>
       <LinearGradient
-        colors={['#1A0D14', '#2D0A1E', '#08010C']}
+        colors={['#FFF5F7', '#FFE6EC', '#FFF9FA']}
         locations={[0, 0.5, 1]}
         start={{ x: 0.3, y: 0 }} end={{ x: 0.7, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -282,57 +284,64 @@ const ls = StyleSheet.create({
 
   top: { alignItems: 'center', gap: 10 },
   eyebrow: {
-    fontFamily: tokens.fonts.regular, fontSize: 10, fontWeight: '700',
-    letterSpacing: 3.5, textTransform: 'uppercase',
-    color: 'rgba(232,57,154,0.55)',
+    fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '700',
+    letterSpacing: 4, textTransform: 'uppercase',
+    color: '#D98A96', // Sophisticated rich brand pink
   },
   headline: {
     fontFamily: tokens.fonts.serif, fontSize: 42, fontStyle: 'italic',
-    color: '#FFF5F9', lineHeight: 50, textAlign: 'center', letterSpacing: 0.2,
+    color: '#3D3532', // Dark warm charcoal brown
+    lineHeight: 50, textAlign: 'center', letterSpacing: 0.2,
   },
 
   // Ring
   ringWrap: { alignItems: 'center', justifyContent: 'center' },
   ringGlow: {
     position: 'absolute',
-    width: RING_SIZE * 0.65,
-    height: RING_SIZE * 0.65,
-    borderRadius: RING_SIZE * 0.325,
-    backgroundColor: tokens.colors.pinkDeep,
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: RING_SIZE * 0.18,
-    elevation: 0,
+    width: RING_SIZE * 0.7,
+    height: RING_SIZE * 0.7,
+    borderRadius: RING_SIZE * 0.35,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    shadowColor: '#D98A96',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 22,
+    elevation: 4,
   },
   ringCenter: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
+    width: RING_SIZE * 0.45,
+    height: RING_SIZE * 0.45,
+    borderRadius: RING_SIZE * 0.225,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#D98A96',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 3,
   },
   ringIcon: {
-    fontSize: 28,
-    color: 'rgba(255,200,230,0.65)',
+    fontSize: 26,
+    color: '#D98A96', // Sophisticated rich pink center star
   },
 
   // Phase + progress
   bottom: { alignItems: 'center', gap: 20, width: '100%' },
   phase: {
-    fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '300',
-    color: 'rgba(255,232,255,0.5)', letterSpacing: 0.3, textAlign: 'center',
+    fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '400',
+    color: '#6E5A5C', // Readably warm rose-brown
+    letterSpacing: 0.3, textAlign: 'center',
     lineHeight: 20,
   },
   progressTrack: {
-    height: 1.5, width: W - 80, borderRadius: 1,
-    backgroundColor: 'rgba(232,57,154,0.12)', overflow: 'hidden',
+    height: 2, width: W - 80, borderRadius: 1,
+    backgroundColor: 'rgba(217,138,150,0.15)', overflow: 'hidden',
     alignSelf: 'center',
   },
   progressFill: {
     height: '100%', borderRadius: 1,
     backgroundColor: tokens.colors.pinkDeep,
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
   },
 });
