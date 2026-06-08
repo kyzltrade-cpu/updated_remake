@@ -65,6 +65,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         '@remake_onboarding_complete',
         'remake_settings',
         'remake_profile_photo',
+        'dna_result',
+        'pending_dna_uri',
       ]);
       router.replace('/(onboarding)');
     } catch {
