@@ -230,7 +230,8 @@ export default function DnaLoadingScreen() {
         await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
         if (user?.id) saveDnaResult(user.id, dna).catch(() => null);
         router.replace('/(onboarding)/scan-success');
-      } catch {
+      } catch (err) {
+        console.warn('[DNA Loading] Failed to analyze DNA:', err);
         router.replace('/(onboarding)/scan-success');
       }
     };

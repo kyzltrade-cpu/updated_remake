@@ -22,6 +22,7 @@ import { SEASON_DESCRIPTIONS, ARCHETYPE_DESCRIPTIONS, SEASON_PALETTES } from '@/
 import { useSubscription } from '@/contexts/subscription-context';
 import { useAuth } from '@/contexts/AuthContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { createClient } from '@/lib/supabase';
 import { DnaShareCard, CARD_W, CARD_H } from '@/components/dna-share-card';
 import { findShades } from '@/lib/api/shades';
 import { getKitForDna, type CategoryKit, type ProductRec } from '@/lib/api/recommendations';
@@ -1547,13 +1548,60 @@ export default function DnaRevealScreen() {
   const [bgTo, setBgTo] = useState(0);
 
   useEffect(() => {
-    if (params.dna) {
-      try { setDna(JSON.parse(params.dna) as DnaResult); return; } catch { /* fall through */ }
-    }
-    AsyncStorage.getItem('dna_result').then(raw => {
-      if (raw) try { setDna(JSON.parse(raw) as DnaResult); } catch { /* ignore */ }
-    });
-  }, [params.dna]);
+    let active = true;
+    const loadDna = async () => {
+      // 1. Try route params first
+      if (params.dna) {
+        try {
+          const parsed = JSON.parse(params.dna) as DnaResult;
+          if (active) {
+            setDna(parsed);
+            await AsyncStorage.setItem('dna_result', params.dna);
+          }
+          return;
+        } catch (e) {
+          console.warn('[DNA Reveal] Failed to parse params.dna:', e);
+        }
+      }
+
+      // 2. Try AsyncStorage for instant offline load
+      let cachedDna: DnaResult | null = null;
+      try {
+        const raw = await AsyncStorage.getItem('dna_result');
+        if (raw) {
+          cachedDna = JSON.parse(raw) as DnaResult;
+          if (active) setDna(cachedDna);
+        }
+      } catch (e) {
+        console.warn('[DNA Reveal] Failed to load AsyncStorage cache:', e);
+      }
+
+      // 3. Sync from Supabase to guarantee freshness
+      if (user?.id) {
+        try {
+          const supabase = createClient() as any;
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('dna_result')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (!error && data?.dna_result) {
+            const dbDna = data.dna_result as DnaResult;
+            if (JSON.stringify(dbDna) !== JSON.stringify(cachedDna)) {
+              if (active) setDna(dbDna);
+              await AsyncStorage.setItem('dna_result', JSON.stringify(dbDna));
+            }
+          }
+        } catch (e) {
+          console.warn('[DNA Reveal] Failed to sync from Supabase:', e);
+        }
+      }
+    };
+
+    loadDna();
+    return () => { active = false; };
+  }, [params.dna, user?.id]);
 
   const preloadRef = useRef<Audio.Sound | null>(null);
 

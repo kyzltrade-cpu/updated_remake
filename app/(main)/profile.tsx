@@ -55,7 +55,10 @@ export default function ProfileScreen() {
   const handleViewDna = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (isPro) {
-      router.push('/(main)/dna-reveal');
+      router.push({
+        pathname: '/(main)/dna-reveal',
+        params: dna ? { dna: JSON.stringify(dna) } : {},
+      } as any);
     } else {
       router.push('/(main)/paywall');
     }
