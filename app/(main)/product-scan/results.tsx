@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable,
+  View, Text, StyleSheet, ScrollView, Pressable, Share,
 } from 'react-native';
 import Animated, {
   FadeIn, FadeInUp,
@@ -14,6 +14,12 @@ import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
 import { analyzeProduct, type ProductScanResult } from '@/lib/api/product-scan';
 import { useSettings } from '@/contexts/settings-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from 'expo-blur';
+import { useUser } from '@/contexts/user-context';
+import { useSubscription } from '@/contexts/subscription-context';
+import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase';
 
 // ─── Design constants ────────────────────────────────────────────────────────
 const CIRCUMFERENCE = 2 * Math.PI * 50;
@@ -330,8 +336,9 @@ export default function ProductScanResultsScreen() {
         </View>
       </View>
 
+      <View style={{ flex: 1, position: 'relative' }}>
       {/* Scrollable body */}
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} scrollEnabled={!isLocked}>
 
         {/* Score ring */}
         <Animated.View entering={FadeInUp.duration(500)} style={s.scoreSection}>
@@ -674,4 +681,120 @@ const s = StyleSheet.create({
     marginBottom: 6,
   },
   saveTxt: { fontFamily: tokens.fonts.regular, fontSize: 12, fontWeight: '700', color: tokens.colors.white, letterSpacing: 1, textTransform: 'uppercase' },
+  
+  lockContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255, 240, 245, 0.45)',
+  },
+  lockCard: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: tokens.colors.pinkMid,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  lockIconBg: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FFF0EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FFF0EB',
+  },
+  lockTitle: {
+    fontFamily: tokens.fonts.serif,
+    fontStyle: 'italic',
+    fontSize: 22,
+    fontWeight: '700',
+    color: tokens.colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  lockSubtitle: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    color: tokens.colors.gray,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  lockPrimaryBtn: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  lockPrimaryBtnTxt: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '700',
+    color: tokens.colors.white,
+  },
+  lockSecondaryBtn: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: tokens.colors.pinkMid,
+    marginBottom: 16,
+  },
+  lockSecondaryBtnTxt: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '700',
+    color: tokens.colors.pinkDeep,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.border,
+    paddingTop: 14,
+  },
+  progressLbl: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    fontWeight: '600',
+    color: tokens.colors.gray,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dotsGrid: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  dotActive: {
+    backgroundColor: tokens.colors.pinkDeep,
+  },
+  dotInactive: {
+    backgroundColor: '#E8DDD8',
+  },
 });

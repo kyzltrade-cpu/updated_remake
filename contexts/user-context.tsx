@@ -11,6 +11,9 @@ export interface UserProfile {
   email: string;
   initials: string;
   onboarding_data?: Record<string, unknown> | null;
+  referral_code?: string | null;
+  shelf_audit_unlocked?: boolean | null;
+  referred_by_code?: string | null;
 }
 
 interface UserContextValue {
@@ -32,11 +35,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const supabase = createClient() as any;
       const { data, error } = await supabase
         .from('profiles')
-        .select('onboarding_data')
+        .select('onboarding_data, referral_code, shelf_audit_unlocked, referred_by_code')
         .eq('id', authUser.id)
         .single();
       
-      setUser(prev => prev ? { ...prev, onboarding_data: data?.onboarding_data } : prev);
+      setUser(prev => prev ? { 
+        ...prev, 
+        onboarding_data: data?.onboarding_data,
+        referral_code: data?.referral_code,
+        shelf_audit_unlocked: data?.shelf_audit_unlocked,
+        referred_by_code: data?.referred_by_code
+      } : prev);
     } catch (err) {
       console.warn('Failed to fetch profile', err);
     }
