@@ -454,7 +454,7 @@ function IncomingContent({ children, dir }: { children: React.ReactNode; dir: 1 
     opacity: op.value,
     transform: [{ translateY: ty.value }, { translateX: tx.value }, { scale: sc.value }],
   }));
-  return <Animated.View style={[StyleSheet.absoluteFill, sty]}>{children}</Animated.View>;
+  return <Animated.View style={[StyleSheet.absoluteFill, { opacity: 0 }, sty]}>{children}</Animated.View>;
 }
 
 // ── Slide reducer ─────────────────────────────────────────────────────────────
