@@ -450,6 +450,12 @@ export default function WrappedScreen() {
   const [bgFrom,   setBgFrom]   = useState(0);
   const [bgTo,     setBgTo]     = useState(0);
   const morph = useSharedValue(0);
+
+  useEffect(() => {
+    if (bgFrom === bgTo) {
+      morph.value = 0;
+    }
+  }, [bgFrom, bgTo]);
   const [stats, setStats]       = useState<WrappedStats>({
     totalScans:0, bestScore:0, bestScoreMonth:'this month',
     topCategory:{name:'Blending',avgScore:0},
@@ -580,7 +586,6 @@ export default function WrappedScreen() {
   const endTransition = useCallback((toIdx: number) => {
     setPrevSlide(null);
     containerX.value = 0;
-    morph.value = 0;
     setBgFrom(toIdx);
     setBgTo(toIdx);
     isAnimating.current = false;
