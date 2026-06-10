@@ -2012,7 +2012,8 @@ export default function DnaRevealScreen() {
   return (
     <View style={ds.root}>
       {/* Persistent world — never remounts */}
-      <LiquidBackdrop />
+      <MorphingBackground fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
+      <PersistentAmbient fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
       <GrainOverlay />
       <DnaPulseOrb />
 
