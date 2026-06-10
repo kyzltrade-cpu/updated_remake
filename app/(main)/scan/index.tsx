@@ -2,7 +2,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Alert, Image,
-  Modal,
+  Modal, ActivityIndicator,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Animated, {
@@ -102,7 +102,12 @@ function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number 
           entering={FadeInDown.duration(220)}
           style={[styles.uvPanel, { top: insetTop + 62 }]}
         >
-          {uv !== null && (
+          {uv === null ? (
+            <View style={styles.uvLoadingContainer}>
+              <ActivityIndicator size="small" color={tokens.colors.pinkDeep} />
+              <Text style={styles.uvLoadingText}>Sensing solar UV...</Text>
+            </View>
+          ) : (
             <View>
               {/* ── Header ── */}
               <View style={styles.uvCardHeader}>
@@ -733,6 +738,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.14, shadowRadius: 20, elevation: 16,
     padding: 16,
     overflow: 'hidden',
+  },
+  uvLoadingContainer: {
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  uvLoadingText: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 14,
+    fontStyle: 'italic',
+    fontWeight: '300',
+    color: tokens.colors.pinkRich,
+    letterSpacing: 0.3,
   },
   // Header
   uvCardHeader: {
