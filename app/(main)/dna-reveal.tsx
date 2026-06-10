@@ -255,8 +255,8 @@ function PersistentAmbient({ fromIdx, toIdx, morphProgress }: {
   const fromC = SLIDE_COLORS[fromIdx] ?? SLIDE_COLORS[0];
   const toC = SLIDE_COLORS[toIdx] ?? SLIDE_COLORS[0];
 
-  const blobFromStyle = useAnimatedStyle(() => ({ opacity: (1 - morphProgress.value) * 0.22 }));
-  const blobToStyle = useAnimatedStyle(() => ({ opacity: morphProgress.value * 0.22 }));
+  const blobFromStyle = useAnimatedStyle(() => ({ opacity: (1 - morphProgress.value) * 0.45 }));
+  const blobToStyle = useAnimatedStyle(() => ({ opacity: morphProgress.value * 0.45 }));
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -1949,13 +1949,13 @@ const ds = StyleSheet.create({
 
   // Welcome + Opening slides
   welcomeHi: {
-    fontFamily: 'Playfair Display', fontSize: 32, fontWeight: '400',
-    color: 'rgba(255,245,249,0.85)', textAlign: 'center', lineHeight: 40,
+    fontFamily: 'Inter', fontSize: 26, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 2,
+    color: 'rgba(255,245,249,0.85)', textAlign: 'center', lineHeight: 32,
   },
   welcomeReady: {
-    fontFamily: 'Playfair Display', fontSize: 52, fontWeight: '400',
-    color: '#FFF5F9', textAlign: 'center', lineHeight: 60, letterSpacing: 0.2,
-    textShadowColor: 'rgba(232,57,154,0.55)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 44,
+    fontFamily: 'Inter', fontSize: 44, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -1,
+    color: '#FFF5F9', textAlign: 'center', lineHeight: 52,
+    textShadowColor: 'rgba(232,57,154,0.75)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 44,
   },
   welcomeHint: {
     fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,170,217,0.4)',
@@ -1966,9 +1966,9 @@ const ds = StyleSheet.create({
     letterSpacing: 8, color: 'rgba(255,170,217,0.65)',
   },
   openingHero: {
-    fontFamily: 'Playfair Display', fontSize: 68, color: '#FFF5F9',
-    textAlign: 'center', lineHeight: 74, letterSpacing: 0.5,
-    textShadowColor: 'rgba(232,57,154,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 50,
+    fontFamily: 'Inter', fontSize: 56, color: '#FFF5F9', fontWeight: '900', textTransform: 'uppercase',
+    textAlign: 'center', lineHeight: 62, letterSpacing: -2,
+    textShadowColor: 'rgba(232,57,154,0.8)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 50,
   },
   openingYear: {
     fontFamily: 'Inter', fontSize: 12, fontWeight: '500',
@@ -1997,8 +1997,8 @@ const ds = StyleSheet.create({
     fontFamily: 'Inter', fontSize: 10, fontWeight: '700',
     letterSpacing: 3, textTransform: 'uppercase', marginBottom: -6,
   },
-  title: { fontFamily: 'Playfair Display', fontSize: 42, textAlign: 'center', lineHeight: 50, marginBottom: 4 },
-  bigVal: { fontFamily: 'Playfair Display', fontSize: 50, fontStyle: 'italic', textAlign: 'center', lineHeight: 58 },
+  title: { fontFamily: 'Inter', fontSize: 36, fontWeight: '900', textTransform: 'uppercase', textAlign: 'center', lineHeight: 42, marginBottom: 4, letterSpacing: -1 },
+  bigVal: { fontFamily: 'Inter', fontSize: 48, fontWeight: '900', textTransform: 'uppercase', textAlign: 'center', lineHeight: 54, letterSpacing: -2 },
   bodyTxt: { fontFamily: 'Inter', fontSize: 14, textAlign: 'center', lineHeight: 24, maxWidth: W - 80 },
   accent: { fontStyle: 'italic', fontWeight: '600' },
   lockedRow: { flexDirection: 'row', alignItems: 'center' },
@@ -2013,7 +2013,7 @@ const ds = StyleSheet.create({
     width: 220, height: 220, borderRadius: 110, overflow: 'hidden',
     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.65, shadowRadius: 48,
   },
-  hexCode: { fontFamily: 'Playfair Display', fontSize: 36, letterSpacing: 3 },
+  hexCode: { fontFamily: 'Inter', fontSize: 32, fontWeight: '900', letterSpacing: 1 },
   shadesCard: {
     borderWidth: 1, borderRadius: 14,
     paddingVertical: 12, paddingHorizontal: 18, gap: 8, width: '100%',
@@ -2053,7 +2053,7 @@ const ds = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', gap: 4,
     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 16,
   },
-  browPct: { fontFamily: 'Playfair Display', fontSize: 44, lineHeight: 50 },
+  browPct: { fontFamily: 'Inter', fontSize: 48, fontWeight: '900', lineHeight: 54, letterSpacing: -1 },
   browLabel: { fontFamily: 'Inter', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' },
 
   // Energy
@@ -2069,7 +2069,7 @@ const ds = StyleSheet.create({
   // Archetype
   youAre: { fontFamily: 'Inter', fontSize: 13, fontWeight: '400', letterSpacing: 2, textTransform: 'uppercase', marginBottom: -10 },
   archetypeNameWrap: { overflow: 'hidden', borderRadius: 12 },
-  archetypeHero: { fontFamily: 'Playfair Display', fontSize: 68, textAlign: 'center', lineHeight: 76 },
+  archetypeHero: { fontFamily: 'Inter', fontSize: 52, fontWeight: '900', textTransform: 'uppercase', textAlign: 'center', lineHeight: 58, letterSpacing: -2 },
   archetypeGlow: {
     position: 'absolute', width: W * 0.9, height: W * 0.9, borderRadius: W * 0.45,
     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 80,
@@ -2196,8 +2196,8 @@ const ds = StyleSheet.create({
   },
   fnHeroWrap: { alignItems: 'center', gap: 4, width: '100%' },
   fnArchNameHero: {
-    fontFamily: 'Playfair Display', fontSize: 68, fontStyle: 'italic',
-    textAlign: 'center', lineHeight: 76, width: '100%',
+    fontFamily: 'Inter', fontSize: 52, fontWeight: '900', textTransform: 'uppercase',
+    textAlign: 'center', lineHeight: 58, width: '100%', letterSpacing: -2,
   },
   fnSwatchStrip: {
     flexDirection: 'row', gap: 8, justifyContent: 'center',
@@ -2214,7 +2214,7 @@ const ds = StyleSheet.create({
     paddingVertical: 12, paddingHorizontal: 14, gap: 4,
   },
   fnStatBlockValue2: {
-    fontFamily: 'Playfair Display', fontSize: 15, fontStyle: 'italic', letterSpacing: 0.2,
+    fontFamily: 'Inter', fontSize: 14, fontWeight: '800', letterSpacing: 0.2, textTransform: 'uppercase',
   },
   fnCanvasRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -2241,10 +2241,10 @@ const ds = StyleSheet.create({
   fnEyebrow: { fontFamily: 'Inter', fontSize: 9, fontWeight: '700', letterSpacing: 4, textTransform: 'uppercase' },
   fnBarsRow: { flexDirection: 'row', gap: 5, width: '100%' },
   fnBar: { flex: 1, height: 68, borderRadius: 10, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12 },
-  fnSeasonLabel: { fontFamily: 'Playfair Display', fontSize: 13, fontStyle: 'italic', letterSpacing: 2, textAlign: 'center' },
+  fnSeasonLabel: { fontFamily: 'Inter', fontSize: 13, fontWeight: '800', letterSpacing: 2, textAlign: 'center', textTransform: 'uppercase' },
   fnArchWrap: { alignItems: 'center', gap: 8, width: '100%' },
   fnYouAre: { fontFamily: 'Inter', fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', marginBottom: -4 },
-  fnArchName: { fontFamily: 'Playfair Display', fontSize: 62, fontStyle: 'italic', textAlign: 'center', lineHeight: 68 },
+  fnArchName: { fontFamily: 'Inter', fontSize: 50, fontWeight: '900', textTransform: 'uppercase', textAlign: 'center', lineHeight: 56, letterSpacing: -2 },
   fnArchDesc: { fontFamily: 'Inter', fontSize: 12, fontStyle: 'italic', textAlign: 'center', lineHeight: 18, maxWidth: W - 80 },
   fnCard: { width: '100%', borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   fnStatRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 11 },
@@ -2262,8 +2262,8 @@ const ds = StyleSheet.create({
     textAlign: 'center', lineHeight: 28,
   },
   narrativePunch: {
-    fontFamily: 'Playfair Display', fontSize: 22, fontStyle: 'italic',
-    textAlign: 'center', lineHeight: 28, marginTop: -4,
+    fontFamily: 'Inter', fontSize: 20, fontWeight: '800', textTransform: 'uppercase',
+    textAlign: 'center', lineHeight: 26, marginTop: -4, letterSpacing: -0.5,
   },
   revealLabel: {
     fontFamily: 'Inter', fontSize: 12, fontWeight: '400',
@@ -2276,7 +2276,7 @@ const ds = StyleSheet.create({
   fnStatCol: { flex: 1, gap: 16, paddingHorizontal: 4 },
   fnStatBlock: { gap: 4 },
   fnStatBlockLabel: { fontFamily: 'Inter', fontSize: 9, fontWeight: '700', letterSpacing: 2.5, textTransform: 'uppercase' },
-  fnStatBlockValue: { fontFamily: 'Playfair Display', fontSize: 16, fontStyle: 'italic', letterSpacing: 0.2 },
+  fnStatBlockValue: { fontFamily: 'Inter', fontSize: 14, fontWeight: '800', letterSpacing: 0.2, textTransform: 'uppercase' },
   fnDivider: { width: '100%', height: StyleSheet.hairlineWidth },
   fnVertDivider: { width: StyleSheet.hairlineWidth, marginVertical: 4 },
   fnSkinRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, width: '100%' },
