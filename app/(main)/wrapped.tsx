@@ -23,20 +23,37 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-// ─── Per-slide gradient palette ───────────────────────────────────────────────
-// Two colours per slide: top and bottom of the gradient.
-// The morphing background crossfades between these independently of content.
-const SLIDE_GRADS: Array<[string, string]> = [
-  ['#1A0414', '#C2187A'],   // 0 Welcome      — personal greeting
-  ['#1A0414', '#E8399A'],   // 1 Opening      — deepest rose → hot pink
-  ['#180310', '#C2187A'],   // 2 Scans        — dark plum → raspberry
-  ['#120010', '#E8399A'],   // 3 Best Score   — near black → pinkDeep
-  ['#200616', '#D63384'],   // 4 Top Category — dark wine → magenta pink
-  ['#1A0A14', '#FF6EB4'],   // 5 Streak       — dark rose → bubblegum
-  ['#160210', '#D4AF37'],   // 6 Glow-Up      — deep rose → gold
-  ['#0E0208', '#C2187A'],   // 7 Improved     — near black → pinkRich
-  ['#1A0414', '#E8399A'],   // 8 Outro        — full circle back to opening
+interface SlideColors {
+  gradientTop: string;
+  gradientBot: string;
+  text: string;
+  muted: string;
+  eyebrow: string;
+  accent: string;
+}
+
+const SLIDE_COLORS: SlideColors[] = [
+  // 0 — Welcome: Deep midnight space violet with glowing neon pink
+  { gradientTop: '#0C0214', gradientBot: '#150526', text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', eyebrow: '#FF007F', accent: '#FF007F' },
+  // 1 — Opening: STARK VIBRANT NEON HOT PINK (stark black text contrast)
+  { gradientTop: '#FF007F', gradientBot: '#E8006F', text: '#0F0311', muted: 'rgba(15,3,17,0.75)', eyebrow: '#0F0311', accent: '#0F0311' },
+  // 2 — Scans: STARK DEEP INDIGO (glowing neon green contrast)
+  { gradientTop: '#1E1B4B', gradientBot: '#0F0E36', text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', eyebrow: '#00FF87', accent: '#00FF87' },
+  // 3 — Best Score: ELECTRIC ROYAL BLUE (glowing neon yellow contrast)
+  { gradientTop: '#1A0DAB', gradientBot: '#0A056B', text: '#FFFFFF', muted: 'rgba(255,255,255,0.75)', eyebrow: '#E8D22C', accent: '#E8D22C' },
+  // 4 — Top Category: VIBRANT NEON ORANGE (deep dark purple text contrast)
+  { gradientTop: '#FF5722', gradientBot: '#E64A19', text: '#1E0500', muted: 'rgba(30,5,0,0.78)', eyebrow: '#1E0500', accent: '#1E0500' },
+  // 5 — Streak: Deepest midnight space violet with glowing neon pink
+  { gradientTop: '#0C0214', gradientBot: '#150526', text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', eyebrow: '#FF007F', accent: '#FF007F' },
+  // 6 — Glow-Up: VIBRANT ACID LIME YELLOW (deep dark forest text contrast)
+  { gradientTop: '#CCFF00', gradientBot: '#B2EB00', text: '#0C1A00', muted: 'rgba(12,26,0,0.75)', eyebrow: '#0C1A00', accent: '#0C1A00' },
+  // 7 — Most Improved: STARK VIBRANT MAGENTA (black text contrast)
+  { gradientTop: '#D81B60', gradientBot: '#C2187B', text: '#0F0107', muted: 'rgba(15,1,7,0.75)', eyebrow: '#0F0107', accent: '#0F0107' },
+  // 8 — Outro: DEEP COSMIC NIGHT (pure gold and white contrast)
+  { gradientTop: '#0A0314', gradientBot: '#1C0838', text: '#FFEEDD', muted: 'rgba(255,238,221,0.7)', eyebrow: '#D4AF37', accent: '#D4AF37' },
 ];
+
+const SLIDE_GRADS: Array<[string, string]> = SLIDE_COLORS.map(c => [c.gradientTop, c.gradientBot]);
 
 // ─── Morphing background ──────────────────────────────────────────────────────
 // Three layers:
@@ -197,7 +214,7 @@ function SlideBase({ children }: { children: React.ReactNode }) {
 // ─── Slides ───────────────────────────────────────────────────────────────────
 
 // ─── Slide 0: Personal welcome ───────────────────────────────────────────────
-function SlideWelcome({ name }: { name?: string }) {
+function SlideWelcome({ name, colors }: { name?: string; colors: SlideColors }) {
   const greeting = name ? `Hi ${name} 👋` : 'Hi there 👋';
   const ready    = useSharedValue(0);
   const readySc  = useSharedValue(0.88);
@@ -215,15 +232,15 @@ function SlideWelcome({ name }: { name?: string }) {
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeInUp.delay(80).duration(500)} style={s.welcomeGreeting}>
+        <Animated.Text entering={FadeInUp.delay(80).duration(500)} style={[s.welcomeGreeting, { color: colors.text }]}>
           {greeting}
         </Animated.Text>
         <Animated.View style={readyStyle}>
-          <Text style={s.welcomeReady}>
+          <Text style={[s.welcomeReady, { color: colors.text, textShadowColor: colors.accent + '80' }]}>
             {'Your Beauty\nWrapped is ready.'}
           </Text>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(1400).duration(600)} style={s.openHint}>
+        <Animated.Text entering={FadeIn.delay(1400).duration(600)} style={[s.openHint, { color: colors.muted }]}>
           tap to start  →
         </Animated.Text>
       </View>
@@ -231,7 +248,7 @@ function SlideWelcome({ name }: { name?: string }) {
   );
 }
 
-function SlideOpening({ name }: { name?: string }) {
+function SlideOpening({ name, colors }: { name?: string; colors: SlideColors }) {
   const sc = useSharedValue(0.78);
   useEffect(() => { sc.value = withDelay(200, withSpring(1,{damping:9,stiffness:80})); }, []);
   const heroStyle = useAnimatedStyle(() => ({ transform:[{scale:sc.value}] }));
@@ -239,73 +256,73 @@ function SlideOpening({ name }: { name?: string }) {
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeIn.delay(60).duration(400)} style={s.openGreeting}>
+        <Animated.Text entering={FadeIn.delay(60).duration(400)} style={[s.openGreeting, { color: colors.muted }]}>
           {greeting}
         </Animated.Text>
-        <Animated.Text entering={FadeIn.delay(160).duration(350)} style={s.openSub}>YOUR</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(160).duration(350)} style={[s.openSub, { color: colors.accent }]}>YOUR</Animated.Text>
         <Animated.View style={heroStyle}>
-          <Text style={s.openHero}>BEAUTY{'\n'}WRAPPED</Text>
+          <Text style={[s.openHero, { color: colors.text, textShadowColor: colors.accent + '80' }]}>BEAUTY{'\n'}WRAPPED</Text>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(500).duration(400)} style={s.openYear}>2  0  2  6</Animated.Text>
-        <Animated.Text entering={FadeIn.delay(1100).duration(500)} style={s.openHint}>tap to begin  →</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(500).duration(400)} style={[s.openYear, { color: colors.accent }]}>2  0  2  6</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(1100).duration(500)} style={[s.openHint, { color: colors.muted }]}>tap to begin  →</Animated.Text>
       </View>
     </SlideBase>
   );
 }
 
-function SlideScans({ stats }: { stats: WrappedStats }) {
+function SlideScans({ stats, colors }: { stats: WrappedStats; colors: SlideColors }) {
   const n = useCounter(stats.totalScans, 200, 900);
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={s.eyebrow}>YOUR YEAR</Animated.Text>
-        <Animated.Text entering={FadeInUp.delay(150).duration(300)} style={s.label}>You showed up</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={[s.eyebrow, { color: colors.eyebrow }]}>YOUR YEAR</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(150).duration(300)} style={[s.label, { color: colors.muted }]}>You showed up</Animated.Text>
         <Animated.View entering={ZoomIn.delay(220).duration(400)}>
-          <Text style={s.heroNum}>{n}</Text>
+          <Text style={[s.heroNum, { color: colors.text, textShadowColor: colors.accent + '80' }]}>{n}</Text>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(320).duration(350)} style={s.label}>times this year</Animated.Text>
-        <Animated.Text entering={FadeIn.delay(800).duration(400)} style={s.copy}>Every scan is a step toward your best self 💕</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(320).duration(350)} style={[s.label, { color: colors.muted }]}>times this year</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(800).duration(400)} style={[s.copy, { color: colors.muted }]}>Every scan is a step toward your best self 💕</Animated.Text>
       </View>
     </SlideBase>
   );
 }
 
-function SlideBestScore({ stats }: { stats: WrappedStats }) {
+function SlideBestScore({ stats, colors }: { stats: WrappedStats; colors: SlideColors }) {
   const n = useCounter(stats.bestScore, 150, 900);
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={s.eyebrow}>PERSONAL BEST</Animated.Text>
-        <Animated.Text entering={FadeInUp.delay(150).duration(300)} style={s.label}>You hit</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={[s.eyebrow, { color: colors.eyebrow }]}>PERSONAL BEST</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(150).duration(300)} style={[s.label, { color: colors.muted }]}>You hit</Animated.Text>
         <Animated.View entering={ZoomIn.delay(200).duration(380)}>
           <View style={{flexDirection:'row',alignItems:'flex-end',gap:4}}>
-            <Text style={s.heroNum}>{n}</Text>
-            <Text style={s.heroUnit}>/100</Text>
+            <Text style={[s.heroNum, { color: colors.text, textShadowColor: colors.accent + '80' }]}>{n}</Text>
+            <Text style={[s.heroUnit, { color: colors.muted }]}>/100</Text>
           </View>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(460).duration(400)} style={s.goldTag}>in {stats.bestScoreMonth}  ✦</Animated.Text>
-        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={s.copy}>That look was absolutely iconic 💅</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(460).duration(400)} style={[s.goldTag, { color: colors.accent }]}>in {stats.bestScoreMonth}  ✦</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={[s.copy, { color: colors.muted }]}>That look was absolutely iconic 💅</Animated.Text>
       </View>
     </SlideBase>
   );
 }
 
-function SlideTopCategory({ stats }: { stats: WrappedStats }) {
+function SlideTopCategory({ stats, colors }: { stats: WrappedStats; colors: SlideColors }) {
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={s.eyebrow}>STRONGEST LOOK</Animated.Text>
-        <Animated.Text entering={FadeInUp.delay(140).duration(300)} style={s.label}>You owned</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={[s.eyebrow, { color: colors.eyebrow }]}>STRONGEST LOOK</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(140).duration(300)} style={[s.label, { color: colors.muted }]}>You owned</Animated.Text>
         <Animated.View entering={ZoomIn.delay(200).duration(400)}>
-          <Text style={s.heroCat}>{stats.topCategory.name}</Text>
+          <Text style={[s.heroCat, { color: colors.text, textShadowColor: colors.accent + '80' }]}>{stats.topCategory.name}</Text>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={s.copy}>This is your natural superpower 👑</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={[s.copy, { color: colors.muted }]}>This is your natural superpower 👑</Animated.Text>
       </View>
     </SlideBase>
   );
 }
 
-function SlideStreak({ stats }: { stats: WrappedStats }) {
+function SlideStreak({ stats, colors }: { stats: WrappedStats; colors: SlideColors }) {
   const n   = useCounter(stats.longestStreak, 200, 900);
   const rot = useSharedValue(0);
   const sc  = useSharedValue(1);
@@ -319,56 +336,56 @@ function SlideStreak({ stats }: { stats: WrappedStats }) {
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={s.eyebrow}>STREAK QUEEN</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={[s.eyebrow, { color: colors.eyebrow }]}>STREAK QUEEN</Animated.Text>
         <Animated.View style={fireStyle}><Text style={{fontSize:72}}>🔥</Text></Animated.View>
         <Animated.View entering={ZoomIn.delay(220).duration(380)}>
           <View style={{flexDirection:'row',alignItems:'flex-end',gap:6}}>
-            <Text style={s.heroNum}>{n}</Text>
-            <Text style={s.heroUnit}>days</Text>
+            <Text style={[s.heroNum, { color: colors.text, textShadowColor: colors.accent + '80' }]}>{n}</Text>
+            <Text style={[s.heroUnit, { color: colors.muted }]}>days</Text>
           </View>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={s.copy}>Consistency is the real glow-up 🌸</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={[s.copy, { color: colors.muted }]}>Consistency is the real glow-up 🌸</Animated.Text>
       </View>
     </SlideBase>
   );
 }
 
-function SlideGlowUp({ stats }: { stats: WrappedStats }) {
+function SlideGlowUp({ stats, colors }: { stats: WrappedStats; colors: SlideColors }) {
   const delta = stats.endAvgScore - stats.startAvgScore;
   const d     = useCounter(Math.abs(delta), 180, 900);
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={s.eyebrow}>YOUR GLOW-UP</Animated.Text>
-        <Animated.Text entering={FadeInUp.delay(140).duration(300)} style={s.label}>You grew</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={[s.eyebrow, { color: colors.eyebrow }]}>YOUR GLOW-UP</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(140).duration(300)} style={[s.label, { color: colors.muted }]}>You grew</Animated.Text>
         <Animated.View entering={ZoomIn.delay(200).duration(380)}>
-          <Text style={s.heroNum}>{delta >= 0 ? '+' : '-'}{d}</Text>
+          <Text style={[s.heroNum, { color: colors.text, textShadowColor: colors.accent + '80' }]}>{delta >= 0 ? '+' : '-'}{d}</Text>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(420).duration(350)} style={s.sublabel}>
+        <Animated.Text entering={FadeIn.delay(420).duration(350)} style={[s.sublabel, { color: colors.muted }]}>
           {stats.startAvgScore} → {stats.endAvgScore}  avg score
         </Animated.Text>
-        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={s.copy}>That's not luck — that's you showing up 💗</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={[s.copy, { color: colors.muted }]}>That's not luck — that's you showing up 💗</Animated.Text>
       </View>
     </SlideBase>
   );
 }
 
-function SlideMostImproved({ stats }: { stats: WrappedStats }) {
+function SlideMostImproved({ stats, colors }: { stats: WrappedStats; colors: SlideColors }) {
   return (
     <SlideBase>
       <View style={s.slideBody}>
-        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={s.eyebrow}>MOST IMPROVED</Animated.Text>
-        <Animated.Text entering={FadeInUp.delay(140).duration(300)} style={s.label}>You levelled up</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(60).duration(300)} style={[s.eyebrow, { color: colors.eyebrow }]}>MOST IMPROVED</Animated.Text>
+        <Animated.Text entering={FadeInUp.delay(140).duration(300)} style={[s.label, { color: colors.muted }]}>You levelled up</Animated.Text>
         <Animated.View entering={ZoomIn.delay(200).duration(400)}>
-          <Text style={s.heroCat}>{stats.mostImproved.name}</Text>
+          <Text style={[s.heroCat, { color: colors.text, textShadowColor: colors.accent + '80' }]}>{stats.mostImproved.name}</Text>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={s.copy}>From struggling to slaying 🦋</Animated.Text>
+        <Animated.Text entering={FadeIn.delay(900).duration(400)} style={[s.copy, { color: colors.muted }]}>From struggling to slaying 🦋</Animated.Text>
       </View>
     </SlideBase>
   );
 }
 
-function SlideOutro({ onShare }: { onShare: () => void }) {
+function SlideOutro({ onShare, colors }: { onShare: () => void; colors: SlideColors }) {
   const heartSc = useSharedValue(0);
   const btnSc   = useSharedValue(0.8);
   const heartR  = useSharedValue(0);
@@ -383,21 +400,21 @@ function SlideOutro({ onShare }: { onShare: () => void }) {
     <SlideBase>
       <View style={s.slideBody}>
         <Animated.Text style={[{fontSize:86},heartStyle]}>💗</Animated.Text>
-        <Animated.Text entering={FadeInUp.delay(350).duration(400)} style={s.outroHead}>
+        <Animated.Text entering={FadeInUp.delay(350).duration(400)} style={[s.outroHead, { color: colors.text }]}>
           {"Here's to your\nglow-up"}
         </Animated.Text>
-        <Animated.Text entering={FadeIn.delay(650).duration(400)} style={s.outroBrand}>
+        <Animated.Text entering={FadeIn.delay(650).duration(400)} style={[s.outroBrand, { color: colors.muted }]}>
           REMAKE  ✦  2026
         </Animated.Text>
         <Animated.View style={[{width:'100%'},btnStyle]}>
           <Pressable
-            style={({pressed})=>[s.shareBtn,pressed&&{opacity:0.85}]}
+            style={({pressed})=>[s.shareBtn, { backgroundColor: colors.accent === '#FF007F' ? '#FF007F' : 'rgba(255,255,255,0.14)', borderColor: colors.accent === '#FF007F' ? '#FF007F' : 'rgba(255,255,255,0.28)' }, pressed&&{opacity:0.85}]}
             onPress={onShare}
           >
-            <Text style={s.shareBtnText}>Share your Wrapped  ↗</Text>
+            <Text style={[s.shareBtnText, { color: colors.accent === '#FF007F' ? '#FFF' : '#FFF5F9' }]}>Share your Wrapped  ↗</Text>
           </Pressable>
         </Animated.View>
-        <Animated.Text entering={FadeIn.delay(1100).duration(500)} style={s.outroNote}>
+        <Animated.Text entering={FadeIn.delay(1100).duration(500)} style={[s.outroNote, { color: colors.muted }]}>
           See you next year  💕
         </Animated.Text>
       </View>
@@ -426,6 +443,7 @@ export default function WrappedScreen() {
     ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
     : undefined;
   const [current, setCurrent]   = useState(0);
+  const colors = SLIDE_COLORS[current] ?? SLIDE_COLORS[0];
   const [prevSlide, setPrevSlide] = useState<number | null>(null);
   const [transDir, setTransDir] = useState<1|-1>(1);
   const [bgFrom,   setBgFrom]   = useState(0);
@@ -609,15 +627,15 @@ export default function WrappedScreen() {
   }, [current]);
 
   const slides = [
-    <SlideWelcome name={displayName} />,
-    <SlideOpening name={displayName} />,
-    <SlideScans stats={stats} />,
-    <SlideBestScore stats={stats} />,
-    <SlideTopCategory stats={stats} />,
-    <SlideStreak stats={stats} />,
-    <SlideGlowUp stats={stats} />,
-    <SlideMostImproved stats={stats} />,
-    <SlideOutro onShare={()=>Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)} />,
+    <SlideWelcome name={displayName} colors={SLIDE_COLORS[0]} />,
+    <SlideOpening name={displayName} colors={SLIDE_COLORS[1]} />,
+    <SlideScans stats={stats} colors={SLIDE_COLORS[2]} />,
+    <SlideBestScore stats={stats} colors={SLIDE_COLORS[3]} />,
+    <SlideTopCategory stats={stats} colors={SLIDE_COLORS[4]} />,
+    <SlideStreak stats={stats} colors={SLIDE_COLORS[5]} />,
+    <SlideGlowUp stats={stats} colors={SLIDE_COLORS[6]} />,
+    <SlideMostImproved stats={stats} colors={SLIDE_COLORS[7]} />,
+    <SlideOutro onShare={()=>Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)} colors={SLIDE_COLORS[8]} />,
   ];
 
   return (
@@ -653,17 +671,17 @@ export default function WrappedScreen() {
       <View style={[s.topRow, { paddingTop: insets.top + 10 }]} pointerEvents="box-none">
         <View style={s.progressSegs} pointerEvents="none">
           {Array.from({length:TOTAL}).map((_,i)=>(
-            <View key={i} style={s.seg}>
+            <View key={i} style={[s.seg, { backgroundColor: colors.text === '#FFFFFF' || colors.text === '#FFEEDD' ? 'rgba(255,240,247,0.15)' : 'rgba(0,0,0,0.1)' }]}>
               {i < current ? (
-                <View style={[s.segFill,s.segDone]} />
+                <View style={[s.segFill, s.segDone, { backgroundColor: colors.text }]} />
               ) : i===current ? (
-                <Animated.View style={[s.segFill,s.segActive,activeBarStyle]} />
+                <Animated.View style={[s.segFill, s.segActive, { backgroundColor: colors.text }, activeBarStyle]} />
               ) : null}
             </View>
           ))}
         </View>
-        <Pressable hitSlop={12} style={s.closeBtn} onPress={()=>router.back()}>
-          <Text style={s.closeTxt}>✕</Text>
+        <Pressable hitSlop={12} style={[s.closeBtn, { backgroundColor: colors.text === '#FFFFFF' || colors.text === '#FFEEDD' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)' }]} onPress={()=>router.back()}>
+          <Text style={[s.closeTxt, { color: colors.text }]}>✕</Text>
         </Pressable>
       </View>
 
