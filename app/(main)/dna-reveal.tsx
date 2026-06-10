@@ -16,7 +16,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
-import Svg, { Defs, Filter, FeTurbulence, FeColorMatrix, Rect } from 'react-native-svg';
+import Svg, { Defs, Filter, FeTurbulence, FeColorMatrix, Rect, Path, G } from 'react-native-svg';
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 import type { DnaResult } from '@/lib/api/dna';
 import { SEASON_DESCRIPTIONS, ARCHETYPE_DESCRIPTIONS, SEASON_PALETTES } from '@/lib/api/dna';
 import { useSubscription } from '@/contexts/subscription-context';
@@ -791,6 +792,99 @@ function BurstDots({ color, delay = 0 }: { color: string; delay?: number }) {
   );
 }
 
+// ── Custom cosmetic Brow Outline Tracer ──
+function BrowTracer({ color }: { color: string }) {
+  const drawProgress = useSharedValue(1);
+  const pathLength = 120;
+
+  useEffect(() => {
+    drawProgress.value = 1;
+    drawProgress.value = withDelay(1400, withSpring(0, { stiffness: 140, damping: 20 }));
+  }, []);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: drawProgress.value * pathLength,
+  }));
+
+  const leftBrow = 'M 20 52 C 32 36, 45 38, 48 44';
+  const rightBrow = 'M 80 52 C 68 36, 55 38, 52 44';
+
+  return (
+    <View style={{ width: 140, height: 80, alignItems: 'center', justifyContent: 'center', marginVertical: 10 }}>
+      <Svg width="140" height="80" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
+        <G>
+          <Path d={leftBrow} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={3} fill="none" strokeLinecap="round" />
+          <AnimatedPath
+            d={leftBrow}
+            stroke={color}
+            strokeWidth={3.5}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={pathLength}
+            animatedProps={animatedProps}
+          />
+          <Path d={rightBrow} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={3} fill="none" strokeLinecap="round" />
+          <AnimatedPath
+            d={rightBrow}
+            stroke={color}
+            strokeWidth={3.5}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={pathLength}
+            animatedProps={animatedProps}
+          />
+        </G>
+      </Svg>
+    </View>
+  );
+}
+
+// ── Custom cosmetic Lash Sweep Tracer ──
+function LashTracer({ color }: { color: string }) {
+  const drawProgress = useSharedValue(1);
+  const pathLength = 100;
+
+  useEffect(() => {
+    drawProgress.value = 1;
+    drawProgress.value = withDelay(1400, withSpring(0, { stiffness: 150, damping: 22 }));
+  }, []);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: drawProgress.value * pathLength,
+  }));
+
+  const lid = 'M 20 58 C 40 42, 60 42, 80 58';
+  const lashes = [
+    'M 30 49 C 24 35, 18 32, 12 34',
+    'M 40 46 C 36 28, 30 20, 24 24',
+    'M 50 45 C 50 24, 50 14, 50 17',
+    'M 60 46 C 64 28, 70 20, 76 24',
+    'M 70 49 C 76 35, 82 32, 88 34',
+  ];
+
+  return (
+    <View style={{ width: 140, height: 100, alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
+      <Svg width="140" height="100" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
+        <G>
+          <Path d={lid} stroke="rgba(255,255,255,0.12)" strokeWidth={2} fill="none" strokeLinecap="round" />
+          {lashes.map((lash, idx) => (
+            <AnimatedPath
+              key={idx}
+              d={lash}
+              stroke={color}
+              strokeWidth={2.5}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={pathLength}
+              animatedProps={animatedProps}
+            />
+          ))}
+        </G>
+      </Svg>
+    </View>
+  );
+}
+
 // ── Slide: Canvas ─────────────────────────────────────────────────────────────
 
 function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
@@ -867,71 +961,75 @@ const SWATCH_SEASON: Record<string, string> = {
   Spring: '#F4A261', Summer: '#A8C4D5', Autumn: '#C8956A', Winter: '#7A8FBF',
 };
 
-function SeasonVinyl({ colors, palette, isLocked }: { colors: SlideColors; palette: string[]; isLocked?: boolean }) {
+function CompactPalette({ colors, palette, isLocked }: { colors: SlideColors; palette: string[]; isLocked?: boolean }) {
+  const scale = useSharedValue(0.7);
   const rotation = useSharedValue(0);
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 12000, easing: Easing.linear }),
-      -1, false
-    );
+    scale.value = withSpring(1, { damping: 11, stiffness: 90 });
+    rotation.value = withTiming(360, { duration: 32000, easing: Easing.linear });
   }, []);
 
-  const rotStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }, { rotate: `${rotation.value}deg` }],
   }));
+
+  const displayPalette = palette.length >= 4 ? palette.slice(0, 4) : ['#F4A261', '#E76F51', '#2A9D8F', '#E9C46A'];
 
   return (
     <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
-      {/* Starburst spikes behind the record */}
+      {/* Sparkly stars behind the compact */}
       <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="none">
         <Text style={{ color: 'rgba(255,255,255,0.06)', fontSize: 260, position: 'absolute' }}>✦</Text>
         <Text style={{ color: 'rgba(255,255,255,0.04)', fontSize: 280, position: 'absolute', transform: [{ rotate: '45deg' }] }}>✦</Text>
       </View>
       
-      {/* The Vinyl Disc */}
-      <Animated.View style={[rotStyle, {
-        width: 200, height: 200, borderRadius: 100,
-        backgroundColor: '#0F0311',
-        borderWidth: 6, borderColor: 'rgba(255,255,255,0.08)',
+      <Animated.View style={[animatedStyle, {
+        width: 190, height: 190, borderRadius: 95,
+        backgroundColor: '#1E151A',
+        borderWidth: 2.5, borderColor: '#D4AF37',
         justifyContent: 'center', alignItems: 'center',
         shadowColor: '#000', shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.45, shadowRadius: 20, elevation: 12,
+        shadowOpacity: 0.35, shadowRadius: 18, elevation: 10,
       }]}>
-        {/* Grooves on vinyl */}
         <View style={{
-          position: 'absolute', width: 170, height: 170, borderRadius: 85,
-          borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderStyle: 'dashed',
-        }} />
-        <View style={{
-          position: 'absolute', width: 140, height: 140, borderRadius: 70,
-          borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.04)',
-        }} />
-        <View style={{
-          position: 'absolute', width: 110, height: 110, borderRadius: 55,
-          borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderStyle: 'dashed',
+          position: 'absolute', width: 176, height: 174, borderRadius: 87,
+          borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)',
         }} />
 
-        {/* Outer Palette Ring */}
-        <View style={{
-          position: 'absolute', width: 80, height: 80, borderRadius: 40,
-          borderWidth: 12, borderColor: isLocked ? '#555' : (palette[0] || colors.accent),
-          opacity: 0.95,
-        }} />
-        <View style={{
-          position: 'absolute', width: 56, height: 56, borderRadius: 28,
-          borderWidth: 8, borderColor: isLocked ? '#333' : (palette[1] || '#FFF'),
-          opacity: 0.9,
-        }} />
+        {/* Quadrant powder pans inside compact */}
+        <View style={{ width: 124, height: 124, flexWrap: 'wrap', flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+          {displayPalette.map((color, idx) => (
+            <View
+              key={idx}
+              style={{
+                width: 54, height: 54, borderRadius: 27,
+                backgroundColor: isLocked ? '#555' : color,
+                shadowColor: color, shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: isLocked ? 0 : 0.25, shadowRadius: 6,
+                borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)',
+                overflow: 'hidden',
+              }}
+            >
+              <View style={{
+                position: 'absolute', top: 4, left: 4, width: 44, height: 44, borderRadius: 22,
+                borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', borderStyle: 'dashed',
+              }} />
+              <View style={{
+                position: 'absolute', top: 10, left: 12, width: 32, height: 32, borderRadius: 16,
+                borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.04)',
+              }} />
+            </View>
+          ))}
+        </View>
 
-        {/* Center Label (The "Sticker") */}
+        {/* Mini Gold Emblem Cover in center */}
         <View style={{
-          width: 40, height: 40, borderRadius: 20,
-          backgroundColor: '#FFF5F9',
+          position: 'absolute', width: 34, height: 34, borderRadius: 17,
+          backgroundColor: '#1E151A', borderWidth: 1, borderColor: '#D4AF37',
           justifyContent: 'center', alignItems: 'center',
-          shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3,
+          shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2,
         }}>
-          {/* Center spindle hole */}
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#0F0311' }} />
+          <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 13, color: '#D4AF37', fontWeight: 'bold' }}>R</Text>
         </View>
       </Animated.View>
     </View>
@@ -953,9 +1051,9 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{"it’s time to enter\nyour ultimate color era. ✨"}</Text>
         </RevealItem>
         
-        {/* Vinyl Record Graphic instead of bar chart */}
+        {/* Luxury Compact Makeup Palette */}
         <RevealItem delay={2000}>
-          <SeasonVinyl colors={colors} palette={palette} isLocked={isLocked} />
+          <CompactPalette colors={colors} palette={palette} isLocked={isLocked} />
         </RevealItem>
 
         {isLocked
@@ -1109,8 +1207,8 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
             </View>
           </View>
         </PopIn>
-        {/* Two bars extending symmetrically from centre — mirrors the symmetry concept */}
-        <SymmetryBars color={colors.text} />
+        {/* Symmetrical Brow Arch Tracer */}
+        <BrowTracer color={colors.accent} />
         {isLocked
           ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
@@ -1141,8 +1239,8 @@ function SlideLashes({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         <RevealItem delay={850}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{'literally turns your natural lashes\ninto your signature slay. 💖'}</Text>
         </RevealItem>
-        {/* Stars scatter from centre — each one arrives from a different direction */}
-        <LashStars delay={1350} color={`${colors.text}88`} />
+        {/* Symmetrical fanned lash sweep vector */}
+        <LashTracer color={colors.accent} />
         {isLocked
           ? <RevealItem delay={2050}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
