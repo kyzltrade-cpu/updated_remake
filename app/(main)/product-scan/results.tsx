@@ -274,6 +274,62 @@ export default function ProductScanResultsScreen() {
   const { barcode, uri } = useLocalSearchParams<{ barcode?: string; uri?: string }>();
   const { settings } = useSettings();
 
+  const { user } = useAuth();
+  const { user: profileUser, refreshProfile } = useUser();
+  const { subscription } = useSubscription();
+
+  const [isLocked, setIsLocked] = useState(false);
+  const [referralCount, setReferralCount] = useState(0);
+
+  useEffect(() => {
+    const checkGating = async () => {
+      try {
+        if (user) {
+          const supabase = createClient() as any;
+          const { count, error } = await supabase
+            .from('referrals')
+            .select('*', { count: 'exact', head: true })
+            .eq('referrer_id', user.id);
+          
+          if (!error && count !== null) {
+            setReferralCount(count);
+          }
+        }
+
+        const isPro = subscription?.plan === 'pro';
+        const isUnlockedByReferral = profileUser?.shelf_audit_unlocked === true || referralCount >= 3;
+
+        if (isPro || isUnlockedByReferral) {
+          setIsLocked(false);
+        } else {
+          setIsLocked(true);
+        }
+      } catch (err) {
+        console.warn('[Product Results Gating] error checking status:', err);
+      }
+    };
+
+    checkGating();
+  }, [subscription, profileUser, referralCount, user]);
+
+  const handleShareReferral = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const refCode = profileUser?.referral_code || 'BESTIE';
+    const shareLink = `https://remake.app/join?ref=${refCode}`;
+    const shareMessage = `wait bestie scan your makeup on Remake immediately 😭 literally half my routine was NOT ACNE SAFE and clogging my pores. Scan your makeup here to see your Clean Girl Index!!: ${shareLink}`;
+
+    try {
+      const result = await Share.share({
+        message: shareMessage,
+      });
+      if (result.action === Share.sharedAction) {
+        await refreshProfile();
+      }
+    } catch (err) {
+      console.warn('[Referral] Share error:', err);
+    }
+  };
+
   const [data, setData] = useState<ProductScanResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -525,6 +581,46 @@ export default function ProductScanResultsScreen() {
         </Pressable>
       </Animated.View>
 
+      {isLocked && (
+        <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFillObject}>
+          <View style={s.lockContainer}>
+            <View style={s.lockCard}>
+              <View style={s.lockIconBg}>
+                <MaterialIcons name="lock-outline" size={40} color={tokens.colors.pinkDeep} />
+              </View>
+              <Text style={s.lockTitle}>Unlock Analysis 🎀</Text>
+              <Text style={s.lockSubtitle}>
+                See your customized pore-clogging ingredient report and safe alternative recommendations!
+              </Text>
+
+              <Pressable onPress={() => router.push('/(main)/paywall')} style={s.lockPrimaryBtn}>
+                <Text style={s.lockPrimaryBtnTxt}>Go Unlimited Premium ($29.99/yr) 👑</Text>
+              </Pressable>
+
+              <Pressable onPress={handleShareReferral} style={s.lockSecondaryBtn}>
+                <Text style={s.lockSecondaryBtnTxt}>Invite 3 Besties to Unlock Free 💖</Text>
+              </Pressable>
+
+              <View style={s.progressRow}>
+                <Text style={s.progressLbl}>Invite Progress: [{referralCount} / 3] Joined! 🎀</Text>
+                <View style={s.dotsGrid}>
+                  {[1, 2, 3].map(i => (
+                    <View 
+                      key={i} 
+                      style={[
+                        s.dot, 
+                        referralCount >= i ? s.dotActive : s.dotInactive
+                      ]} 
+                    />
+                  ))}
+                </View>
+              </View>
+            </View>
+          </View>
+        </BlurView>
+      )}
+
+      </View>
     </View>
   );
 }

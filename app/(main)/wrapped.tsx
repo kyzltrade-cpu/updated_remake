@@ -19,6 +19,7 @@ import { BlurView } from 'expo-blur';
 import { useUser } from '@/contexts/user-context';
 import { useSubscription } from '@/contexts/subscription-context';
 import { createClient } from '@/lib/supabase';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const { width: W, height: H } = Dimensions.get('window');
 

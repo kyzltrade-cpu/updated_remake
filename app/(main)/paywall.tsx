@@ -63,7 +63,7 @@ export default function PaywallScreen() {
     
     try {
       if (user) {
-        const supabase = createClient();
+        const supabase = createClient() as any;
         
         // Update subscription to 'pro' plan with 'active' status in database
         const { error: subError } = await supabase
