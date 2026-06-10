@@ -32,7 +32,7 @@ import { HolographicTracer } from '@/components/holographic-tracer';
 import { tokens } from '@/components/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
-const SLIDE_COUNT = 19; // +2 for welcome + opening slides, +1 for Eye Shape
+const SLIDE_COUNT = 20; // +2 for welcome + opening slides, +1 for Eye Shape, +1 for Celebrity Match
 const SLIDE_DURATION = 9000;
 const SEG_GAP = 3;
 const SEG_PAD = 14;
@@ -180,77 +180,84 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
     eyebrow: '#00F5FF', accent: '#00F5FF' 
   },
-  // 8 — Energy: VIBRANT ACID LIME YELLOW (deep dark forest text contrast)
+  // 8 — Celebrity Match: Starry gold over rich obsidian (stark white & coquette gold contrast)
+  { 
+    gradientTop: '#080206', gradientBot: '#12050E', 
+    blobA: '#D4AF37', blobB: '#3F102F', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
+    eyebrow: '#D4AF37', accent: '#D4AF37' 
+  },
+  // 9 — Energy: VIBRANT ACID LIME YELLOW (deep dark forest text contrast)
   { 
     gradientTop: '#CCFF00', gradientBot: '#B2EB00', 
     blobA: '#1A237E', blobB: '#E6FF00', 
     text: '#0C1A00', muted: 'rgba(12,26,0,0.75)', 
     eyebrow: '#0C1A00', accent: '#0C1A00' 
   },
-  // 9 — Archetype: THE REVEAL (glowing hot pink over deep purple)
+  // 10 — Archetype: THE REVEAL (glowing hot pink over deep purple)
   { 
     gradientTop: '#110118', gradientBot: '#050008', 
     blobA: '#FF007F', blobB: '#880E4F', 
     text: '#FFFFFF', muted: 'rgba(255,255,255,0.75)', 
     eyebrow: '#FF007F', accent: '#FF007F' 
   },
-  // 10 — Lips: DEEP gothic plum (stark white & neon pink contrast)
+  // 11 — Lips: DEEP gothic plum (stark white & neon pink contrast)
   { 
     gradientTop: '#1B001F', gradientBot: '#0D0017', 
     blobA: '#FF007F', blobB: '#4A148C', 
     text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
     eyebrow: '#FF007F', accent: '#FF007F' 
   },
-  // 11 — Blush: VIBRANT ELECTRIC CORAL (dark navy text contrast)
+  // 12 — Blush: VIBRANT ELECTRIC CORAL (dark navy text contrast)
   { 
     gradientTop: '#FF6F00', gradientBot: '#E65100', 
     blobA: '#1A237E', blobB: '#FFB300', 
     text: '#1C0600', muted: 'rgba(28,6,0,0.75)', 
     eyebrow: '#1C0600', accent: '#1C0600' 
   },
-  // 12 — Foundation Recs/Kit 0: Deep luxury charcoal (gold and white contrast)
+  // 13 — Foundation Recs/Kit 0: Deep luxury charcoal (gold and white contrast)
   { 
     gradientTop: '#0D0D0D', gradientBot: '#1A1A1A', 
     blobA: '#D4AF37', blobB: '#333333', 
     text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
     eyebrow: '#D4AF37', accent: '#D4AF37' 
   },
-  // 13 — Blush Recs/Kit 1: STARK VIBRANT MAGENTA (black text contrast)
+  // 14 — Blush Recs/Kit 1: STARK VIBRANT MAGENTA (black text contrast)
   { 
     gradientTop: '#D81B60', gradientBot: '#C2185B', 
     blobA: '#FFF0F5', blobB: '#880E4F', 
     text: '#0F0107', muted: 'rgba(15,1,7,0.75)', 
     eyebrow: '#0F0107', accent: '#0F0107' 
   },
-  // 14 — Mascara Recs/Kit 2: Midnight navy (glowing electric purple contrast)
+  // 15 — Mascara Recs/Kit 2: Midnight navy (glowing electric purple contrast)
   { 
     gradientTop: '#050B24', gradientBot: '#0A133A', 
     blobA: '#8F5EFE', blobB: '#111A4D', 
     text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
     eyebrow: '#8F5EFE', accent: '#8F5EFE' 
   },
-  // 15 — Eye Recs/Kit 3: VIBRANT LIME GREEN (stark black text contrast)
+  // 16 — Eye Recs/Kit 3: VIBRANT LIME GREEN (stark black text contrast)
   { 
     gradientTop: '#00E676', gradientBot: '#00C853', 
     blobA: '#1B5E20', blobB: '#B9F6CA', 
     text: '#011A04', muted: 'rgba(1,26,4,0.75)', 
     eyebrow: '#011A04', accent: '#011A04' 
   },
-  // 16 — Lip Recs/Kit 4: Deep velvet burgundy (stark white & cyan contrast)
+  // 17 — Lip Recs/Kit 4: Deep velvet burgundy (stark white & cyan contrast)
   { 
     gradientTop: '#3E0313', gradientBot: '#1D000A', 
     blobA: '#00F5FF', blobB: '#5C061F', 
     text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
     eyebrow: '#00F5FF', accent: '#00F5FF' 
   },
-  // 17 — Skincare Recs/Kit 5: ELECTRIC DEEP CYAN TEAL (neon yellow contrast)
+  // 18 — Skincare Recs/Kit 5: ELECTRIC DEEP CYAN TEAL (neon yellow contrast)
   { 
     gradientTop: '#006064', gradientBot: '#00363A', 
     blobA: '#FFD700', blobB: '#00838F', 
     text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
     eyebrow: '#FFD700', accent: '#FFD700' 
   },
-  // 18 — Summary/Finale: DEEP COSMIC NIGHT (pure gold and white contrast)
+  // 19 — Summary/Finale: DEEP COSMIC NIGHT (pure gold and white contrast)
   { 
     gradientTop: '#0A0314', gradientBot: '#1C0838', 
     blobA: '#D4AF37', blobB: '#060108', 
@@ -1502,33 +1509,43 @@ function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: b
           <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>EYE SHAPE & MAKEUP 🎀</Text>
         </DropIn>
 
+        {/* Word-by-word kinetic headers */}
+        <WordByWordReveal
+          text="Your eyes have their own custom alignment and sweep…"
+          style={[ds.narrativeHook, { color: colors.muted }]}
+          delay={400}
+        />
+        <WordByWordReveal
+          text="the perfect liner blueprint makes everything pop. ✨"
+          style={[ds.narrativePunch, { color: colors.text }]}
+          delay={1100}
+        />
+
         {isLocked ? (
-          <SpinIn delay={400}>
+          <SpinIn delay={1500}>
             <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>○</Text>
           </SpinIn>
         ) : (
-          <RevealItem delay={400}>
+          <RevealItem delay={1500}>
             <HolographicTracer shape={dna.eyeShape ?? 'Almond Eye'} color={colors.accent} />
           </RevealItem>
         )}
 
         {isLocked ? (
-          <RevealItem delay={1100}>
+          <RevealItem delay={2100}>
             <LockedValue size="lg" color={colors.muted} />
           </RevealItem>
         ) : (
           <>
-            <RevealItem delay={1100}>
-              <Text style={[ds.narrativeHook, { color: colors.muted, textAlign: 'center' }]}>
-                {`Similar to your celebrity look-alike, ${dna.celebrityLookalike ?? 'Kendall Jenner'}! 💖`}
-              </Text>
+            <RevealItem delay={2000}>
+              <Text style={[ds.revealLabel, { color: colors.muted }]}>Your official eye shape:</Text>
             </RevealItem>
-            <RevealItem delay={1400}>
-              <Text style={[ds.narrativePunch, { color: colors.accent, fontSize: 32, lineHeight: 38 }]}>
+            <RevealPop delay={2100}>
+              <Text style={[ds.bigVal, { color: colors.accent }]}>
                 {dna.eyeShape ?? 'Almond Eye'}
               </Text>
-            </RevealItem>
-            <RevealItem delay={1900}>
+            </RevealPop>
+            <RevealItem delay={2600}>
               <View style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 borderRadius: 16,
@@ -1561,6 +1578,157 @@ function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: b
                   {dna.eyeMakeup ?? 'Classic wing with highlighted crease.'}
                 </Text>
               </View>
+            </RevealItem>
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// ── Slide: Celebrity Match (Dedicated, Highly Kinetic lookalike reveal) ──
+function SlideCelebrityMatch({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+  const [matchPct, setMatchPct] = useState(0);
+  const celebName = dna.celebrityLookalike ?? 'Kendall Jenner';
+  
+  // Get initials for portrait avatar placeholder
+  const celebInitials = celebName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
+
+  useEffect(() => {
+    if (isLocked) return;
+    const target = 94 + Math.floor(Math.random() * 5); // 94% - 98% similarity
+    let frame = 0;
+    const totalFrames = 38;
+    const id = setInterval(() => {
+      frame++;
+      const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
+      setMatchPct(Math.round(eased * target));
+      if (frame % 3 === 0) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      if (frame >= totalFrames) {
+        clearInterval(id);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }, 60);
+    return () => clearInterval(id);
+  }, [isLocked]);
+
+  // Portrait scanning radar sweep shared value
+  const sweepY = useSharedValue(-90);
+  useEffect(() => {
+    sweepY.value = withRepeat(
+      withSequence(
+        withTiming(90, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+        withTiming(-90, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1, false
+    );
+  }, []);
+
+  const sweepStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sweepY.value }],
+  }));
+
+  return (
+    <View style={[ds.page, { backgroundColor: 'transparent' }]}>
+      <View style={ds.bodyWrap}>
+        <DropIn delay={0}>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>CELEBRITY MATCH 💅</Text>
+        </DropIn>
+
+        {/* Word-by-word kinetic headers */}
+        <WordByWordReveal
+          text="The algorithm scanned your features against 500+ beauty icons…"
+          style={[ds.narrativeHook, { color: colors.muted }]}
+          delay={400}
+        />
+        <WordByWordReveal
+          text="and we literally found your aesthetic twin. ✨"
+          style={[ds.narrativePunch, { color: colors.text }]}
+          delay={1200}
+        />
+
+        {/* Golden SVG Portrait Frame with Radar Scan Sweep */}
+        <View style={{ width: 180, height: 180, alignItems: 'center', justifyContent: 'center', marginVertical: 10 }}>
+          <PopIn delay={1800}>
+            <View style={{
+              width: 140, height: 140,
+              borderRadius: 70,
+              borderWidth: 2, borderColor: '#D4AF37',
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              justifyContent: 'center', alignItems: 'center',
+              overflow: 'hidden',
+              shadowColor: '#D4AF37',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isLocked ? 0 : 0.28, shadowRadius: 16,
+            }}>
+              {/* Radar Scanner Line */}
+              {!isLocked && (
+                <Animated.View style={[sweepStyle, {
+                  position: 'absolute',
+                  width: 140, height: 2,
+                  backgroundColor: '#D4AF37',
+                  shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.9, shadowRadius: 8,
+                  zIndex: 10,
+                }]} />
+              )}
+              
+              {/* Initials Placeholder */}
+              <Text style={{
+                fontFamily: 'Playfair Display',
+                fontSize: 34,
+                fontStyle: 'italic',
+                fontWeight: 'bold',
+                color: colors.text,
+                letterSpacing: 2,
+              }}>
+                {isLocked ? '??' : celebInitials}
+              </Text>
+              
+              {isLocked && <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFillObject} />}
+            </View>
+          </PopIn>
+        </View>
+
+        {isLocked ? (
+          <RevealItem delay={2600}>
+            <LockedValue size="lg" color={colors.muted} />
+          </RevealItem>
+        ) : (
+          <>
+            <RevealItem delay={2400} fast>
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 10,
+                fontWeight: '500',
+                color: colors.muted,
+                textTransform: 'uppercase',
+                letterSpacing: 2,
+                textAlign: 'center',
+                marginBottom: -4,
+              }}>
+                {`Scan match ... ${matchPct}% similarity`}
+              </Text>
+            </RevealItem>
+            <RevealPop delay={2600}>
+              <Text style={[ds.bigVal, { color: colors.accent }]}>{celebName}</Text>
+            </RevealPop>
+            <RevealItem delay={3100}>
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: colors.muted,
+                textAlign: 'center',
+                lineHeight: 18,
+                maxWidth: W - 100,
+              }}>
+                {`It's giving twins, bestie! You both share the exact same beautiful ${dna.eyeShape ?? 'Almond Eye'} outline and bone structure.`}
+              </Text>
             </RevealItem>
           </>
         )}
@@ -2189,21 +2357,21 @@ function renderSlide(idx: number, dna: DnaResult, locked: boolean, onShare: () =
   if (idx === 0) return <DnaSlideWelcome name={name} />;
   if (idx === 1) return <DnaSlideOpening />;
   // Existing slides shifted by +2
-  // Kit slides shifted from 11-16 → 12-17
-  if (idx >= 12 && idx <= 17) {
+  // Kit slides shifted from 12-17 → 13-18
+  if (idx >= 13 && idx <= 18) {
     const kits = getKitForDna(dna.archetype);
-    const kit = kits[idx - 12] ?? kits[0];
+    const kit = kits[idx - 13] ?? kits[0];
     return (
       <SlideKitCategory
         kit={kit}
         isLocked={locked}
         colors={colors}
-        slideNum={idx - 11}
+        slideNum={idx - 12}
         totalSlides={KIT_CATEGORY_COUNT}
       />
     );
   }
-  // Existing content slides shifted by +2 with Eye Shape as Slide 7
+  // Existing content slides shifted by +2 with Eye Shape as Slide 7 and Celebrity Match as Slide 8
   switch (idx) {
     case 2:  return <SlideCanvas dna={dna} isLocked={locked} colors={colors} />;
     case 3:  return <SlideSeason dna={dna} isLocked={locked} colors={colors} />;
@@ -2211,11 +2379,12 @@ function renderSlide(idx: number, dna: DnaResult, locked: boolean, onShare: () =
     case 5:  return <SlideBrows dna={dna} isLocked={locked} colors={colors} />;
     case 6:  return <SlideLashes dna={dna} isLocked={locked} colors={colors} />;
     case 7:  return <SlideEyeShape dna={dna} isLocked={locked} colors={colors} />;
-    case 8:  return <SlideEnergy dna={dna} isLocked={locked} colors={colors} />;
-    case 9:  return <SlideArchetype dna={dna} isLocked={locked} colors={colors} />;
-    case 10: return <SlideLips dna={dna} isLocked={locked} colors={colors} />;
-    case 11: return <SlideBlush dna={dna} isLocked={locked} colors={colors} />;
-    case 18: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
+    case 8:  return <SlideCelebrityMatch dna={dna} isLocked={locked} colors={colors} />;
+    case 9:  return <SlideEnergy dna={dna} isLocked={locked} colors={colors} />;
+    case 10: return <SlideArchetype dna={dna} isLocked={locked} colors={colors} />;
+    case 11: return <SlideLips dna={dna} isLocked={locked} colors={colors} />;
+    case 12: return <SlideBlush dna={dna} isLocked={locked} colors={colors} />;
+    case 19: return <SlideSummary dna={dna} isLocked={locked} onShare={onShare} colors={colors} />;
     default: return null;
   }
 }
@@ -2424,10 +2593,10 @@ export default function DnaRevealScreen() {
     router.push('/(main)/paywall');
   };
 
-  // Free users see their real DNA on all analysis slides (0-9).
-  // Product pick slides (12-17) are the hard paywall — locked for free users.
+  // Free users see their real DNA on all analysis slides (0-12).
+  // Product pick slides (13-18) are the hard paywall — locked for free users.
   const displayDna = dna ?? PLACEHOLDER_DNA;
-  const isProductSlide = (idx: number) => idx >= 12 && idx <= 17;
+  const isProductSlide = (idx: number) => idx >= 13 && idx <= 18;
   const locked = !isPro && isProductSlide(current);
 
   return (
