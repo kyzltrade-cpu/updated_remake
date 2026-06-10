@@ -8,6 +8,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import Animated, {
   FadeIn, FadeInDown, FadeInUp, FadeOut,
   useSharedValue, useAnimatedStyle, withTiming, Easing,
+  withRepeat,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -63,6 +64,84 @@ const UV_HOURS = [
 const MAX_BAR_H = 52;
 const MAX_UVI   = 10;
 
+// ── UV Sun Loader Component ───────────────────────────────────────────────────
+
+function UVSunLoader() {
+  const pulse = useSharedValue(0);
+
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withTiming(1, {
+        duration: 1800,
+        easing: Easing.out(Easing.ease),
+      }),
+      -1, // infinite loop
+      false // do not reverse
+    );
+  }, []);
+
+  const animatedHaloStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: 1 + pulse.value * 1.5 }],
+      opacity: 1 - pulse.value,
+    };
+  });
+
+  const animatedCoreStyle = useAnimatedStyle(() => {
+    const coreScale = 1 + Math.sin(pulse.value * Math.PI) * 0.15;
+    return {
+      transform: [{ scale: coreScale }],
+    };
+  });
+
+  return (
+    <View style={loaderStyles.container}>
+      <Animated.View style={[loaderStyles.halo, animatedHaloStyle]} />
+      <Animated.View style={[loaderStyles.core, animatedCoreStyle]}>
+        <LinearGradient
+          colors={[tokens.colors.pinkDeep, tokens.colors.goldSoft]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={loaderStyles.gradientCore}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
+const loaderStyles = StyleSheet.create({
+  container: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  halo: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: tokens.colors.pink,
+    backgroundColor: tokens.colors.pinkLight,
+  },
+  core: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.24,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  gradientCore: {
+    flex: 1,
+  },
+});
+
 // ── UV Popup ──────────────────────────────────────────────────────────────────
 
 function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number }) {
@@ -104,7 +183,7 @@ function UVPopup({ onClose, insetTop }: { onClose: () => void; insetTop: number 
         >
           {uv === null ? (
             <View style={styles.uvLoadingContainer}>
-              <ActivityIndicator size="small" color={tokens.colors.pinkDeep} />
+              <UVSunLoader />
               <Text style={styles.uvLoadingText}>Sensing solar UV...</Text>
             </View>
           ) : (
