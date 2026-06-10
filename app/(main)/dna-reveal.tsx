@@ -124,41 +124,43 @@ interface SlideColors {
 
 const SLIDE_COLORS: SlideColors[] = [
   // 0 — Welcome: deep rose (matches wrapped opening)
-  { gradientTop: '#1A0414', gradientBot: '#C2187A', blobA: '#E8399A', blobB: '#C2187A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.65)', eyebrow: 'rgba(255,245,249,0.45)', accent: '#FFD6EF' },
+  { gradientTop: '#150111', gradientBot: '#C2187A', blobA: '#E8399A', blobB: '#C2187A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.7)', eyebrow: 'rgba(255,245,249,0.5)', accent: '#FFD6EF' },
   // 1 — Opening: hot pink
-  { gradientTop: '#1A0414', gradientBot: '#E8399A', blobA: '#FF70C0', blobB: '#E8399A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.65)', eyebrow: 'rgba(255,245,249,0.45)', accent: '#FFAAD9' },
-  // 2 — Canvas: warm champagne ivory
-  { gradientTop: '#F2E4D0', gradientBot: '#C49A6A', blobA: '#E0C088', blobB: '#C8A870', text: '#1E0C04', muted: 'rgba(30,12,4,0.55)', eyebrow: 'rgba(30,12,4,0.4)', accent: '#7A4010' },
-  // 1 — Season: dusty rose blush
-  { gradientTop: '#F7CDD6', gradientBot: '#C8607C', blobA: '#F0AABB', blobB: '#E88A9C', text: '#280510', muted: 'rgba(40,5,16,0.55)', eyebrow: 'rgba(40,5,16,0.4)', accent: '#7A2038' },
-  // 2 — Face Shape: warm terracotta
-  { gradientTop: '#F0C4A4', gradientBot: '#C07848', blobA: '#E8AC80', blobB: '#D09060', text: '#1E0800', muted: 'rgba(30,8,0,0.55)', eyebrow: 'rgba(30,8,0,0.4)', accent: '#7A3010' },
-  // 3 — Brows: deep wine/burgundy
-  { gradientTop: '#9A2848', gradientBot: '#3E0818', blobA: '#D04878', blobB: '#AA2850', text: '#FFE8EE', muted: 'rgba(255,232,238,0.62)', eyebrow: 'rgba(255,232,238,0.45)', accent: '#FFB0CC' },
-  // 4 — Lashes: deep aubergine/plum
-  { gradientTop: '#5C2060', gradientBot: '#1C0824', blobA: '#9C40B0', blobB: '#7820A0', text: '#F8EEFF', muted: 'rgba(248,238,255,0.62)', eyebrow: 'rgba(248,238,255,0.45)', accent: '#D0A0E0' },
-  // 5 — Energy: rust/burnt sienna
-  { gradientTop: '#D86838', gradientBot: '#8A2810', blobA: '#F09060', blobB: '#E07040', text: '#FFF0E8', muted: 'rgba(255,240,232,0.62)', eyebrow: 'rgba(255,240,232,0.45)', accent: '#FFB890' },
-  // 6 — Archetype: electric magenta (THE REVEAL)
-  { gradientTop: '#F02888', gradientBot: '#920040', blobA: '#FF70C0', blobB: '#FF40A8', text: '#FFF0F8', muted: 'rgba(255,240,248,0.72)', eyebrow: 'rgba(255,240,248,0.5)', accent: '#FFFFFF' },
-  // 7 — Lips: deep berry/raspberry
-  { gradientTop: '#A83868', gradientBot: '#400820', blobA: '#D870A0', blobB: '#B84880', text: '#FFE8F0', muted: 'rgba(255,232,240,0.62)', eyebrow: 'rgba(255,232,240,0.45)', accent: '#FFB0C8' },
-  // 8 — Blush: warm coral rose
-  { gradientTop: '#E88878', gradientBot: '#B83840', blobA: '#F0ACA0', blobB: '#E08078', text: '#FFF4F0', muted: 'rgba(255,244,240,0.62)', eyebrow: 'rgba(255,244,240,0.45)', accent: '#FFCAB8' },
-  // 9 — Foundation: warm mocha/sienna
-  { gradientTop: '#906050', gradientBot: '#402010', blobA: '#C08860', blobB: '#A06840', text: '#FFF4EE', muted: 'rgba(255,244,238,0.62)', eyebrow: 'rgba(255,244,238,0.45)', accent: '#D0A888' },
-  // 10 — Blush recs: soft clay peach
-  { gradientTop: '#D4897A', gradientBot: '#8C3828', blobA: '#E8B0A0', blobB: '#D07868', text: '#FFF6F4', muted: 'rgba(255,246,244,0.65)', eyebrow: 'rgba(255,246,244,0.45)', accent: '#FFD0C0' },
-  // 11 — Mascara: deep charcoal night
-  { gradientTop: '#2C2840', gradientBot: '#0A0814', blobA: '#5C5080', blobB: '#402868', text: '#F0EEF8', muted: 'rgba(240,238,248,0.62)', eyebrow: 'rgba(240,238,248,0.42)', accent: '#C0B0E0' },
-  // 12 — Eye: rich forest emerald
-  { gradientTop: '#244830', gradientBot: '#061808', blobA: '#3A7848', blobB: '#286038', text: '#EEFAF2', muted: 'rgba(238,250,242,0.62)', eyebrow: 'rgba(238,250,242,0.42)', accent: '#A0E8B8' },
-  // 13 — Lip: deep crimson velvet
-  { gradientTop: '#8C2038', gradientBot: '#300810', blobA: '#C04868', blobB: '#A02848', text: '#FFF0F4', muted: 'rgba(255,240,244,0.65)', eyebrow: 'rgba(255,240,244,0.45)', accent: '#FFB0C8' },
-  // 14 — Skincare: sage mist
-  { gradientTop: '#5A7860', gradientBot: '#1A3820', blobA: '#8AB898', blobB: '#6A9878', text: '#F0F8F2', muted: 'rgba(240,248,242,0.62)', eyebrow: 'rgba(240,248,242,0.42)', accent: '#C0E8CC' },
-  // 15 — Summary: deep midnight gold (finale)
-  { gradientTop: '#1C0838', gradientBot: '#060108', blobA: '#D4AF37', blobB: '#C8906A', text: '#FFEEDD', muted: 'rgba(255,238,221,0.6)', eyebrow: 'rgba(255,238,221,0.4)', accent: '#D4AF37' },
+  { gradientTop: '#0C010E', gradientBot: '#E8399A', blobA: '#FF70C0', blobB: '#E8399A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.7)', eyebrow: 'rgba(255,245,249,0.5)', accent: '#FFAAD9' },
+  // 2 — Canvas: dark espresso velvet to glowing caramel bronze
+  { gradientTop: '#0F0603', gradientBot: '#C49A6A', blobA: '#E0C088', blobB: '#8B5A2B', text: '#FFFBF8', muted: 'rgba(255,245,240,0.75)', eyebrow: 'rgba(255,245,240,0.5)', accent: '#FFD6B2' },
+  // 3 — Season: dusty rose blush over dark eggplant
+  { gradientTop: '#12010F', gradientBot: '#C8607C', blobA: '#F0AABB', blobB: '#A81050', text: '#FFF5F7', muted: 'rgba(255,240,244,0.7)', eyebrow: 'rgba(255,240,244,0.5)', accent: '#FFB2CD' },
+  // 4 — Face Shape: warm terracotta over dark maroon
+  { gradientTop: '#100301', gradientBot: '#C07848', blobA: '#E8AC80', blobB: '#90301A', text: '#FFF8F6', muted: 'rgba(255,240,235,0.75)', eyebrow: 'rgba(255,240,235,0.5)', accent: '#FFA07A' },
+  // 5 — Brows: deep wine/burgundy over dark obsidian
+  { gradientTop: '#1B0208', gradientBot: '#9A2848', blobA: '#D04878', blobB: '#7C1028', text: '#FFF5F7', muted: 'rgba(255,232,238,0.7)', eyebrow: 'rgba(255,232,238,0.5)', accent: '#FFB0CC' },
+  // 6 — Lashes: deep aubergine/plum over violet night
+  { gradientTop: '#0E021A', gradientBot: '#5C2060', blobA: '#9C40B0', blobB: '#4A0D60', text: '#F8EEFF', muted: 'rgba(248,238,255,0.7)', eyebrow: 'rgba(248,238,255,0.5)', accent: '#D0A0E0' },
+  // 7 — Eye Shape: deep space blue to electric cyan/teal
+  { gradientTop: '#030A1F', gradientBot: '#00838F', blobA: '#00ACC1', blobB: '#0A3180', text: '#F0FDFF', muted: 'rgba(235,250,255,0.75)', eyebrow: 'rgba(235,250,255,0.5)', accent: '#00FFFF' },
+  // 8 — Energy: rust/burnt sienna over deep charcoal
+  { gradientTop: '#160401', gradientBot: '#D86838', blobA: '#F09060', blobB: '#8A2810', text: '#FFF6F2', muted: 'rgba(255,240,232,0.72)', eyebrow: 'rgba(255,240,232,0.5)', accent: '#FFB890' },
+  // 9 — Archetype: electric magenta over gothic purple (THE REVEAL)
+  { gradientTop: '#0F010E', gradientBot: '#F02888', blobA: '#FF70C0', blobB: '#920040', text: '#FFF0F8', muted: 'rgba(255,240,248,0.75)', eyebrow: 'rgba(255,240,248,0.5)', accent: '#FFFFFF' },
+  // 10 — Lips: deep berry/raspberry over cherry wood
+  { gradientTop: '#150109', gradientBot: '#A83868', blobA: '#D870A0', blobB: '#5A082A', text: '#FFE8F0', muted: 'rgba(255,232,240,0.7)', eyebrow: 'rgba(255,232,240,0.5)', accent: '#FFB0C8' },
+  // 11 — Blush: warm coral rose over deep obsidian
+  { gradientTop: '#1A0402', gradientBot: '#E88878', blobA: '#F0ACA0', blobB: '#B83840', text: '#FFF4F0', muted: 'rgba(255,244,240,0.7)', eyebrow: 'rgba(255,244,240,0.5)', accent: '#FFCAB8' },
+  // 12 — Foundation Recs/Kit 0: warm mocha/sienna over dark roasted wood
+  { gradientTop: '#130A07', gradientBot: '#906050', blobA: '#C08860', blobB: '#402010', text: '#FFF4EE', muted: 'rgba(255,244,238,0.7)', eyebrow: 'rgba(255,244,238,0.5)', accent: '#D0A888' },
+  // 13 — Blush Recs/Kit 1: soft clay peach over deep raspberry
+  { gradientTop: '#180605', gradientBot: '#D4897A', blobA: '#E8B0A0', blobB: '#8C3828', text: '#FFF6F4', muted: 'rgba(255,246,244,0.7)', eyebrow: 'rgba(255,246,244,0.5)', accent: '#FFD0C0' },
+  // 14 — Mascara Recs/Kit 2: deep charcoal night over deepest violet
+  { gradientTop: '#080614', gradientBot: '#2C2840', blobA: '#5C5080', blobB: '#0A0814', text: '#F0EEF8', muted: 'rgba(240,238,248,0.7)', eyebrow: 'rgba(240,238,248,0.5)', accent: '#C0B0E0' },
+  // 15 — Eye Recs/Kit 3: rich forest emerald over deep dark night
+  { gradientTop: '#020D06', gradientBot: '#244830', blobA: '#3A7848', blobB: '#061808', text: '#EEFAF2', muted: 'rgba(238,250,242,0.7)', eyebrow: 'rgba(238,250,242,0.5)', accent: '#A0E8B8' },
+  // 16 — Lip Recs/Kit 4: deep crimson velvet over dark burgundy
+  { gradientTop: '#1B0409', gradientBot: '#8C2038', blobA: '#C04868', blobB: '#300810', text: '#FFF0F4', muted: 'rgba(255,240,244,0.7)', eyebrow: 'rgba(255,240,244,0.5)', accent: '#FFB0C8' },
+  // 17 — Skincare Recs/Kit 5: sage mist over sage shadow
+  { gradientTop: '#0F1811', gradientBot: '#5A7860', blobA: '#8AB898', blobB: '#1A3820', text: '#F0F8F2', muted: 'rgba(240,248,242,0.7)', eyebrow: 'rgba(240,248,242,0.5)', accent: '#C0E8CC' },
+  // 18 — Summary/Finale: deep midnight gold over cosmic black void
+  { gradientTop: '#0A0314', gradientBot: '#1C0838', blobA: '#D4AF37', blobB: '#060108', text: '#FFEEDD', muted: 'rgba(255,238,221,0.7)', eyebrow: 'rgba(255,238,221,0.5)', accent: '#D4AF37' },
 ];
 
 // ── Grain overlay (iOS renders, Android gracefully skips) ─────────────────────
