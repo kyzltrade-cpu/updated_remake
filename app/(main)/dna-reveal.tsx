@@ -1959,13 +1959,18 @@ export default function DnaRevealScreen() {
     morphProgress.value = withTiming(1, { duration: 380, easing: Easing.bezier(0.4, 0, 0.2, 1) }, (finished) => {
       if (finished) {
         runOnJS(setBgFrom)(to);
-        morphProgress.value = 0;
       }
     });
     slideDispatch({ type: 'go', to });
     if (clearOutRef.current) clearTimeout(clearOutRef.current);
     clearOutRef.current = setTimeout(() => slideDispatch({ type: 'done' }), 210);
   }, [morphProgress]);
+
+  useEffect(() => {
+    if (bgFrom === bgTo) {
+      morphProgress.value = 0;
+    }
+  }, [bgFrom, bgTo]);
 
   const advanceCurrent = useCallback(() => {
     navigateTo(Math.min(current + 1, SLIDE_COUNT - 1), current);
