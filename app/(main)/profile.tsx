@@ -196,7 +196,10 @@ export default function ProfileScreen() {
         <Animated.View entering={FadeInUp.delay(150).duration(500)} style={styles.statsGrid}>
           <Pressable 
             style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
-            onPress={() => settings.hapticsEnabled && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+            onPress={() => {
+              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(main)/wrapped');
+            }}
           >
             <Text style={styles.statEmoji}>🔥</Text>
             <Text style={styles.statVal}>{stats ? stats.currentStreak : '--'}</Text>
@@ -205,7 +208,10 @@ export default function ProfileScreen() {
 
           <Pressable 
             style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
-            onPress={() => settings.hapticsEnabled && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+            onPress={() => {
+              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(main)/wrapped');
+            }}
           >
             <Text style={styles.statEmoji}>📸</Text>
             <Text style={styles.statVal}>{stats ? stats.totalScans : '--'}</Text>
@@ -214,7 +220,10 @@ export default function ProfileScreen() {
 
           <Pressable 
             style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
-            onPress={() => settings.hapticsEnabled && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+            onPress={() => {
+              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(main)/wrapped');
+            }}
           >
             <Text style={styles.statEmoji}>💖</Text>
             <Text style={styles.statVal}>{stats ? `${stats.avgScore}%` : '--'}</Text>
@@ -480,6 +489,39 @@ export default function ProfileScreen() {
             );
           })}
         </Animated.View>
+
+        {/* Developer Bypass Test Actions */}
+        {__DEV__ && (
+          <View style={styles.devSection}>
+            <Text style={styles.devSectionTitle}>🛠️ Developer Previews (Dev Only)</Text>
+            <View style={styles.devRow}>
+              <Pressable
+                onPress={() => {
+                  if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push({
+                    pathname: '/(main)/dna-reveal',
+                    params: { bypass: '1' }
+                  } as any);
+                }}
+                style={styles.devBtn}
+              >
+                <Text style={styles.devBtnText}>Test Beauty DNA 🧬</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push({
+                    pathname: '/(main)/wrapped',
+                    params: { bypass: '1' }
+                  } as any);
+                }}
+                style={[styles.devBtn, { backgroundColor: '#1E1B4B' }]}
+              >
+                <Text style={[styles.devBtnText, { color: '#FFFFFF' }]}>Test Scan Stats 📸</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -976,5 +1018,47 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: tokens.colors.pinkDeep,
+  },
+  devSection: {
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(232, 160, 170, 0.1)',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: tokens.colors.pinkDeep,
+    marginBottom: 16,
+    marginHorizontal: 16,
+  },
+  devSectionTitle: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '700',
+    color: tokens.colors.text,
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  devRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  devBtn: {
+    flex: 1,
+    backgroundColor: tokens.colors.pinkDeep,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  devBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

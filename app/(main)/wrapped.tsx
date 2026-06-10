@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, Pressable, Dimensions, Share } from 'react-native';
 import Animated, {
   FadeIn, FadeInUp, ZoomIn,
@@ -426,6 +426,7 @@ function SlideOutro({ onShare, colors }: { onShare: () => void; colors: SlideCol
 
 export default function WrappedScreen() {
   const router   = useRouter();
+  const params   = useLocalSearchParams<{ bypass?: string }>();
   const insets   = useSafeAreaInsets();
   const { user } = useAuth();
   
@@ -481,7 +482,7 @@ export default function WrappedScreen() {
           }
         }
 
-        const isPro = subscription?.plan === 'pro';
+        const isPro = subscription?.plan === 'pro' || (__DEV__ && params.bypass === '1');
         const isUnlockedByReferral = profileUser?.shelf_audit_unlocked === true || referralCount >= 3;
 
         if (isPro || isUnlockedByReferral) {
