@@ -1336,13 +1336,13 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
                 <Text style={[ds.spotifyCardVal, { color: '#CCC', fontSize: 18 }]}>●●●●</Text>
               </View>
             </View>
-            {/* Black Card */}
+            {/* Black Card (Locked State with visible pink accents) */}
             <View style={ds.spotifyCardBlack}>
               <View style={[ds.spotifyCardIconBg, { backgroundColor: '#3E0818' }]}>
-                <MaterialIcons name="star-outline" size={18} color={colors.accent} />
+                <MaterialIcons name="star-outline" size={18} color="#E8399A" />
               </View>
               <View style={{ gap: 2 }}>
-                <Text style={ds.spotifyCardLbl}>Symmetry</Text>
+                <Text style={[ds.spotifyCardLbl, { color: 'rgba(255, 255, 255, 0.45)' }]}>Symmetry</Text>
                 <Text style={[ds.spotifyCardVal, { color: 'rgba(255,255,255,0.15)', fontSize: 18 }]}>●●%</Text>
               </View>
             </View>
@@ -1365,14 +1365,14 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
               </View>
             </FlyingCardLeft>
 
-            {/* Black Card (Flying Right) */}
+            {/* Black Card (Flying Right with high-contrast pink metrics) */}
             <FlyingCardRight style={ds.spotifyCardBlack}>
               <View style={[ds.spotifyCardIconBg, { backgroundColor: '#21020A' }]}>
-                <MaterialIcons name="star" size={18} color={colors.accent} />
+                <MaterialIcons name="star" size={18} color="#E8399A" />
               </View>
               <View style={{ gap: 2 }}>
-                <Text style={ds.spotifyCardLbl}>Symmetry</Text>
-                <Text style={[ds.spotifyCardVal, { color: colors.accent, fontSize: 22 }]}>{dna.browSymmetryPct}%</Text>
+                <Text style={[ds.spotifyCardLbl, { color: 'rgba(255, 255, 255, 0.5)' }]}>Symmetry</Text>
+                <Text style={[ds.spotifyCardVal, { color: '#E8399A', fontSize: 22 }]}>{dna.browSymmetryPct}%</Text>
               </View>
             </FlyingCardRight>
           </View>
