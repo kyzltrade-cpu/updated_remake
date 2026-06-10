@@ -765,9 +765,79 @@ const SWATCH_SEASON: Record<string, string> = {
   Spring: '#F4A261', Summer: '#A8C4D5', Autumn: '#C8956A', Winter: '#7A8FBF',
 };
 
+function SeasonVinyl({ colors, palette, isLocked }: { colors: SlideColors; palette: string[]; isLocked?: boolean }) {
+  const rotation = useSharedValue(0);
+  useEffect(() => {
+    rotation.value = withRepeat(
+      withTiming(360, { duration: 12000, easing: Easing.linear }),
+      -1, false
+    );
+  }, []);
+
+  const rotStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
+  return (
+    <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
+      {/* Starburst spikes behind the record */}
+      <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="none">
+        <Text style={{ color: 'rgba(255,255,255,0.06)', fontSize: 260, position: 'absolute' }}>✦</Text>
+        <Text style={{ color: 'rgba(255,255,255,0.04)', fontSize: 280, position: 'absolute', transform: [{ rotate: '45deg' }] }}>✦</Text>
+      </View>
+      
+      {/* The Vinyl Disc */}
+      <Animated.View style={[rotStyle, {
+        width: 200, height: 200, borderRadius: 100,
+        backgroundColor: '#0F0311',
+        borderWidth: 6, borderColor: 'rgba(255,255,255,0.08)',
+        justifyContent: 'center', alignItems: 'center',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.45, shadowRadius: 20, elevation: 12,
+      }]}>
+        {/* Grooves on vinyl */}
+        <View style={{
+          position: 'absolute', width: 170, height: 170, borderRadius: 85,
+          borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderStyle: 'dashed',
+        }} />
+        <View style={{
+          position: 'absolute', width: 140, height: 140, borderRadius: 70,
+          borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.04)',
+        }} />
+        <View style={{
+          position: 'absolute', width: 110, height: 110, borderRadius: 55,
+          borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', borderStyle: 'dashed',
+        }} />
+
+        {/* Outer Palette Ring */}
+        <View style={{
+          position: 'absolute', width: 80, height: 80, borderRadius: 40,
+          borderWidth: 12, borderColor: isLocked ? '#555' : (palette[0] || colors.accent),
+          opacity: 0.95,
+        }} />
+        <View style={{
+          position: 'absolute', width: 56, height: 56, borderRadius: 28,
+          borderWidth: 8, borderColor: isLocked ? '#333' : (palette[1] || '#FFF'),
+          opacity: 0.9,
+        }} />
+
+        {/* Center Label (The "Sticker") */}
+        <View style={{
+          width: 40, height: 40, borderRadius: 20,
+          backgroundColor: '#FFF5F9',
+          justifyContent: 'center', alignItems: 'center',
+          shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3,
+        }}>
+          {/* Center spindle hole */}
+          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#0F0311' }} />
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
 function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const allSeasons = ['Spring', 'Summer', 'Autumn', 'Winter'];
-  const userSeason = dna.colorSeason.split(' ').pop()!;
+  const palette = SEASON_PALETTES[dna.colorSeason] ?? [];
   return (
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
@@ -780,22 +850,12 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         <RevealItem delay={1500}>
           <Text style={[ds.narrativePunch, { color: colors.text }]}>{"You won't anymore."}</Text>
         </RevealItem>
-        {/* Animated bar chart — each season grows to its height, active season tallest + glowing */}
-        <View style={{ flexDirection: 'row', gap: 10, height: 164, alignItems: 'flex-end', paddingHorizontal: 8, width: W - 56 }}>
-          {allSeasons.map((s, i) => (
-            <SeasonBar
-              key={s}
-              name={s}
-              color={SWATCH_SEASON[s] ?? '#CCC'}
-              targetH={!isLocked && s === userSeason ? 140 : [72, 90, 116, 100][i]}
-              isActive={!isLocked && s === userSeason}
-              index={i}
-              isLocked={isLocked}
-              textColor={colors.text}
-              mutedColor={colors.muted}
-            />
-          ))}
-        </View>
+        
+        {/* Vinyl Record Graphic instead of bar chart */}
+        <RevealItem delay={2000}>
+          <SeasonVinyl colors={colors} palette={palette} isLocked={isLocked} />
+        </RevealItem>
+
         {isLocked
           ? <RevealItem delay={2800}><LockedValue size="md" color={colors.muted} /></RevealItem>
           : <>
@@ -826,12 +886,58 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
         </DropIn>
 
         {isLocked ? (
-          <SpinIn delay={400}>
-            <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>⬭</Text>
-          </SpinIn>
+          <View style={ds.spotifyCardsRow}>
+            {/* White Card */}
+            <View style={ds.spotifyCardWhite}>
+              <View style={ds.spotifyCardIconBg}>
+                <MaterialIcons name="face" size={18} color="#111" />
+              </View>
+              <View style={{ gap: 2 }}>
+                <Text style={ds.spotifyCardLbl}>Shape</Text>
+                <Text style={[ds.spotifyCardVal, { color: '#CCC', fontSize: 18 }]}>●●●●</Text>
+              </View>
+            </View>
+            {/* Black Card */}
+            <View style={ds.spotifyCardBlack}>
+              <View style={[ds.spotifyCardIconBg, { backgroundColor: '#3E0818' }]}>
+                <MaterialIcons name="star-outline" size={18} color={colors.accent} />
+              </View>
+              <View style={{ gap: 2 }}>
+                <Text style={ds.spotifyCardLbl}>Symmetry</Text>
+                <Text style={[ds.spotifyCardVal, { color: 'rgba(255,255,255,0.15)', fontSize: 18 }]}>●●%</Text>
+              </View>
+            </View>
+          </View>
         ) : (
           <RevealItem delay={400}>
-            <HolographicTracer shape={dna.faceShape} color={colors.accent} />
+            <View style={ds.spotifyCardsRow}>
+              {/* Starburst backdrop */}
+              <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="none">
+                <Text style={{ color: 'rgba(255,255,255,0.07)', fontSize: 260, position: 'absolute' }}>✦</Text>
+              </View>
+
+              {/* White Card (Tilted) */}
+              <Animated.View entering={FadeInUp.delay(500).duration(400)} style={ds.spotifyCardWhite}>
+                <View style={ds.spotifyCardIconBg}>
+                  <MaterialIcons name="face" size={18} color="#0E020A" />
+                </View>
+                <View style={{ gap: 2 }}>
+                  <Text style={ds.spotifyCardLbl}>Face Shape</Text>
+                  <Text style={[ds.spotifyCardVal, { fontSize: dna.faceShape.length > 5 ? 18 : 22 }]}>{dna.faceShape}</Text>
+                </View>
+              </Animated.View>
+
+              {/* Black Card (Tilted offset) */}
+              <Animated.View entering={FadeInUp.delay(750).duration(400)} style={ds.spotifyCardBlack}>
+                <View style={[ds.spotifyCardIconBg, { backgroundColor: '#21020A' }]}>
+                  <MaterialIcons name="star" size={18} color={colors.accent} />
+                </View>
+                <View style={{ gap: 2 }}>
+                  <Text style={ds.spotifyCardLbl}>Symmetry</Text>
+                  <Text style={[ds.spotifyCardVal, { color: colors.accent, fontSize: 22 }]}>{dna.browSymmetryPct}%</Text>
+                </View>
+              </Animated.View>
+            </View>
           </RevealItem>
         )}
 
@@ -2280,4 +2386,56 @@ const ds = StyleSheet.create({
   fnDivider: { width: '100%', height: StyleSheet.hairlineWidth },
   fnVertDivider: { width: StyleSheet.hairlineWidth, marginVertical: 4 },
   fnSkinRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, width: '100%' },
+
+  // Spotify Wrapped high-energy cards
+  spotifyCardsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: W,
+    height: 190,
+    position: 'relative',
+    marginVertical: 15,
+  },
+  spotifyCardWhite: {
+    position: 'absolute',
+    left: 28,
+    width: W * 0.44,
+    height: 150,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    justifyContent: 'space-between',
+    transform: [{ rotate: '-6deg' }, { translateY: -10 }],
+    shadowColor: '#000', shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2, shadowRadius: 15, elevation: 8,
+  },
+  spotifyCardBlack: {
+    position: 'absolute',
+    right: 28,
+    width: W * 0.44,
+    height: 150,
+    backgroundColor: '#0E020A',
+    borderRadius: 20,
+    padding: 16,
+    justifyContent: 'space-between',
+    transform: [{ rotate: '5deg' }, { translateY: 15 }],
+    shadowColor: '#000', shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22, shadowRadius: 15, elevation: 8,
+    borderWidth: 1.5, borderColor: '#E8399A',
+  },
+  spotifyCardIconBg: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#FFF0F5',
+    justifyContent: 'center', alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
+  spotifyCardLbl: {
+    fontFamily: 'Inter', fontSize: 10, fontWeight: '700',
+    color: '#999', textTransform: 'uppercase', letterSpacing: 0.5,
+  },
+  spotifyCardVal: {
+    fontFamily: 'Inter', fontSize: 24, fontWeight: '900',
+    color: '#111', textTransform: 'uppercase', letterSpacing: -1,
+  },
 });
