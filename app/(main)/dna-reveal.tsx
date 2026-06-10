@@ -5,7 +5,7 @@ import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   FadeIn, FadeInUp,
-  useSharedValue, useAnimatedStyle,
+  useSharedValue, useAnimatedStyle, useAnimatedProps,
   withSpring, withTiming, withDelay, withRepeat, withSequence,
   cancelAnimation, runOnJS, Easing,
 } from 'react-native-reanimated';
