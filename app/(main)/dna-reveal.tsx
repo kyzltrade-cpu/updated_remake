@@ -809,13 +809,13 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       <Animated.View style={[ds.canvasGlow, { backgroundColor: dna.skinToneHex, shadowColor: dna.skinToneHex }, glSty]} />
       <View style={ds.bodyWrap}>
         <DropIn delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR CANVAS</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>YOUR CANVAS 🎀</Text>
         </DropIn>
         <RevealItem delay={600}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'There are thousands of foundation shades\nout there.'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'There are literally thousands of shades\nout there, bestie… 🔎'}</Text>
         </RevealItem>
         <RevealItem delay={1400}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'Yours is the only one\nthat matters.'}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'but yours is the only one\nthat actually slays. 💖'}</Text>
         </RevealItem>
         {/* Ripple rings radiate from behind the swatch */}
         <View style={{ width: 240, height: 240, alignItems: 'center', justifyContent: 'center' }}>
@@ -830,7 +830,14 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         </View>
         {isLocked
           ? <RevealItem delay={3000}><LockedValue size="lg" color={colors.muted} /></RevealItem>
-          : <RevealPop delay={3000}><Text style={[ds.hexCode, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text></RevealPop>}
+          : <>
+              <RevealItem delay={2800} fast>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your exact match bestie:</Text>
+              </RevealItem>
+              <RevealPop delay={3000}>
+                <Text style={[ds.hexCode, { color: colors.text }]}>{dna.skinToneHex.toUpperCase()}</Text>
+              </RevealPop>
+            </>}
         {shades && (
           <RevealItem delay={3500}>
             <View style={[ds.shadesCard, { borderColor: `${colors.text}22`, backgroundColor: 'rgba(0,0,0,0.08)' }]}>
@@ -937,13 +944,13 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <RevealItem delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>COLOUR SEASON</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>COLOUR SEASON 🌸</Text>
         </RevealItem>
         <RevealItem delay={700}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Most people spend years wearing\ncolours that fight their face.'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Stop wearing colors that fight your face, bestie… 😭'}</Text>
         </RevealItem>
         <RevealItem delay={1500}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{"You won't anymore."}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{"it’s time to enter\nyour ultimate color era. ✨"}</Text>
         </RevealItem>
         
         {/* Vinyl Record Graphic instead of bar chart */}
@@ -955,7 +962,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           ? <RevealItem delay={2800}><LockedValue size="md" color={colors.muted} /></RevealItem>
           : <>
               <RevealItem delay={3000} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your colour season is</Text>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>You are officially a</Text>
               </RevealItem>
               <RevealPop delay={3200}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.colorSeason}</Text>
@@ -977,7 +984,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <DropIn delay={100}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>FACE SHAPE</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>FACE SHAPE 👑</Text>
         </DropIn>
 
         {isLocked ? (
@@ -1037,10 +1044,10 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
         )}
 
         <RevealItem delay={1100}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Brow arch, highlight zones,\ncontour map —'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Highlight zones, contour angles, brow arches… 🎀'}</Text>
         </RevealItem>
         <RevealItem delay={1800}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'all of it is built\naround this.'}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'it’s literally all written\nin your structure. ✨'}</Text>
         </RevealItem>
         {isLocked
           ? <RevealItem delay={2500}><LockedValue size="lg" color={colors.muted} /></RevealItem>
@@ -1080,13 +1087,13 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <DropIn delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BROW BLUEPRINT</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BROW BLUEPRINT 👁️</Text>
         </DropIn>
         <RevealItem delay={600}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Nothing rewrites your face\nfaster than your brows.'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Nothing literally rewrites your face faster… 💫'}</Text>
         </RevealItem>
         <RevealItem delay={1400}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{"Here's your blueprint."}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'it’s giving perfect arches\nand ultimate symmetry. 💖'}</Text>
         </RevealItem>
         {/* Ring bounces in with overshoot, counter eases out to final number */}
         <PopIn delay={2100}>
@@ -1095,6 +1102,7 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
               {isLocked
                 ? <MaterialIcons name="lock" size={32} color={colors.muted} />
                 : <>
+                    <Text style={[ds.revealLabel, { color: colors.muted, marginBottom: 4 }]}>Your symmetrical brow era:</Text>
                     <Text style={[ds.browPct, { color: colors.text }]}>{displayPct}%</Text>
                     <Text style={[ds.browLabel, { color: colors.muted }]}>symmetry</Text>
                   </>}
@@ -1125,13 +1133,13 @@ function SlideLashes({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <DropIn delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LASH PROFILE</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LASH PROFILE ✨</Text>
         </DropIn>
         <RevealItem delay={350}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'The right formula and technique\nturns your natural lashes'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'The perfect lash lift, formula, and length… 💅'}</Text>
         </RevealItem>
         <RevealItem delay={850}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'into your signature.'}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'literally turns your natural lashes\ninto your signature slay. 💖'}</Text>
         </RevealItem>
         {/* Stars scatter from centre — each one arrives from a different direction */}
         <LashStars delay={1350} color={`${colors.text}88`} />
@@ -1139,7 +1147,7 @@ function SlideLashes({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           ? <RevealItem delay={2050}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
               <RevealItem delay={2050} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lash profile is</Text>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lash coquette profile is</Text>
               </RevealItem>
               <RevealPop delay={2270}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lashProfile}</Text>
@@ -1157,7 +1165,7 @@ function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: b
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <DropIn delay={100}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>EYE SHAPE & MAKEUP</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>EYE SHAPE & MAKEUP 🎀</Text>
         </DropIn>
 
         {isLocked ? (
@@ -1178,7 +1186,7 @@ function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: b
           <>
             <RevealItem delay={1100}>
               <Text style={[ds.narrativeHook, { color: colors.muted, textAlign: 'center' }]}>
-                {`Similar to ${dna.celebrityLookalike ?? 'Kendall Jenner'} with`}
+                {`Similar to your celebrity look-alike, ${dna.celebrityLookalike ?? 'Kendall Jenner'}! 💖`}
               </Text>
             </RevealItem>
             <RevealItem delay={1400}>
@@ -1244,13 +1252,13 @@ function SlideEnergy({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <DropIn delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>ENERGY TYPE</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>ENERGY TYPE 💫</Text>
         </DropIn>
         <RevealItem delay={500}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Every face leans one of two ways —\nsharp and graphic,'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Leaning sharp and graphic, or soft and coquette… 💖'}</Text>
         </RevealItem>
         <RevealItem delay={1100}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'or soft and blended.'}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'your face shape has its own\nperfect aesthetic energy. ✨'}</Text>
         </RevealItem>
         {/* Labels slide in from their respective edges — Sharp from left, Soft from right */}
         <RevealItem delay={1800}>
@@ -1275,7 +1283,7 @@ function SlideEnergy({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
               <RevealItem delay={2900} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your energy type is</Text>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your absolute energy:</Text>
               </RevealItem>
               <RevealPop delay={3100}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.energy}</Text>
@@ -1317,16 +1325,16 @@ function SlideArchetype({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
       {showConfetti && <ConfettiBurst />}
       <View style={ds.bodyWrap}>
         <RevealItem delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BEAUTY ARCHETYPE</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BEAUTY ARCHETYPE 🎀</Text>
         </RevealItem>
         <RevealItem delay={800}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Your season. Your shape.\nYour energy.'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Your season. Your shape. Your structure… ✨'}</Text>
         </RevealItem>
         <RevealItem delay={1800}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'They all point to one identity.'}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'it literally all points to\nyour ultimate aesthetic identity. 💅'}</Text>
         </RevealItem>
         <RevealItem delay={2300} fast>
-          <Text style={[ds.youAre, { color: colors.muted }]}>You are</Text>
+          <Text style={[ds.revealLabel, { color: colors.muted }]}>You are officially</Text>
         </RevealItem>
         <RevealPop delay={2500}>
           <View style={ds.archetypeNameWrap}>
@@ -1368,13 +1376,13 @@ function SlideLips({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boole
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <RevealItem delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LIP TONE</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LIP TONE 💄</Text>
         </RevealItem>
         <RevealItem delay={350}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'There are hundreds of lip shades.\nMost will wash you out.'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Out of hundreds of glossy lip colors… 👄'}</Text>
         </RevealItem>
         <RevealItem delay={750}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{"Yours won't."}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'this is the only one\nthat actually slays your routine. 💅'}</Text>
         </RevealItem>
         {/* Ripple rings emanate from the lip swatch */}
         <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center' }}>
@@ -1391,7 +1399,7 @@ function SlideLips({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boole
           ? <RevealItem delay={2000}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
               <RevealItem delay={2000} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lip tone is</Text>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your signature coquette lip tone:</Text>
               </RevealItem>
               <RevealPop delay={2200}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lipProfile || '—'}</Text>
@@ -1417,13 +1425,13 @@ function SlideBlush({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     <View style={[ds.page, { backgroundColor: 'transparent' }]}>
       <View style={ds.bodyWrap}>
         <RevealItem delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BLUSH</Text>
+          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BLUSH 🌸</Text>
         </RevealItem>
         <RevealItem delay={450}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Blush in the wrong tone\nfights your face.'}</Text>
+          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'A bad blush shade ruins the vibe… 😭'}</Text>
         </RevealItem>
         <RevealItem delay={1000}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'In the right tone, it lifts everything.'}</Text>
+          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'the right one literally lifts your cheekbones\nand completes the coquette look. ✨'}</Text>
         </RevealItem>
         {/* Three blush dots pop in one-two-three — like actual blush placement */}
         <BlushDots delay={1600} hex={blushHex} isLocked={isLocked} />
@@ -1431,7 +1439,7 @@ function SlideBlush({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
           ? <RevealItem delay={2400}><LockedValue size="lg" color={colors.muted} /></RevealItem>
           : <>
               <RevealItem delay={2500} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your blush is</Text>
+                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your ultimate coquette blush:</Text>
               </RevealItem>
               <RevealPop delay={2750}>
                 <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.blushProfile || '—'}</Text>
@@ -2473,7 +2481,7 @@ const ds = StyleSheet.create({
 
   // Narrative reveal typography
   narrativeHook: {
-    fontFamily: 'Inter', fontSize: 20, fontWeight: '400',
+    fontFamily: 'Playfair Display', fontSize: 22, fontStyle: 'italic',
     textAlign: 'center', lineHeight: 28,
   },
   narrativePunch: {
@@ -2481,8 +2489,8 @@ const ds = StyleSheet.create({
     textAlign: 'center', lineHeight: 26, marginTop: -4, letterSpacing: -0.5,
   },
   revealLabel: {
-    fontFamily: 'Inter', fontSize: 12, fontWeight: '400',
-    textAlign: 'center', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: -8,
+    fontFamily: 'Playfair Display', fontSize: 14, fontStyle: 'italic',
+    textAlign: 'center', marginBottom: -4,
   },
   kitRedactBar: { height: 10, borderRadius: 5, marginVertical: 2 },
 
