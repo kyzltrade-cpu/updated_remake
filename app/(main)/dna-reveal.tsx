@@ -123,44 +123,139 @@ interface SlideColors {
 }
 
 const SLIDE_COLORS: SlideColors[] = [
-  // 0 — Welcome: deep rose (matches wrapped opening)
-  { gradientTop: '#150111', gradientBot: '#C2187A', blobA: '#E8399A', blobB: '#C2187A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.7)', eyebrow: 'rgba(255,245,249,0.5)', accent: '#FFD6EF' },
-  // 1 — Opening: hot pink
-  { gradientTop: '#0C010E', gradientBot: '#E8399A', blobA: '#FF70C0', blobB: '#E8399A', text: '#FFF5F9', muted: 'rgba(255,245,249,0.7)', eyebrow: 'rgba(255,245,249,0.5)', accent: '#FFAAD9' },
-  // 2 — Canvas: dark espresso velvet to glowing caramel bronze
-  { gradientTop: '#0F0603', gradientBot: '#C49A6A', blobA: '#E0C088', blobB: '#8B5A2B', text: '#FFFBF8', muted: 'rgba(255,245,240,0.75)', eyebrow: 'rgba(255,245,240,0.5)', accent: '#FFD6B2' },
-  // 3 — Season: dusty rose blush over dark eggplant
-  { gradientTop: '#12010F', gradientBot: '#C8607C', blobA: '#F0AABB', blobB: '#A81050', text: '#FFF5F7', muted: 'rgba(255,240,244,0.7)', eyebrow: 'rgba(255,240,244,0.5)', accent: '#FFB2CD' },
-  // 4 — Face Shape: warm terracotta over dark maroon
-  { gradientTop: '#100301', gradientBot: '#C07848', blobA: '#E8AC80', blobB: '#90301A', text: '#FFF8F6', muted: 'rgba(255,240,235,0.75)', eyebrow: 'rgba(255,240,235,0.5)', accent: '#FFA07A' },
-  // 5 — Brows: deep wine/burgundy over dark obsidian
-  { gradientTop: '#1B0208', gradientBot: '#9A2848', blobA: '#D04878', blobB: '#7C1028', text: '#FFF5F7', muted: 'rgba(255,232,238,0.7)', eyebrow: 'rgba(255,232,238,0.5)', accent: '#FFB0CC' },
-  // 6 — Lashes: deep aubergine/plum over violet night
-  { gradientTop: '#0E021A', gradientBot: '#5C2060', blobA: '#9C40B0', blobB: '#4A0D60', text: '#F8EEFF', muted: 'rgba(248,238,255,0.7)', eyebrow: 'rgba(248,238,255,0.5)', accent: '#D0A0E0' },
-  // 7 — Eye Shape: deep space blue to electric cyan/teal
-  { gradientTop: '#030A1F', gradientBot: '#00838F', blobA: '#00ACC1', blobB: '#0A3180', text: '#F0FDFF', muted: 'rgba(235,250,255,0.75)', eyebrow: 'rgba(235,250,255,0.5)', accent: '#00FFFF' },
-  // 8 — Energy: rust/burnt sienna over deep charcoal
-  { gradientTop: '#160401', gradientBot: '#D86838', blobA: '#F09060', blobB: '#8A2810', text: '#FFF6F2', muted: 'rgba(255,240,232,0.72)', eyebrow: 'rgba(255,240,232,0.5)', accent: '#FFB890' },
-  // 9 — Archetype: electric magenta over gothic purple (THE REVEAL)
-  { gradientTop: '#0F010E', gradientBot: '#F02888', blobA: '#FF70C0', blobB: '#920040', text: '#FFF0F8', muted: 'rgba(255,240,248,0.75)', eyebrow: 'rgba(255,240,248,0.5)', accent: '#FFFFFF' },
-  // 10 — Lips: deep berry/raspberry over cherry wood
-  { gradientTop: '#150109', gradientBot: '#A83868', blobA: '#D870A0', blobB: '#5A082A', text: '#FFE8F0', muted: 'rgba(255,232,240,0.7)', eyebrow: 'rgba(255,232,240,0.5)', accent: '#FFB0C8' },
-  // 11 — Blush: warm coral rose over deep obsidian
-  { gradientTop: '#1A0402', gradientBot: '#E88878', blobA: '#F0ACA0', blobB: '#B83840', text: '#FFF4F0', muted: 'rgba(255,244,240,0.7)', eyebrow: 'rgba(255,244,240,0.5)', accent: '#FFCAB8' },
-  // 12 — Foundation Recs/Kit 0: warm mocha/sienna over dark roasted wood
-  { gradientTop: '#130A07', gradientBot: '#906050', blobA: '#C08860', blobB: '#402010', text: '#FFF4EE', muted: 'rgba(255,244,238,0.7)', eyebrow: 'rgba(255,244,238,0.5)', accent: '#D0A888' },
-  // 13 — Blush Recs/Kit 1: soft clay peach over deep raspberry
-  { gradientTop: '#180605', gradientBot: '#D4897A', blobA: '#E8B0A0', blobB: '#8C3828', text: '#FFF6F4', muted: 'rgba(255,246,244,0.7)', eyebrow: 'rgba(255,246,244,0.5)', accent: '#FFD0C0' },
-  // 14 — Mascara Recs/Kit 2: deep charcoal night over deepest violet
-  { gradientTop: '#080614', gradientBot: '#2C2840', blobA: '#5C5080', blobB: '#0A0814', text: '#F0EEF8', muted: 'rgba(240,238,248,0.7)', eyebrow: 'rgba(240,238,248,0.5)', accent: '#C0B0E0' },
-  // 15 — Eye Recs/Kit 3: rich forest emerald over deep dark night
-  { gradientTop: '#020D06', gradientBot: '#244830', blobA: '#3A7848', blobB: '#061808', text: '#EEFAF2', muted: 'rgba(238,250,242,0.7)', eyebrow: 'rgba(238,250,242,0.5)', accent: '#A0E8B8' },
-  // 16 — Lip Recs/Kit 4: deep crimson velvet over dark burgundy
-  { gradientTop: '#1B0409', gradientBot: '#8C2038', blobA: '#C04868', blobB: '#300810', text: '#FFF0F4', muted: 'rgba(255,240,244,0.7)', eyebrow: 'rgba(255,240,244,0.5)', accent: '#FFB0C8' },
-  // 17 — Skincare Recs/Kit 5: sage mist over sage shadow
-  { gradientTop: '#0F1811', gradientBot: '#5A7860', blobA: '#8AB898', blobB: '#1A3820', text: '#F0F8F2', muted: 'rgba(240,248,242,0.7)', eyebrow: 'rgba(240,248,242,0.5)', accent: '#C0E8CC' },
-  // 18 — Summary/Finale: deep midnight gold over cosmic black void
-  { gradientTop: '#0A0314', gradientBot: '#1C0838', blobA: '#D4AF37', blobB: '#060108', text: '#FFEEDD', muted: 'rgba(255,238,221,0.7)', eyebrow: 'rgba(255,238,221,0.5)', accent: '#D4AF37' },
+  // 0 — Welcome: Deep midnight space violet with glowing neon pink
+  { 
+    gradientTop: '#0C0214', gradientBot: '#150526', 
+    blobA: '#FF007F', blobB: '#7A1FA2', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
+    eyebrow: '#FF007F', accent: '#FF007F' 
+  },
+  // 1 — Opening: STARK VIBRANT NEON HOT PINK (stark black text contrast)
+  { 
+    gradientTop: '#FF007F', gradientBot: '#E8006F', 
+    blobA: '#FF5E97', blobB: '#000000', 
+    text: '#0F0311', muted: 'rgba(15,3,17,0.75)', 
+    eyebrow: '#0F0311', accent: '#0F0311' 
+  },
+  // 2 — Canvas: Obsidian black (stark gold & white text contrast)
+  { 
+    gradientTop: '#08030C', gradientBot: '#0C0514', 
+    blobA: '#D4AF37', blobB: '#1C0626', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
+    eyebrow: '#D4AF37', accent: '#D4AF37' 
+  },
+  // 3 — Season: ELECTRIC ROYAL BLUE (glowing neon yellow contrast)
+  { 
+    gradientTop: '#1A0DAB', gradientBot: '#0A056B', 
+    blobA: '#E8D22C', blobB: '#3E0DAB', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.75)', 
+    eyebrow: '#E8D22C', accent: '#E8D22C' 
+  },
+  // 4 — Face Shape: VIBRANT NEON ORANGE (deep dark purple text contrast)
+  { 
+    gradientTop: '#FF5722', gradientBot: '#E64A19', 
+    blobA: '#3F51B5', blobB: '#FF8A50', 
+    text: '#1E0500', muted: 'rgba(30,5,0,0.78)', 
+    eyebrow: '#1E0500', accent: '#1E0500' 
+  },
+  // 5 — Brows: ULTRA RICH FOREST EMERALD (stark white & gold text contrast)
+  { 
+    gradientTop: '#004D40', gradientBot: '#00251A', 
+    blobA: '#D4AF37', blobB: '#00796B', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
+    eyebrow: '#D4AF37', accent: '#D4AF37' 
+  },
+  // 6 — Lashes: STARK DEEP INDIGO (glowing neon green contrast)
+  { 
+    gradientTop: '#1E1B4B', gradientBot: '#0F0E36', 
+    blobA: '#00FF87', blobB: '#4F46E5', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
+    eyebrow: '#00FF87', accent: '#00FF87' 
+  },
+  // 7 — Eye Shape: DEEP CHERRY RED (stark white & cyan contrast)
+  { 
+    gradientTop: '#4C0519', gradientBot: '#2D0011', 
+    blobA: '#00F5FF', blobB: '#880E4F', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
+    eyebrow: '#00F5FF', accent: '#00F5FF' 
+  },
+  // 8 — Energy: VIBRANT ACID LIME YELLOW (deep dark forest text contrast)
+  { 
+    gradientTop: '#CCFF00', gradientBot: '#B2EB00', 
+    blobA: '#1A237E', blobB: '#E6FF00', 
+    text: '#0C1A00', muted: 'rgba(12,26,0,0.75)', 
+    eyebrow: '#0C1A00', accent: '#0C1A00' 
+  },
+  // 9 — Archetype: THE REVEAL (glowing hot pink over deep purple)
+  { 
+    gradientTop: '#110118', gradientBot: '#050008', 
+    blobA: '#FF007F', blobB: '#880E4F', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.75)', 
+    eyebrow: '#FF007F', accent: '#FF007F' 
+  },
+  // 10 — Lips: DEEP gothic plum (stark white & neon pink contrast)
+  { 
+    gradientTop: '#1B001F', gradientBot: '#0D0017', 
+    blobA: '#FF007F', blobB: '#4A148C', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
+    eyebrow: '#FF007F', accent: '#FF007F' 
+  },
+  // 11 — Blush: VIBRANT ELECTRIC CORAL (dark navy text contrast)
+  { 
+    gradientTop: '#FF6F00', gradientBot: '#E65100', 
+    blobA: '#1A237E', blobB: '#FFB300', 
+    text: '#1C0600', muted: 'rgba(28,6,0,0.75)', 
+    eyebrow: '#1C0600', accent: '#1C0600' 
+  },
+  // 12 — Foundation Recs/Kit 0: Deep luxury charcoal (gold and white contrast)
+  { 
+    gradientTop: '#0D0D0D', gradientBot: '#1A1A1A', 
+    blobA: '#D4AF37', blobB: '#333333', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
+    eyebrow: '#D4AF37', accent: '#D4AF37' 
+  },
+  // 13 — Blush Recs/Kit 1: STARK VIBRANT MAGENTA (black text contrast)
+  { 
+    gradientTop: '#D81B60', gradientBot: '#C2185B', 
+    blobA: '#FFF0F5', blobB: '#880E4F', 
+    text: '#0F0107', muted: 'rgba(15,1,7,0.75)', 
+    eyebrow: '#0F0107', accent: '#0F0107' 
+  },
+  // 14 — Mascara Recs/Kit 2: Midnight navy (glowing electric purple contrast)
+  { 
+    gradientTop: '#050B24', gradientBot: '#0A133A', 
+    blobA: '#8F5EFE', blobB: '#111A4D', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
+    eyebrow: '#8F5EFE', accent: '#8F5EFE' 
+  },
+  // 15 — Eye Recs/Kit 3: VIBRANT LIME GREEN (stark black text contrast)
+  { 
+    gradientTop: '#00E676', gradientBot: '#00C853', 
+    blobA: '#1B5E20', blobB: '#B9F6CA', 
+    text: '#011A04', muted: 'rgba(1,26,4,0.75)', 
+    eyebrow: '#011A04', accent: '#011A04' 
+  },
+  // 16 — Lip Recs/Kit 4: Deep velvet burgundy (stark white & cyan contrast)
+  { 
+    gradientTop: '#3E0313', gradientBot: '#1D000A', 
+    blobA: '#00F5FF', blobB: '#5C061F', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
+    eyebrow: '#00F5FF', accent: '#00F5FF' 
+  },
+  // 17 — Skincare Recs/Kit 5: ELECTRIC DEEP CYAN TEAL (neon yellow contrast)
+  { 
+    gradientTop: '#006064', gradientBot: '#00363A', 
+    blobA: '#FFD700', blobB: '#00838F', 
+    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
+    eyebrow: '#FFD700', accent: '#FFD700' 
+  },
+  // 18 — Summary/Finale: DEEP COSMIC NIGHT (pure gold and white contrast)
+  { 
+    gradientTop: '#0A0314', gradientBot: '#1C0838', 
+    blobA: '#D4AF37', blobB: '#060108', 
+    text: '#FFEEDD', muted: 'rgba(255,238,221,0.7)', 
+    eyebrow: '#D4AF37', accent: '#D4AF37' 
+  },
 ];
 
 // ── Grain overlay (iOS renders, Android gracefully skips) ─────────────────────
@@ -396,13 +491,13 @@ function LockedValue({ size = 'md', color = 'rgba(255,255,255,0.55)' }: { size?:
 
 // ── Progress segment ──────────────────────────────────────────────────────────
 
-function ProgressSeg({ i, current, progress }: { i: number; current: number; progress: SharedValue<number> }) {
+function ProgressSeg({ i, current, progress, textColor, trackColor }: { i: number; current: number; progress: SharedValue<number>; textColor: string; trackColor: string }) {
   const fillStyle = useAnimatedStyle(() => ({
     width: i < current ? SEG_W : i === current ? progress.value * SEG_W : 0,
   }));
   return (
-    <View style={[ds.segTrack, { width: SEG_W }]}>
-      <Animated.View style={[ds.segFill, fillStyle]} />
+    <View style={[ds.segTrack, { width: SEG_W, backgroundColor: trackColor }]}>
+      <Animated.View style={[ds.segFill, { backgroundColor: textColor }, fillStyle]} />
     </View>
   );
 }
@@ -1716,6 +1811,7 @@ export default function DnaRevealScreen() {
   const [dna, setDna] = useState<DnaResult | null>(null);
   const [slideState, slideDispatch] = useReducer(slideReducer, { current: 0, outgoing: null, dir: 1 as const, uid: 0 });
   const { current } = slideState;
+  const colors = SLIDE_COLORS[current] ?? SLIDE_COLORS[0];
   const clearOutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shareCardRef = useRef<View>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -1946,11 +2042,18 @@ export default function DnaRevealScreen() {
       <View style={[ds.header, { paddingTop: insets.top + 10 }]}>
         <View style={ds.barsRow}>
           {Array.from({ length: SLIDE_COUNT }).map((_, i) => (
-            <ProgressSeg key={i} i={i} current={current} progress={progress} />
+            <ProgressSeg 
+              key={i} 
+              i={i} 
+              current={current} 
+              progress={progress} 
+              textColor={colors.text} 
+              trackColor={colors.text === '#FFFFFF' || colors.text === '#FFEEDD' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)'}
+            />
           ))}
         </View>
-        <Pressable hitSlop={12} style={ds.closeBtn} onPress={handleClose}>
-          <Text style={ds.closeTxt}>✕</Text>
+        <Pressable hitSlop={12} style={[ds.closeBtn, { backgroundColor: colors.text === '#FFFFFF' || colors.text === '#FFEEDD' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]} onPress={handleClose}>
+          <Text style={[ds.closeTxt, { color: colors.text }]}>✕</Text>
         </Pressable>
       </View>
 
