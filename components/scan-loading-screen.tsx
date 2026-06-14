@@ -8,16 +8,17 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { tokens } from './theme';
+import { LiquidBackdrop } from './liquid-backdrop';
 
 const { width: W } = Dimensions.get('window');
 
 const SCAN_PHASES = [
-  'analysing skin barrier health... 🌸',
-  'detecting pore-cloggers... 💅',
-  'evaluating complexion symmetry... ✨',
-  'grading makeup colour harmony... 🎀',
-  'generating custom coachings... 💫',
-  'cooking your beauty DNA... 💕',
+  'Analysing skin barrier health…',
+  'Detecting pore-cloggers…',
+  'Evaluating complexion symmetry…',
+  'Grading makeup colour harmony…',
+  'Generating custom suggestions…',
+  'Calibrating your beauty DNA…',
 ];
 
 const RING_SIZE = 220;
@@ -108,11 +109,14 @@ export function ScanLoadingScreen({ imageUri }: ScanLoadingScreenProps) {
 
   return (
     <View style={ls.root}>
+      {/* Dynamic Animated Liquid Backdrop */}
+      <LiquidBackdrop />
+
       {/* Top Header */}
       <View style={ls.top}>
         <Text style={ls.eyebrow}>Beauty DNA</Text>
         <Text style={ls.headline}>
-          {'decoding\nyour look... 💫'}
+          {'analysing\nyour skin.'}
         </Text>
       </View>
 
@@ -202,7 +206,7 @@ function DotPulse({ index }: { index: number }) {
 const ls = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: tokens.colors.cream,
+    backgroundColor: 'transparent',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 28,
