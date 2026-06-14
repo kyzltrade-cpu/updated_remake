@@ -226,15 +226,6 @@ export default function ResultsScreen() {
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={s.statNum}>
-                {categories.length > 0
-                  ? Math.round(categories.reduce((sum, c) => sum + c.score, 0) / categories.length)
-                  : 0}
-              </Text>
-              <Text style={s.statLabel}>Average</Text>
-            </View>
-            <View style={s.statDivider} />
-            <View style={s.stat}>
               <Text style={[s.statNum, lastScore >= score ? { color: SCORE_RED } : { color: SCORE_GREEN }]}>
                 {lastScore}
               </Text>
