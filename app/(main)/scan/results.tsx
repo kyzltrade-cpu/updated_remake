@@ -227,13 +227,6 @@ export default function ResultsScreen() {
             <View style={s.statDivider} />
             <View style={s.stat}>
               <Text style={s.statNum}>
-                {categories.length > 0 ? Math.max(...categories.map(c => c.score)) : 0}
-              </Text>
-              <Text style={s.statLabel}>Best</Text>
-            </View>
-            <View style={s.statDivider} />
-            <View style={s.stat}>
-              <Text style={s.statNum}>
                 {categories.length > 0
                   ? Math.round(categories.reduce((sum, c) => sum + c.score, 0) / categories.length)
                   : 0}
