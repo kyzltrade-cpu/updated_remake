@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import { FaceCorners } from '@/components/face-corners';
 import { EdgeFlashOverlay } from '@/components/edge-flash';
+import { ScanLimitModal } from '@/components/scan-limit-modal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSettings } from '@/contexts/settings-context';
 import { useAuth } from '@/contexts/AuthContext';
@@ -298,6 +299,7 @@ export default function ScanScreen() {
   const [scanned, setScanned] = useState(false);
   const [showLowLight, setShowLowLight] = useState(false);
   const [showUV, setShowUV] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const { settings, profilePhoto } = useSettings();
   const { user } = useAuth();
@@ -362,17 +364,7 @@ export default function ScanScreen() {
 
   const takePhoto = async () => {
     if (mode === 'face' && !isPro && scanCount >= 1) {
-      Alert.alert(
-        "Scan Limit Reached",
-        "Upgrade to ReMake Pro to unlock unlimited face scans, custom coaching, and your full DNA profile analysis.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { 
-            text: "Upgrade Now", 
-            onPress: () => router.push('/(main)/paywall') 
-          }
-        ]
-      );
+      setShowLimitModal(true);
       return;
     }
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -409,17 +401,7 @@ export default function ScanScreen() {
 
   const pickImage = async () => {
     if (mode === 'face' && !isPro && scanCount >= 1) {
-      Alert.alert(
-        "Scan Limit Reached",
-        "Upgrade to ReMake Pro to unlock unlimited face scans, custom coaching, and your full DNA profile analysis.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { 
-            text: "Upgrade Now", 
-            onPress: () => router.push('/(main)/paywall') 
-          }
-        ]
-      );
+      setShowLimitModal(true);
       return;
     }
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -659,6 +641,8 @@ export default function ScanScreen() {
       <EdgeFlashOverlay visible={flash && mode === 'face'} />
 
       {showUV && <UVPopup onClose={() => setShowUV(false)} insetTop={insets.top} />}
+
+      <ScanLimitModal visible={showLimitModal} onClose={() => setShowLimitModal(false)} />
     </View>
   );
 }
