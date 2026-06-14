@@ -4,9 +4,8 @@ import { View, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScanLoadingScreen } from '@/components/scan-loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
-import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
-import { saveDnaResult, saveScan, getLastScan } from '@/lib/api/scan-storage';
+import { saveScan, getLastScan } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/settings-context';
 
@@ -44,22 +43,14 @@ export default function LoadingPage() {
       try {
         const { priorityCategory, skillLevel } = await getOnboardingData();
         const referenceUri = settings.referencePhoto ?? undefined;
-        const [diagnosis, dna] = await Promise.all([
-          analyzeImage({
-            imageUri: validUri,
-            priorityCategory: priorityCategory ?? 'Blending',
-            skillLevel: skillLevel ?? 'Intermediate',
-            referenceUri,
-          }),
-          analyzeDna({
-            imageUri: validUri,
-            priorityCategory: priorityCategory ?? 'Blending',
-          }),
-        ]);
+        const diagnosis = await analyzeImage({
+          imageUri: validUri,
+          priorityCategory: priorityCategory ?? 'Blending',
+          skillLevel: skillLevel ?? 'Intermediate',
+          referenceUri,
+        });
         const coaching = await getCoaching({ diagnosis });
 
-        // Store DNA result for DNA reveal screen and persist to Supabase
-        await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
         let lastScore: number | undefined;
         if (user?.id) {
           try {
@@ -68,7 +59,6 @@ export default function LoadingPage() {
           } catch (e) {
             console.warn('[loading] failed to get last scan:', e);
           }
-          saveDnaResult(user.id, dna).catch(() => null);
           saveScan({
             userId: user.id,
             imageUri: validUri,
