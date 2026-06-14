@@ -136,7 +136,7 @@ export function ScanLimitModal({ visible, onClose }: ScanLimitModalProps) {
           <Text style={styles.eyebrow}>ReMake Pro</Text>
           
           <Text style={styles.title}>
-            bestie, scan limit reached! 💖
+            scan limit reached! 💖
           </Text>
 
           <Text style={styles.body}>
