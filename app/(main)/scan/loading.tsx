@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LoadingScreen } from '@/components/loading-screen';
+import { ScanLoadingScreen } from '@/components/scan-loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
 import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
@@ -98,7 +98,7 @@ export default function LoadingPage() {
 
   return (
     <View style={{ flex: 1 }}>
-      <LoadingScreen />
+      <ScanLoadingScreen imageUri={params.uri ?? ''} />
     </View>
   );
 }
