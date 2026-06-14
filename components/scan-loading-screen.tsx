@@ -148,19 +148,10 @@ export function ScanLoadingScreen({ imageUri }: ScanLoadingScreenProps) {
           </Svg>
         </Animated.View>
 
-        {/* Rounded Scanned Selfie Frame */}
-        <View style={ls.imageContainer}>
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} style={ls.selfie} />
-          ) : (
-            <View style={ls.avatarPlaceholder} />
-          )}
-
-          {/* Glowing laser line overlay */}
-          <Animated.View style={[ls.laserLine, laserStyle]}>
-            <View style={ls.laserLineGlow} />
-          </Animated.View>
-        </View>
+        {/* Centre Star Emblem */}
+        <Animated.View style={[ls.ringCenter, glowStyle]}>
+          <Text style={ls.ringIcon}>✦</Text>
+        </Animated.View>
       </View>
 
       {/* Bottom Progress details */}
@@ -248,52 +239,8 @@ const ls = StyleSheet.create({
     backgroundColor: tokens.colors.blush,
     opacity: 0.22,
   },
-  imageContainer: {
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE,
-    borderRadius: IMAGE_SIZE / 2,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: tokens.colors.white,
-    backgroundColor: tokens.colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    shadowColor: tokens.colors.pinkDeep,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  selfie: {
-    width: '100%',
-    height: '100%',
-    borderRadius: IMAGE_SIZE / 2,
-    resizeMode: 'cover',
-  },
-  avatarPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: tokens.colors.pinkLight,
-  },
-  laserLine: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: tokens.colors.pinkDeep,
-    zIndex: 5,
-  },
-  laserLineGlow: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: -4,
-    height: 11,
-    backgroundColor: tokens.colors.pinkDeep,
-    opacity: 0.35,
-    borderRadius: 6,
-  },
+  ringCenter: { position: 'absolute' },
+  ringIcon: { fontSize: 24, color: tokens.colors.pinkDeep },
   bottom: {
     alignItems: 'center',
     gap: 14,
