@@ -5,7 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { signUp, signInDev, DEV_BYPASS } from '@/lib/auth';
+import { signUp, signInDev, DEV_BYPASS, signInWithGoogle, signInWithApple } from '@/lib/auth';
 import { isValidEmail, isValidPassword, sanitizeEmail } from '@/lib/validation';
 import { loadGloDraft, clearGloDraft } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
@@ -64,6 +64,56 @@ export default function CreateAccountScreen() {
       }
     } catch { Alert.alert('Error', 'Something went wrong. Try again.'); }
     finally { setLoading(false); }
+  };
+
+  const handleGoogleSignIn = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setLoading(true);
+    try {
+      const { data, error } = await signInWithGoogle();
+      if (error) {
+        if (error.code !== 'CANCELED') {
+          Alert.alert('Google Sign-In failed', error.message);
+        }
+      } else {
+        const draft = await loadGloDraft();
+        if (data?.user?.id && Object.keys(draft).length > 0) {
+          const supabase = createClient() as any;
+          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+        }
+        await clearGloDraft();
+        advance(router);
+      }
+    } catch {
+      Alert.alert('Error', 'Something went wrong. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setLoading(true);
+    try {
+      const { data, error } = await signInWithApple();
+      if (error) {
+        if (error.code !== 'CANCELED') {
+          Alert.alert('Apple Sign-In failed', error.message);
+        }
+      } else {
+        const draft = await loadGloDraft();
+        if (data?.user?.id && Object.keys(draft).length > 0) {
+          const supabase = createClient() as any;
+          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+        }
+        await clearGloDraft();
+        advance(router);
+      }
+    } catch {
+      Alert.alert('Error', 'Something went wrong. Try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -134,7 +184,7 @@ export default function CreateAccountScreen() {
 
           {/* SSO Buttons */}
           <View style={styles.ssoButtons}>
-            <Pressable style={[styles.ssoBtn, styles.appleBtn]} onPress={handleDevOrCreate}>
+            <Pressable style={[styles.ssoBtn, styles.appleBtn]} onPress={handleAppleSignIn}>
               <Svg width={16} height={16} viewBox="0 0 24 24" style={styles.ssoIcon}>
                 <Path
                   d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-.1 3.77.46 1.51.56 2.68 1.67 3.32 2.6-2.52 1.48-2.11 4.74.45 5.79-1.01 2.54-2.11 5.1-4.14 7.14M15.96 4.17c.66-.81 1.11-1.93.99-3.05-1.04.04-2.3.69-3.05 1.56-.65.76-1.22 1.9-1.07 3.01 1.17.09 2.32-.54 3.13-1.52z"
@@ -143,7 +193,7 @@ export default function CreateAccountScreen() {
               </Svg>
               <Text style={styles.appleBtnText}>Sign in with Apple</Text>
             </Pressable>
-            <Pressable style={[styles.ssoBtn, styles.googleBtn]} onPress={handleDevOrCreate}>
+            <Pressable style={[styles.ssoBtn, styles.googleBtn]} onPress={handleGoogleSignIn}>
               <Svg width={15} height={15} viewBox="0 0 24 24" style={styles.ssoIcon}>
                 <Path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

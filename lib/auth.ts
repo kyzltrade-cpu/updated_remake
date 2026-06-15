@@ -7,6 +7,8 @@ import {
   validationResult,
   type ValidationResult
 } from '@/lib/validation'
+import { GoogleSignin } from '@react-native-google-signin/google-signin'
+import * as AppleAuthentication from 'expo-apple-authentication'
 
 const DEV_BYPASS = process.env.EXPO_PUBLIC_DEV_BYPASS === 'true'
 
@@ -167,6 +169,93 @@ export async function signInDev() {
   }
 
   return { data: signUpData, error: signUpError };
+}
+
+// Configure Google Sign-In lazily or once
+let googleConfigured = false;
+function configureGoogle() {
+  if (googleConfigured) return;
+
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+
+  GoogleSignin.configure({
+    webClientId,
+    iosClientId,
+    offlineAccess: false,
+  });
+  googleConfigured = true;
+}
+
+/**
+ * Native Sign-In with Google
+ */
+export async function signInWithGoogle() {
+  try {
+    configureGoogle();
+
+    await GoogleSignin.hasPlayServices();
+    const response = await GoogleSignin.signIn();
+    
+    // Support newer structure (v11+) and older structure
+    const idToken = response.data?.idToken || (response as any).idToken;
+
+    if (!idToken) {
+      throw new Error('Google Sign-In: No ID token returned.');
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: idToken,
+    });
+
+    return { data, error };
+  } catch (err: any) {
+    const msg = err.message || '';
+    if (msg.includes('Sign in action cancelled') || err.code === '12501' || err.code === 'SIGN_IN_CANCELLED') {
+      return { data: null, error: { message: 'Sign in was cancelled.', code: 'CANCELED' } };
+    }
+    console.error('[Auth] Google Sign-In error:', err);
+    return { data: null, error: { message: err.message || 'Google Sign-In failed.', code: 'ERROR' } };
+  }
+}
+
+/**
+ * Native Sign-In with Apple
+ */
+export async function signInWithApple() {
+  try {
+    const isAvailable = await AppleAuthentication.isAvailableAsync();
+    if (!isAvailable) {
+      return { data: null, error: { message: 'Apple Sign-In is not available on this device.', code: 'UNAVAILABLE' } };
+    }
+
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+
+    if (!credential.identityToken) {
+      throw new Error('Apple Sign-In: No identity token returned.');
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'apple',
+      token: credential.identityToken,
+    });
+
+    return { data, error };
+  } catch (err: any) {
+    if (err.code === 'ERR_CANCELED') {
+      return { data: null, error: { message: 'Sign in was cancelled.', code: 'CANCELED' } };
+    }
+    console.error('[Auth] Apple Sign-In error:', err);
+    return { data: null, error: { message: err.message || 'Apple Sign-In failed.', code: 'ERROR' } };
+  }
 }
 
 export { DEV_BYPASS }
