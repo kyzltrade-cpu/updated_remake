@@ -7,8 +7,8 @@ import {
   validationResult,
   type ValidationResult
 } from '@/lib/validation'
-import { GoogleSignin } from '@react-native-google-signin/google-signin'
-import * as AppleAuthentication from 'expo-apple-authentication'
+import type { GoogleSignin as GoogleSigninType } from '@react-native-google-signin/google-signin'
+import type * as AppleAuthenticationType from 'expo-apple-authentication'
 
 const DEV_BYPASS = process.env.EXPO_PUBLIC_DEV_BYPASS === 'true'
 
@@ -176,6 +176,8 @@ let googleConfigured = false;
 function configureGoogle() {
   if (googleConfigured) return;
 
+  const { GoogleSignin } = require('@react-native-google-signin/google-signin') as { GoogleSignin: typeof GoogleSigninType };
+
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
@@ -192,6 +194,7 @@ function configureGoogle() {
  */
 export async function signInWithGoogle() {
   try {
+    const { GoogleSignin } = require('@react-native-google-signin/google-signin') as { GoogleSignin: typeof GoogleSigninType };
     configureGoogle();
 
     await GoogleSignin.hasPlayServices();
@@ -212,6 +215,9 @@ export async function signInWithGoogle() {
 
     return { data, error };
   } catch (err: any) {
+    if (err.message?.includes('RNGoogleSignin') || err.message?.includes('could not be found') || err.message?.includes('Cannot find module')) {
+      return { data: null, error: { message: 'Google Sign-In is only available in a custom development build. Please build the native app to use this feature.', code: 'UNSUPPORTED' } };
+    }
     const msg = err.message || '';
     if (msg.includes('Sign in action cancelled') || err.code === '12501' || err.code === 'SIGN_IN_CANCELLED') {
       return { data: null, error: { message: 'Sign in was cancelled.', code: 'CANCELED' } };
@@ -226,6 +232,7 @@ export async function signInWithGoogle() {
  */
 export async function signInWithApple() {
   try {
+    const AppleAuthentication = require('expo-apple-authentication') as typeof AppleAuthenticationType;
     const isAvailable = await AppleAuthentication.isAvailableAsync();
     if (!isAvailable) {
       return { data: null, error: { message: 'Apple Sign-In is not available on this device.', code: 'UNAVAILABLE' } };
@@ -250,6 +257,9 @@ export async function signInWithApple() {
 
     return { data, error };
   } catch (err: any) {
+    if (err.message?.includes('expo-apple-authentication') || err.message?.includes('could not be found') || err.message?.includes('Cannot find module')) {
+      return { data: null, error: { message: 'Apple Sign-In is only available in a custom development build. Please build the native app to use this feature.', code: 'UNSUPPORTED' } };
+    }
     if (err.code === 'ERR_CANCELED') {
       return { data: null, error: { message: 'Sign in was cancelled.', code: 'CANCELED' } };
     }
