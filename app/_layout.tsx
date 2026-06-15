@@ -12,6 +12,7 @@ import { UserProvider } from '@/contexts/user-context';
 import { SubscriptionProvider } from '@/contexts/subscription-context';
 import { View } from 'react-native';
 import { LoadingScreen } from '@/components/loading-screen';
+import { AppSplashScreen } from '@/components/splash-screen';
 
 const ONBOARDING_KEY = '@remake_onboarding_complete';
 
@@ -38,7 +39,7 @@ export default function RootLayout() {
   }, []);
 
   if (!fontsLoaded || onboardingComplete === null) {
-    return <LoadingScreen />;
+    return <AppSplashScreen />;
   }
 
   return (
