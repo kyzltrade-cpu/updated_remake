@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,26 +9,33 @@ import Animated, {
 import { tokens } from './theme';
 
 export function AppSplashScreen() {
+  // Unified entrance values from onboarding splash
   const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.95);
+  const scale = useSharedValue(0.93);
+  const translateY = useSharedValue(10);
 
   useEffect(() => {
-    opacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) });
-    scale.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
+    // Entrance animation (Fade-in with slow scale and lift)
+    opacity.value = withTiming(1, { duration: 750, easing: Easing.out(Easing.quad) });
+    scale.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.quad) });
+    translateY.value = withTiming(0, { duration: 900, easing: Easing.out(Easing.quad) });
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
-      transform: [{ scale: scale.value }],
+      transform: [
+        { scale: scale.value },
+        { translateY: translateY.value },
+      ],
     };
   });
 
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.center, animatedStyle]}>
-        <Text style={styles.wordmark}>REMAKE</Text>
-        <Text style={styles.tagline}>Your makeup, analysed. Daily.</Text>
+        <Animated.Text style={styles.wordmark}>REMAKE</Animated.Text>
+        <Animated.Text style={styles.tagline}>Your makeup, analysed. Daily.</Animated.Text>
       </Animated.View>
     </View>
   );
@@ -51,7 +58,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: tokens.colors.pinkRich,
     letterSpacing: 2,
-    textAlign: 'center',
   },
   tagline: {
     fontFamily: tokens.fonts.regular,
@@ -59,6 +65,5 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     color: tokens.colors.gray,
     letterSpacing: 0.3,
-    textAlign: 'center',
   },
 });
