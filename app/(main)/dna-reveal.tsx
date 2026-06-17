@@ -1167,17 +1167,40 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         {shades && (
           <RevealItem delay={3500}>
             <View style={[ds.shadesCard, { borderColor: `${colors.text}22`, backgroundColor: 'rgba(0,0,0,0.08)' }]}>
-              <View style={ds.shadesRow}>
-                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Fenty</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.Fenty}</Text>
+              <View style={[ds.shadesRow, { justifyContent: 'center', rowGap: 6, columnGap: 8 }]}>
+                {/* Fenty */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Fenty</Text>
+                  <Text style={[ds.shadeName, { color: colors.text }]}>{shades.Fenty}</Text>
+                </View>
                 <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
-                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>MAC</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.MAC}</Text>
+
+                {/* MAC */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>MAC</Text>
+                  <Text style={[ds.shadeName, { color: colors.text }]}>{shades.MAC}</Text>
+                </View>
                 <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
-                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Maybelline</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.Maybelline}</Text>
-              </View>
-              <View style={ds.shadesRow}>
-                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>L'Oréal</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades["L'Oréal"]}</Text>
+
+                {/* Maybelline */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>Maybelline</Text>
+                  <Text style={[ds.shadeName, { color: colors.text }]}>{shades.Maybelline}</Text>
+                </View>
                 <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
-                <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>NARS</Text><Text style={[ds.shadeName, { color: colors.text }]}>{shades.NARS}</Text>
+
+                {/* L'Oréal */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>L'Oréal</Text>
+                  <Text style={[ds.shadeName, { color: colors.text }]}>{shades["L'Oréal"]}</Text>
+                </View>
+                <Text style={[ds.shadeSep, { color: `${colors.text}33` }]}>·</Text>
+
+                {/* NARS */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={[ds.shadeBrand, { color: colors.eyebrow }]}>NARS</Text>
+                  <Text style={[ds.shadeName, { color: colors.text }]}>{shades.NARS}</Text>
+                </View>
               </View>
             </View>
           </RevealItem>
