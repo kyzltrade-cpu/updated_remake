@@ -9,6 +9,7 @@ import {
 } from '@/lib/validation'
 import type { GoogleSignin as GoogleSigninType } from '@react-native-google-signin/google-signin'
 import type * as AppleAuthenticationType from 'expo-apple-authentication'
+import Constants from 'expo-constants'
 
 const DEV_BYPASS = process.env.EXPO_PUBLIC_DEV_BYPASS === 'true'
 
@@ -193,6 +194,9 @@ function configureGoogle() {
  * Native Sign-In with Google
  */
 export async function signInWithGoogle() {
+  if (Constants.executionEnvironment === 'storeClient') {
+    return { data: null, error: { message: 'Google Sign-In is only available in a custom development build. Please build the native app to use this feature.', code: 'UNSUPPORTED' } };
+  }
   try {
     const { GoogleSignin } = require('@react-native-google-signin/google-signin') as { GoogleSignin: typeof GoogleSigninType };
     configureGoogle();
@@ -231,6 +235,9 @@ export async function signInWithGoogle() {
  * Native Sign-In with Apple
  */
 export async function signInWithApple() {
+  if (Constants.executionEnvironment === 'storeClient') {
+    return { data: null, error: { message: 'Apple Sign-In is only available in a custom development build. Please build the native app to use this feature.', code: 'UNSUPPORTED' } };
+  }
   try {
     const AppleAuthentication = require('expo-apple-authentication') as typeof AppleAuthenticationType;
     const isAvailable = await AppleAuthentication.isAvailableAsync();
