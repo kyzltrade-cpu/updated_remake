@@ -337,11 +337,7 @@ export default function ProfileScreen() {
                 <Pressable 
                   onPress={() => {
                     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    if (dna) {
-                      router.push('/(main)/paywall');
-                    } else {
-                      router.push('/(main)/scan');
-                    }
+                    router.push('/(main)/paywall');
                   }}
                   style={styles.lockedActionBtn}
                 >
