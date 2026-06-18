@@ -211,28 +211,10 @@ export async function signInWithGoogle() {
       throw new Error('Google Sign-In: No ID token returned.');
     }
 
-    // Decode JWT payload to extract nonce (required by Supabase on iOS)
-    let nonce: string | undefined;
-    try {
-      const parts = idToken.split('.');
-      if (parts.length === 3) {
-        const payload = parts[1];
-        const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-        const pad = base64.length % 4;
-        const paddedBase64 = pad ? base64 + '='.repeat(4 - pad) : base64;
-        const jsonStr = atob(paddedBase64);
-        const decoded = JSON.parse(jsonStr);
-        nonce = decoded.nonce;
-      }
-    } catch (e) {
-      console.warn('[Auth] Google Sign-In: Failed to parse nonce from idToken', e);
-    }
-
     const supabase = createClient();
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: idToken,
-      nonce,
     });
 
     return { data, error };
