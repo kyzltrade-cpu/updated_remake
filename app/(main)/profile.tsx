@@ -312,6 +312,37 @@ export default function ProfileScreen() {
                   <Text style={styles.actionBtnText}>Open Beauty wrapped story ✦</Text>
                 </Pressable>
               </View>
+            ) : isPro ? (
+              <View style={styles.dnaLockedCard}>
+                <LinearGradient
+                  colors={[tokens.colors.darkBg, '#141c2d']}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.lockedSparkle} pointerEvents="none">
+                  <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 120 }}>✦</Text>
+                </View>
+                
+                <View style={styles.lockedIconCircle}>
+                  <MaterialIcons name="face" size={28} color={tokens.colors.accent} />
+                </View>
+
+                <Text style={styles.lockedTitle}>Your Beauty DNA is Ready</Text>
+                <Text style={styles.lockedSubtitle}>
+                  Take your first face scan to unlock your custom color season, facial shape, and beauty archetype!
+                </Text>
+
+                <Pressable 
+                  onPress={() => {
+                    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    router.push('/(main)/scan');
+                  }}
+                  style={styles.lockedActionBtn}
+                >
+                  <Text style={styles.lockedActionText}>
+                    Scan Your Face ✦
+                  </Text>
+                </Pressable>
+              </View>
             ) : (
               <View style={styles.dnaLockedCard}>
                 <LinearGradient
