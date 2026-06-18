@@ -370,7 +370,7 @@ export default function ScanScreen() {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (!cameraRef.current) return;
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.7, exif: true });
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.4, exif: true });
       if (!photo?.uri) return;
       const rawEv = photo.exif?.BrightnessValue;
       const ev = typeof rawEv === 'number' ? rawEv

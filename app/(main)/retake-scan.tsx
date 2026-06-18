@@ -92,7 +92,7 @@ export default function RetakeScanScreen() {
     }
 
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85, exif: true });
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.4, exif: true });
       if (!photo?.uri) throw new Error('no uri');
 
       const rawEv = photo.exif?.BrightnessValue;
