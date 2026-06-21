@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { tokens } from '@/components/theme';
@@ -71,7 +71,7 @@ export default function LegalScreen() {
 
             <Text style={styles.heading}>2. Description of Service</Text>
             <Text style={styles.paragraph}>
-              ReMake is an aesthetic analysis tool powered by computer vision algorithms. Users take or upload photos of their face to receive feedback, category breakdowns, and educational makeup coaching suggestions.
+              ReMake is an aesthetic analysis tool powered by computer vision algorithms. Users take or upload photos of their face to receive feedback, category breakdowns, and educational makeup coaching suggestions. It also features skincare and makeup barcode scanning to analyze ingredient lists, revealing comedogenic (pore-clogging) ratings, allergens, and clean beauty scores.
             </Text>
 
             <Text style={styles.heading}>3. Age Requirements</Text>
@@ -83,6 +83,18 @@ export default function LegalScreen() {
             <Text style={styles.paragraph}>
               ReMake is a premium service that requires an active weekly or annual paid subscription. Subscriptions are billed directly through Apple In-App Purchases (App Store) and will auto-renew unless cancelled at least 24 hours before the end of the current billing cycle. No refunds are provided for partial periods.
             </Text>
+            <Text style={styles.paragraph}>
+              By using and subscribing to the App, you agree to be bound by Apple's standard Terms of Use (EULA), which can be accessed here:
+            </Text>
+            <Pressable 
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+              }}
+              style={styles.linkContainer}
+            >
+              <Text style={styles.linkText}>Apple Standard Terms of Use (EULA) ↗</Text>
+            </Pressable>
 
             <Text style={styles.heading}>5. Intellectual Property</Text>
             <Text style={styles.paragraph}>
@@ -241,5 +253,26 @@ const styles = StyleSheet.create({
     color: tokens.colors.gray,
     lineHeight: 22,
     fontWeight: '300',
+  },
+  linkContainer: {
+    marginTop: 4,
+    marginBottom: 12,
+    padding: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  linkText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    fontWeight: '600',
+    color: tokens.colors.pinkDeep,
   },
 });
