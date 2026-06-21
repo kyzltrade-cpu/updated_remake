@@ -228,7 +228,10 @@ export default function SignInScreen() {
             </Pressable>
           </View>
 
-          <Pressable onPress={() => router.push('/(onboarding)/create-account')} hitSlop={8}>
+          <Pressable onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push('/(onboarding)/value');
+          }} hitSlop={8}>
             <Text style={styles.altLink}>
               No account?{' '}
               <Text style={styles.altLinkBold}>Create one free</Text>
