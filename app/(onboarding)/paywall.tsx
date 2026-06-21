@@ -121,11 +121,6 @@ export default function OnboardingPaywallScreen() {
     router.replace('/(main)/home');
   };
 
-  const handleDevBypass = async () => {
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    router.replace({ pathname: '/(main)/dna-reveal', params: { bypass: '1' } } as any);
-  };
-
   const currentPlan = PLANS.find(p => p.id === selectedPlan)!;
 
   return (
@@ -260,12 +255,6 @@ export default function OnboardingPaywallScreen() {
             <Text style={styles.auxDivider}>|</Text>
             <Text style={styles.auxText}>Terms & Privacy</Text>
           </View>
-
-          {__DEV__ && (
-            <Pressable onPress={handleDevBypass} style={styles.devBypass}>
-              <Text style={styles.devBypassText}>⚙ Dev: Skip paywall</Text>
-            </Pressable>
-          )}
         </Animated.View>
       </ScrollView>
     </View>

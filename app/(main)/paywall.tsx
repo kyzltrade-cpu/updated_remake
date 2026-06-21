@@ -116,10 +116,6 @@ export default function PaywallScreen() {
     }
   };
 
-  const handleDevBypass = () => {
-    router.replace({ pathname: '/(main)/dna-reveal', params: { bypass: '1' } } as any);
-  };
-
   const selected = PLANS.find(p => p.id === selectedPlan)!;
 
   return (
@@ -214,12 +210,6 @@ export default function PaywallScreen() {
           <Pressable onPress={handleRestore}>
             <Text style={styles.restore}>Restore purchases</Text>
           </Pressable>
-
-          {__DEV__ && (
-            <Pressable onPress={handleDevBypass} style={styles.devBypass}>
-              <Text style={styles.devBypassText}>⚙ Dev: Skip paywall</Text>
-            </Pressable>
-          )}
         </Animated.View>
       </ScrollView>
     </View>
