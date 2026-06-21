@@ -17,8 +17,7 @@ export default function ScanSuccessScreen() {
 
   const handleProceed = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    router.replace('/(main)/home');
+    router.replace('/(onboarding)/trial-timeline');
   };
 
   return (
