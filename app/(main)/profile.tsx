@@ -116,7 +116,7 @@ export default function ProfileScreen() {
     }
     try {
       // Formulate a beautiful message
-      const text = `✨ My Skin Health Score is ${Math.round(scan.overall_score)}/100 on Remake! 🌸\nVerdict: ${scan.verdict === 'GO' ? 'Clean & Acne-Safe! ✅' : 'Exposed Bad Ingredients! 🛑'}\n"${scan.coaching_compliment}"\nGet your free scan at remake.beauty 💖`;
+      const text = `✨ My Skin Health Score is ${Math.round(scan.overall_score)}/100 on Remake! 🌸\nVerdict: ${scan.verdict === 'GO' ? 'Clean & Acne-Safe! ✅' : 'Exposed Bad Ingredients! 🛑'}\n"${scan.coaching_compliment}"\nAnalyze your skin at remake.beauty 💖`;
       await Sharing.shareAsync('https://remake.beauty', { dialogTitle: 'Share Scan Results', mimeType: 'text/plain' });
     } catch (e) {
       console.warn('[Profile] Sharing failed:', e);
