@@ -4,8 +4,9 @@ import { View, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScanLoadingScreen } from '@/components/scan-loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
+import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
-import { saveScan, getLastScan } from '@/lib/api/scan-storage';
+import { saveScan, getLastScan, saveDnaResult } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/settings-context';
 
@@ -43,12 +44,21 @@ export default function LoadingPage() {
       try {
         const { priorityCategory, skillLevel } = await getOnboardingData();
         const referenceUri = settings.referencePhoto ?? undefined;
-        const diagnosis = await analyzeImage({
-          imageUri: validUri,
-          priorityCategory: priorityCategory ?? 'Blending',
-          skillLevel: skillLevel ?? 'Intermediate',
-          referenceUri,
-        });
+
+        // Perform both makeup analysis and beauty DNA evaluation in parallel!
+        const [diagnosis, dna] = await Promise.all([
+          analyzeImage({
+            imageUri: validUri,
+            priorityCategory: priorityCategory ?? 'Blending',
+            skillLevel: skillLevel ?? 'Intermediate',
+            referenceUri,
+          }),
+          analyzeDna({
+            imageUri: validUri,
+            priorityCategory: priorityCategory ?? 'Blending',
+          })
+        ]);
+
         const coaching = await getCoaching({ diagnosis });
 
         let lastScore: number | undefined;
@@ -59,12 +69,17 @@ export default function LoadingPage() {
           } catch (e) {
             console.warn('[loading] failed to get last scan:', e);
           }
-          saveScan({
-            userId: user.id,
-            imageUri: validUri,
-            diagnosis,
-            coaching,
-          }).catch((err) => console.warn('[loading] saveScan failed:', err));
+
+          // Save the scan record and update their Profile DNA results in parallel
+          await Promise.all([
+            saveScan({
+              userId: user.id,
+              imageUri: validUri,
+              diagnosis,
+              coaching,
+            }),
+            saveDnaResult(user.id, dna)
+          ]).catch((err) => console.warn('[loading] parallel DB saves failed:', err));
         }
 
         router.replace({
