@@ -76,10 +76,9 @@ export default function LoadingPage() {
             lastScore: lastScore !== undefined ? String(lastScore) : undefined,
           },
         });
-      } catch {
-        Alert.alert('Analysis failed', 'Please try again.', [
-          { text: 'OK', onPress: () => router.replace('/(main)/scan') },
-        ]);
+      } catch (err) {
+        console.error('[loading] scan analysis failed:', err);
+        router.replace('/(main)/scan/error');
       }
     };
 
