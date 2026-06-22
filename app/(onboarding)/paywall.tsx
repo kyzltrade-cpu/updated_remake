@@ -261,7 +261,12 @@ export default function OnboardingPaywallScreen() {
               <Text style={styles.auxText}>Restore purchases</Text>
             </Pressable>
             <Text style={styles.auxDivider}>|</Text>
-            <Text style={styles.auxText}>Terms & Privacy</Text>
+            <Pressable onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(onboarding)/legal');
+            }}>
+              <Text style={styles.auxText}>Terms & Privacy</Text>
+            </Pressable>
           </View>
         </Animated.View>
       </ScrollView>

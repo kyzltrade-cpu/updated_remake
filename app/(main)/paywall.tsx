@@ -219,9 +219,19 @@ export default function PaywallScreen() {
             Cancel anytime in App Store settings. No commitment.
           </Text>
 
-          <Pressable onPress={handleRestore}>
-            <Text style={styles.restore}>Restore purchases</Text>
-          </Pressable>
+          {/* Auxiliary actions */}
+          <View style={styles.auxRow}>
+            <Pressable onPress={handleRestore}>
+              <Text style={styles.auxText}>Restore purchases</Text>
+            </Pressable>
+            <Text style={styles.auxDivider}>|</Text>
+            <Pressable onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(onboarding)/legal');
+            }}>
+              <Text style={styles.auxText}>Terms & Privacy</Text>
+            </Pressable>
+          </View>
         </Animated.View>
       </ScrollView>
     </View>
@@ -324,20 +334,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter', fontSize: 11,
     color: 'rgba(255,249,247,0.4)', textAlign: 'center',
   },
-  restore: {
-    fontFamily: 'Inter', fontSize: 12,
-    color: 'rgba(255,249,247,0.45)', textDecorationLine: 'underline',
+  auxRow: { flexDirection: 'row', gap: 12, alignItems: 'center', marginTop: 4 },
+  auxText: {
+    fontFamily: 'Inter',
+    fontSize: 12,
+    color: 'rgba(255,249,247,0.45)',
+    textDecorationLine: 'underline',
   },
-  devBypass: {
-    marginTop: 8,
-    paddingVertical: 8, paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  devBypassText: {
-    fontFamily: 'Inter', fontSize: 11,
-    color: 'rgba(255,249,247,0.35)',
-    letterSpacing: 0.3,
-  },
+  auxDivider: { color: 'rgba(255,255,255,0.1)', fontSize: 12 },
 });
