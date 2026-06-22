@@ -179,7 +179,7 @@ export default function ProfileScreen() {
 
           <View style={styles.userInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.userName}>hi, bestie ✨</Text>
+              <Text style={styles.userName}>hi, bestie</Text>
               <View style={[styles.proBadge, isPro && styles.proBadgeActive]}>
                 <Text style={styles.proBadgeText}>{isPro ? 'PRO ✦' : 'FREE'}</Text>
               </View>
