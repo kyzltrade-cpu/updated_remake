@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { analyzeDna } from '@/lib/api/dna';
 import { getOnboardingData } from '@/lib/onboarding-store';
 import { saveDnaResult } from '@/lib/api/scan-storage';
+import { useSubscription } from '@/contexts/subscription-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
 
@@ -28,6 +29,15 @@ export default function RetakeScanScreen() {
   const insets = useSafeAreaInsets();
   const { updateSettings, settings } = useSettings();
   const { user } = useAuth();
+  const { subscription } = useSubscription();
+  const isPro = subscription?.plan === 'pro';
+
+  useEffect(() => {
+    if (!isPro) {
+      router.replace('/(main)/paywall');
+    }
+  }, [isPro]);
+
   const [permission, requestPermission] = useCameraPermissions();
   const [flash, setFlash] = useState(false);
   const [capturing, setCapturing] = useState(false);

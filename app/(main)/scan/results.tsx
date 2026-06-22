@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import type { DiagnosisResult, CoachingResult, CategoryAnalysis } from '@/lib/api/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { getScanById } from '@/lib/api/scan-storage';
+import { useSubscription } from '@/contexts/subscription-context';
 
 const SCORE_GREEN = '#2D7D46';
 const SCORE_GOLD  = '#B8820A';
@@ -98,6 +99,15 @@ function CategoryCard({ cat, index }: { cat: CategoryAnalysis; index: number }) 
 export default function ResultsScreen() {
   const router   = useRouter();
   const insets   = useSafeAreaInsets();
+  const { subscription } = useSubscription();
+  const isPro = subscription?.plan === 'pro';
+
+  useEffect(() => {
+    if (!isPro) {
+      router.replace('/(main)/paywall');
+    }
+  }, [isPro]);
+
   const params   = useLocalSearchParams<{ uri?: string; diagnosis?: string; coaching?: string; scanId?: string; lastScore?: string }>();
   const [diagnosis,  setDiagnosis]  = useState<DiagnosisResult | null>(null);
   const [coaching,   setCoaching]   = useState<CoachingResult | null>(null);

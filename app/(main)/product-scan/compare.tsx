@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
 import { analyzeProduct, type ProductScanResult } from '@/lib/api/product-scan';
+import { useSubscription } from '@/contexts/subscription-context';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -161,6 +162,15 @@ function ScoreBar({ scoreA, scoreB }: { scoreA: number; scoreB: number }) {
 export default function ProductCompareScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { subscription } = useSubscription();
+  const isPro = subscription?.plan === 'pro';
+
+  useEffect(() => {
+    if (!isPro) {
+      router.replace('/(main)/paywall');
+    }
+  }, [isPro]);
+
   const { barcode1, barcode2, uri1, uri2, productAResult } = useLocalSearchParams<{
     barcode1?: string; barcode2?: string;
     uri1?: string; uri2?: string;
