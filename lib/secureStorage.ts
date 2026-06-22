@@ -1,57 +1,48 @@
-/**
- * Secure storage utilities
- *
- * Wraps AsyncStorage with obfuscation for sensitive data.
- * AsyncStorage stores data in plaintext - this adds a layer of obfuscation.
- *
- * NOTE: For production with highly sensitive data, consider using:
- * - expo-secure-store (encrypted storage)
- * - react-native-keychain (for credentials)
- */
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
-// Simple XOR obfuscation key - NOT cryptographically secure
-// This is obfuscation, not encryption. For production, use expo-secure-store
-const OBFUSCATION_KEY = 'remake_app_key_2024_v1';
+const PROFILE_PHOTO_KEY = 'remake_profile_photo';
 
-function xorEncrypt(data: string): string {
-  let result = '';
-  for (let i = 0; i < data.length; i++) {
-    result += String.fromCharCode(data.charCodeAt(i) ^ OBFUSCATION_KEY.charCodeAt(i % OBFUSCATION_KEY.length));
-  }
-  return result;
+// Helper to determine if a key is sensitive and must be encrypted via iOS Keychain / Android Keystore
+function isSensitiveKey(key: string): boolean {
+  return (
+    key === PROFILE_PHOTO_KEY ||
+    key.startsWith('secure_') ||
+    key.includes('token') ||
+    key.includes('password')
+  );
 }
 
 /**
- * Secure set - encodes data before storing
+ * Secure set - transparently routes sensitive keys to hardware-encrypted SecureStore,
+ * and regular keys to AsyncStorage.
  */
 export async function secureSet(key: string, value: string): Promise<void> {
   try {
-    const obfuscated = xorEncrypt(value);
-    console.log('[secureStorage] secureSet:', key, 'value length:', value.length, 'obfuscated length:', obfuscated.length);
-    const result = await SecureStore.setItemAsync(key, obfuscated);
-    console.log('[secureStorage] setItemAsync completed, result:', result);
+    if (isSensitiveKey(key)) {
+      await SecureStore.setItemAsync(key, value);
+    } else {
+      await AsyncStorage.setItem(key, value);
+    }
   } catch (e) {
-    console.error('[secureStorage] setItemAsync FAILED:', e);
+    console.error('[secureStorage] secureSet failed for key:', key, e);
     throw e;
   }
 }
 
 /**
- * Secure get - decodes data after retrieving
+ * Secure get - transparently retrieves sensitive keys from SecureStore,
+ * and regular keys from AsyncStorage.
  */
 export async function secureGet(key: string): Promise<string | null> {
   try {
-    const obfuscated = await SecureStore.getItemAsync(key);
-    console.log('[secureStorage] getItemAsync:', key, 'result:', obfuscated ? `${obfuscated.substring(0, 30)}...` : 'null');
-    if (!obfuscated) return null;
-    const result = xorEncrypt(obfuscated);
-    console.log('[secureStorage] decoded:', result ? `${result.substring(0, 30)}...` : 'null');
-    return result;
+    if (isSensitiveKey(key)) {
+      return await SecureStore.getItemAsync(key);
+    } else {
+      return await AsyncStorage.getItem(key);
+    }
   } catch (e) {
-    console.error('[secureStorage] Failed to get:', key, e);
+    console.error('[secureStorage] secureGet failed for key:', key, e);
     return null;
   }
 }
@@ -60,16 +51,34 @@ export async function secureGet(key: string): Promise<string | null> {
  * Clear all stored data (for logout)
  */
 export async function clearSecureStorage(): Promise<void> {
-  const keys = await AsyncStorage.getAllKeys();
-  const appKeys = keys.filter((k: string) => k.startsWith('@remake'));
-  await AsyncStorage.multiRemove(appKeys);
+  try {
+    // 1. Clear all AsyncStorage keys starting with '@remake' or 'remake_'
+    const keys = await AsyncStorage.getAllKeys();
+    const appKeys = keys.filter((k: string) => k.startsWith('@remake') || k.startsWith('remake_'));
+    await AsyncStorage.multiRemove(appKeys);
+
+    // 2. Clear sensitive hardware-backed SecureStore keys
+    await SecureStore.deleteItemAsync(PROFILE_PHOTO_KEY);
+  } catch (e) {
+    console.error('[secureStorage] clearSecureStorage failed:', e);
+  }
 }
 
-// Export raw AsyncStorage for non-sensitive data
+// Export a unified, transparent storage engine
 export const storage = {
-  getItem: AsyncStorage.getItem.bind(AsyncStorage),
-  setItem: AsyncStorage.setItem.bind(AsyncStorage),
-  removeItem: AsyncStorage.removeItem.bind(AsyncStorage),
+  getItem: secureGet,
+  setItem: secureSet,
+  removeItem: async (key: string): Promise<void> => {
+    try {
+      if (isSensitiveKey(key)) {
+        await SecureStore.deleteItemAsync(key);
+      } else {
+        await AsyncStorage.removeItem(key);
+      }
+    } catch (e) {
+      console.error('[secureStorage] removeItem failed for key:', key, e);
+    }
+  },
   multiGet: AsyncStorage.multiGet.bind(AsyncStorage),
   multiSet: AsyncStorage.multiSet.bind(AsyncStorage),
   multiRemove: AsyncStorage.multiRemove.bind(AsyncStorage),

@@ -363,7 +363,7 @@ export default function ScanScreen() {
   };
 
   const takePhoto = async () => {
-    if (mode === 'face' && !isPro && scanCount >= 1) {
+    if (!isPro) {
       setShowLimitModal(true);
       return;
     }
@@ -400,7 +400,7 @@ export default function ScanScreen() {
   };
 
   const pickImage = async () => {
-    if (mode === 'face' && !isPro && scanCount >= 1) {
+    if (!isPro) {
       setShowLimitModal(true);
       return;
     }

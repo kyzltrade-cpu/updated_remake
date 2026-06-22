@@ -163,17 +163,7 @@ class SixCategoryDiagnosisProvider implements DiagnosisProvider {
       throw new Error('Invalid image URI');
     }
 
-    if (hasNimKey()) {
-      try {
-        return await analyzeWithNim(request);
-      } catch (e) {
-        console.warn('[Diagnosis] NIM failed, using mock:', e);
-      }
-    }
-
-    // Mock fallback — simulated delay
-    await new Promise(r => setTimeout(r, 3000));
-    return mockAnalyze(request);
+    return await analyzeWithNim(request);
   }
 }
 

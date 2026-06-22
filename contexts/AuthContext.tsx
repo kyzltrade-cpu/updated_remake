@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const isDevMode = process.env.EXPO_PUBLIC_DEV_BYPASS === 'true'
+  const isDevMode = false
 
   useEffect(() => {
     const supabase = createClient()

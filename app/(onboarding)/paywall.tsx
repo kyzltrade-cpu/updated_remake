@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase';
 import { useSubscription } from '@/contexts/subscription-context';
 import { tokens } from '@/components/theme';
 import { ONBOARDING_KEY } from '../_layout';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const { width: W } = Dimensions.get('window');
 
@@ -48,12 +49,17 @@ const PLANS: PlanDetails[] = [
   },
 ];
 
-const VALUE_BULLETS = [
-  { emoji: '📸', text: 'Unlimited Daily Barcode Scans' },
-  { emoji: '🧬', text: 'Full Makeup DNA Reveal (8 Custom Slides)' },
-  { emoji: '🛡️', text: '100+ Comedogenic & Toxic Ingredient Alerts' },
-  { emoji: '🎀', text: 'Shade Matching & Custom Archetype Cards' },
-  { emoji: '🔥', text: 'Daily Skincare Coaching & Streak Rewards' },
+interface ValueBullet {
+  icon: keyof typeof MaterialIcons.glyphMap;
+  text: string;
+}
+
+const VALUE_BULLETS: ValueBullet[] = [
+  { icon: 'camera-alt', text: 'Unlimited Face & Product Scans' },
+  { icon: 'fingerprint', text: 'Full Makeup DNA Reveal (8 Custom Slides)' },
+  { icon: 'security', text: '100+ Comedogenic & Toxic Ingredient Alerts' },
+  { icon: 'palette', text: 'Shade Matching & Custom Archetype Cards' },
+  { icon: 'spa', text: 'Daily Skincare Coaching & Streak Rewards' },
 ];
 
 export default function OnboardingPaywallScreen() {
@@ -121,11 +127,6 @@ export default function OnboardingPaywallScreen() {
     router.replace('/(main)/home');
   };
 
-  const handleDevBypass = async () => {
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    router.replace({ pathname: '/(main)/dna-reveal', params: { bypass: '1' } } as any);
-  };
-
   const currentPlan = PLANS.find(p => p.id === selectedPlan)!;
 
   return (
@@ -169,7 +170,9 @@ export default function OnboardingPaywallScreen() {
         <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.bullets}>
           {VALUE_BULLETS.map((bullet, i) => (
             <View key={i} style={styles.bulletRow}>
-              <Text style={styles.bulletEmoji}>{bullet.emoji}</Text>
+              <View style={styles.bulletIconCircle}>
+                <MaterialIcons name={bullet.icon} size={15} color={tokens.colors.pinkDeep} />
+              </View>
               <Text style={styles.bulletText}>{bullet.text}</Text>
             </View>
           ))}
@@ -258,14 +261,13 @@ export default function OnboardingPaywallScreen() {
               <Text style={styles.auxText}>Restore purchases</Text>
             </Pressable>
             <Text style={styles.auxDivider}>|</Text>
-            <Text style={styles.auxText}>Terms & Privacy</Text>
-          </View>
-
-          {__DEV__ && (
-            <Pressable onPress={handleDevBypass} style={styles.devBypass}>
-              <Text style={styles.devBypassText}>⚙ Dev: Skip paywall</Text>
+            <Pressable onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/(onboarding)/legal');
+            }}>
+              <Text style={styles.auxText}>Terms & Privacy</Text>
             </Pressable>
-          )}
+          </View>
         </Animated.View>
       </ScrollView>
     </View>
@@ -350,7 +352,14 @@ const styles = StyleSheet.create({
   // Benefits
   bullets: { marginTop: 24, gap: 12 },
   bulletRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
-  bulletEmoji: { fontSize: 18 },
+  bulletIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(232,57,154,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   bulletText: {
     fontFamily: tokens.fonts.regular,
     fontSize: 14,

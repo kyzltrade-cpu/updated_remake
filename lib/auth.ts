@@ -11,7 +11,7 @@ import type { GoogleSignin as GoogleSigninType } from '@react-native-google-sign
 import type * as AppleAuthenticationType from 'expo-apple-authentication'
 import Constants from 'expo-constants'
 
-const DEV_BYPASS = process.env.EXPO_PUBLIC_DEV_BYPASS === 'true'
+const DEV_BYPASS = false
 
 // DEV_EMAIL and DEV_PASSWORD must ONLY come from environment variables
 const DEV_EMAIL = process.env.EXPO_PUBLIC_DEV_EMAIL

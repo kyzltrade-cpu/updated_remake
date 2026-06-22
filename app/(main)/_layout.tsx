@@ -16,7 +16,7 @@ export default function MainLayout() {
     );
   }
 
-  const isDevMode = process.env.EXPO_PUBLIC_DEV_BYPASS === 'true';
+  const isDevMode = false;
 
   if (!user && !isDevMode) {
     return <Redirect href="/(onboarding)" />;

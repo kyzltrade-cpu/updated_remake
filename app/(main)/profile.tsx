@@ -44,7 +44,6 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [onboardingName, setOnboardingName] = useState('');
   const [expandedScanId, setExpandedScanId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dna' | 'safety'>('dna');
 
   const isPro = subscription?.plan === 'pro';
 
@@ -116,7 +115,7 @@ export default function ProfileScreen() {
     }
     try {
       // Formulate a beautiful message
-      const text = `✨ My Skin Health Score is ${Math.round(scan.overall_score)}/100 on Remake! 🌸\nVerdict: ${scan.verdict === 'GO' ? 'Clean & Acne-Safe! ✅' : 'Exposed Bad Ingredients! 🛑'}\n"${scan.coaching_compliment}"\nGet your free scan at remake.beauty 💖`;
+      const text = `✨ My Skin Health Score is ${Math.round(scan.overall_score)}/100 on Remake! 🌸\nVerdict: ${scan.verdict === 'GO' ? 'Clean & Acne-Safe! ✅' : 'Exposed Bad Ingredients! 🛑'}\n"${scan.coaching_compliment}"\nAnalyze your skin at remake.beauty 💖`;
       await Sharing.shareAsync('https://remake.beauty', { dialogTitle: 'Share Scan Results', mimeType: 'text/plain' });
     } catch (e) {
       console.warn('[Profile] Sharing failed:', e);
@@ -179,7 +178,7 @@ export default function ProfileScreen() {
 
           <View style={styles.userInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.userName}>hi, bestie ✨</Text>
+              <Text style={styles.userName}>hi, bestie</Text>
               <View style={[styles.proBadge, isPro && styles.proBadgeActive]}>
                 <Text style={styles.proBadgeText}>{isPro ? 'PRO ✦' : 'FREE'}</Text>
               </View>
@@ -231,191 +230,124 @@ export default function ProfileScreen() {
           </Pressable>
         </Animated.View>
 
-        {/* Segment Tabs */}
-        <Animated.View entering={FadeInUp.delay(180).duration(500)} style={styles.tabsContainer}>
-          <Pressable 
-            onPress={() => {
-              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setActiveTab('dna');
-            }}
-            style={[styles.tabButton, activeTab === 'dna' && styles.tabButtonActive]}
-          >
-            <Text style={[styles.tabButtonText, activeTab === 'dna' && styles.tabButtonTextActive]}>
-              Beauty DNA ✦
-            </Text>
-          </Pressable>
-          <Pressable 
-            onPress={() => {
-              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setActiveTab('safety');
-            }}
-            style={[styles.tabButton, activeTab === 'safety' && styles.tabButtonActive]}
-          >
-            <Text style={[styles.tabButtonText, activeTab === 'safety' && styles.tabButtonTextActive]}>
-              Skin Guard 🛡️
-            </Text>
-          </Pressable>
-        </Animated.View>
-
-        {/* Dynamic Panel */}
+        {/* Dynamic Panel (Beauty DNA Card) */}
         <Animated.View entering={FadeInUp.delay(200).duration(500)}>
-          {activeTab === 'dna' ? (
-            (dna && isPro) ? (
-              <View style={styles.dnaActiveCard}>
-                <View style={styles.dnaHeader}>
-                  <View>
-                    <Text style={styles.dnaEyebrow}>YOUR ARCHETYPE</Text>
-                    <Text style={styles.dnaTitle}>{dna.archetype || 'The Natural'}</Text>
-                  </View>
-                  <View style={styles.dnaSparkleIcon}>
-                    <Text style={{ fontSize: 18 }}>✦</Text>
-                  </View>
+          {(dna && isPro) ? (
+            <View style={styles.dnaActiveCard}>
+              <View style={styles.dnaHeader}>
+                <View>
+                  <Text style={styles.dnaEyebrow}>YOUR ARCHETYPE</Text>
+                  <Text style={styles.dnaTitle}>{dna.archetype || 'The Natural'}</Text>
                 </View>
-
-                <View style={styles.dnaDivider} />
-
-                {/* Grid of details */}
-                <View style={styles.dnaDetailGrid}>
-                  <View style={styles.dnaGridItem}>
-                    <Text style={styles.dnaItemLabel}>Color Season</Text>
-                    <Text style={styles.dnaItemValue}>{dna.colorSeason}</Text>
-                  </View>
-                  <View style={styles.dnaGridItem}>
-                    <Text style={styles.dnaItemLabel}>Face Shape</Text>
-                    <Text style={styles.dnaItemValue}>{dna.faceShape}</Text>
-                  </View>
-                  <View style={styles.dnaGridItem}>
-                    <Text style={styles.dnaItemLabel}>Brows</Text>
-                    <Text style={styles.dnaItemValue}>{dna.browShape} ({dna.browSymmetryPct}%)</Text>
-                  </View>
-                  <View style={styles.dnaGridItem}>
-                    <Text style={styles.dnaItemLabel}>Lash Profile</Text>
-                    <Text style={styles.dnaItemValue}>{dna.lashProfile}</Text>
-                  </View>
+                <View style={styles.dnaSparkleIcon}>
+                  <Text style={{ fontSize: 18 }}>✦</Text>
                 </View>
-
-                {/* Aesthetic Palette Row */}
-                {paletteColors && (
-                  <View style={styles.paletteSection}>
-                    <Text style={styles.dnaItemLabel}>Seasonal Palette Swatches</Text>
-                    <View style={styles.paletteRow}>
-                      {paletteColors.map((col, idx) => (
-                        <View key={idx} style={[styles.colorBubble, { backgroundColor: col }]}>
-                          <View style={styles.colorBubbleHighlight} />
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                <Pressable onPress={handleViewDna} style={styles.actionBtn}>
-                  <Text style={styles.actionBtnText}>Open Beauty wrapped story ✦</Text>
-                </Pressable>
               </View>
-            ) : isPro ? (
-              <View style={styles.dnaLockedCard}>
-                <LinearGradient
-                  colors={[tokens.colors.darkBg, '#141c2d']}
-                  style={StyleSheet.absoluteFillObject}
-                />
-                <View style={styles.lockedSparkle} pointerEvents="none">
-                  <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 120 }}>✦</Text>
-                </View>
-                
-                <View style={styles.lockedIconCircle}>
-                  <MaterialIcons name="face" size={28} color={tokens.colors.accent} />
-                </View>
 
-                <Text style={styles.lockedTitle}>Your Beauty DNA is Ready</Text>
-                <Text style={styles.lockedSubtitle}>
-                  Take your first face scan to unlock your custom color season, facial shape, and beauty archetype!
-                </Text>
+              <View style={styles.dnaDivider} />
 
-                <Pressable 
-                  onPress={() => {
-                    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    router.push('/(main)/scan');
-                  }}
-                  style={styles.lockedActionBtn}
-                >
-                  <Text style={styles.lockedActionText}>
-                    Scan Your Face ✦
-                  </Text>
-                </Pressable>
+              {/* Grid of details */}
+              <View style={styles.dnaDetailGrid}>
+                <View style={styles.dnaGridItem}>
+                  <Text style={styles.dnaItemLabel}>Color Season</Text>
+                  <Text style={styles.dnaItemValue}>{dna.colorSeason}</Text>
+                </View>
+                <View style={styles.dnaGridItem}>
+                  <Text style={styles.dnaItemLabel}>Face Shape</Text>
+                  <Text style={styles.dnaItemValue}>{dna.faceShape}</Text>
+                </View>
+                <View style={styles.dnaGridItem}>
+                  <Text style={styles.dnaItemLabel}>Brows</Text>
+                  <Text style={styles.dnaItemValue}>{dna.browShape} ({dna.browSymmetryPct}%)</Text>
+                </View>
+                <View style={styles.dnaGridItem}>
+                  <Text style={styles.dnaItemLabel}>Lash Profile</Text>
+                  <Text style={styles.dnaItemValue}>{dna.lashProfile}</Text>
+                </View>
               </View>
-            ) : (
-              <View style={styles.dnaLockedCard}>
-                <LinearGradient
-                  colors={[tokens.colors.darkBg, '#2d1424']}
-                  style={StyleSheet.absoluteFillObject}
-                />
-                <View style={styles.lockedSparkle} pointerEvents="none">
-                  <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 120 }}>✦</Text>
-                </View>
-                
-                <View style={styles.lockedIconCircle}>
-                  <MaterialIcons name="lock" size={28} color={tokens.colors.accent} />
-                </View>
 
-                <Text style={styles.lockedTitle}>Your Beauty DNA is Sealed</Text>
-                <Text style={styles.lockedSubtitle}>
-                  {dna 
-                    ? "Your analysis is complete! Unlock PRO to reveal your color season, archetype, and perfect-match ingredients."
-                    : "Analyze your skin & facial symmetry to uncover your season, archetype, and perfect-match ingredients."
-                  }
-                </Text>
+              {/* Aesthetic Palette Row */}
+              {paletteColors && (
+                <View style={styles.paletteSection}>
+                  <Text style={styles.dnaItemLabel}>Seasonal Palette Swatches</Text>
+                  <View style={styles.paletteRow}>
+                    {paletteColors.map((col, idx) => (
+                      <View key={idx} style={[styles.colorBubble, { backgroundColor: col }]}>
+                        <View style={styles.colorBubbleHighlight} />
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
 
-                <Pressable 
-                  onPress={() => {
-                    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    router.push('/(main)/paywall');
-                  }}
-                  style={styles.lockedActionBtn}
-                >
-                  <Text style={styles.lockedActionText}>
-                    {dna ? "Reveal Beauty DNA ✦" : "Unlock Beauty DNA ✨"}
-                  </Text>
-                </Pressable>
+              <Pressable onPress={handleViewDna} style={styles.actionBtn}>
+                <Text style={styles.actionBtnText}>Open Beauty wrapped story ✦</Text>
+              </Pressable>
+            </View>
+          ) : isPro ? (
+            <View style={styles.dnaLockedCard}>
+              <LinearGradient
+                colors={[tokens.colors.darkBg, '#141c2d']}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={styles.lockedSparkle} pointerEvents="none">
+                <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 120 }}>✦</Text>
               </View>
-            )
-          ) : (
-            /* Skin Guard Panel */
-            <View style={styles.safetyCard}>
-              <View style={styles.safetyHeader}>
-                <MaterialIcons name="security" size={22} color={tokens.colors.pinkDeep} />
-                <Text style={styles.safetyTitle}>Active Ingredient Watchdog</Text>
+              
+              <View style={styles.lockedIconCircle}>
+                <MaterialIcons name="face" size={28} color={tokens.colors.accent} />
               </View>
-              <Text style={styles.safetyBody}>
-                Exposing ingredients that trigger breakouts, destroy skin barriers, or spike allergy alerts. Remake maintains 100% objective testing.
+
+              <Text style={styles.lockedTitle}>Your Beauty DNA is Ready</Text>
+              <Text style={styles.lockedSubtitle}>
+                Take your first face scan to unlock your custom color season, facial shape, and beauty archetype!
               </Text>
 
-              <View style={styles.safetyDivider} />
-
-              <View style={styles.safetyMetricRow}>
-                <View style={styles.safetyMetricItem}>
-                  <Text style={styles.safetyMetricEmoji}>🛡️</Text>
-                  <Text style={styles.safetyMetricTitle}>Comedogenic Guard</Text>
-                  <Text style={styles.safetyMetricStatus}>STRICT ACTIVE</Text>
-                </View>
-                <View style={styles.safetyMetricItem}>
-                  <Text style={styles.safetyMetricEmoji}>⚠️</Text>
-                  <Text style={styles.safetyMetricTitle}>Hidden Allergens</Text>
-                  <Text style={styles.safetyMetricStatus}>SCANNING ON</Text>
-                </View>
+              <Pressable 
+                onPress={() => {
+                  if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push('/(main)/scan');
+                }}
+                style={styles.lockedActionBtn}
+              >
+                <Text style={styles.lockedActionText}>
+                  Scan Your Face ✦
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.dnaLockedCard}>
+              <LinearGradient
+                colors={[tokens.colors.darkBg, '#2d1424']}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={styles.lockedSparkle} pointerEvents="none">
+                <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 120 }}>✦</Text>
+              </View>
+              
+              <View style={styles.lockedIconCircle}>
+                <MaterialIcons name="lock" size={28} color={tokens.colors.accent} />
               </View>
 
-              <View style={[styles.safetyMetricRow, { marginTop: 12 }]}>
-                <View style={styles.safetyMetricItem}>
-                  <Text style={styles.safetyMetricEmoji}>🧪</Text>
-                  <Text style={styles.safetyMetricTitle}>Barrier Risks</Text>
-                  <Text style={styles.safetyMetricStatus}>MONITORED</Text>
-                </View>
-                <View style={styles.safetyMetricItem}>
-                  <Text style={styles.safetyMetricEmoji}>🌱</Text>
-                  <Text style={styles.safetyMetricTitle}>Clean Index Goal</Text>
-                  <Text style={styles.safetyMetricStatus}>90% +</Text>
-                </View>
-              </View>
+              <Text style={styles.lockedTitle}>Your Beauty DNA is Sealed</Text>
+              <Text style={styles.lockedSubtitle}>
+                {dna 
+                  ? "Your analysis is complete! Unlock PRO to reveal your color season, archetype, and perfect-match ingredients."
+                  : "Analyze your skin & facial symmetry to uncover your season, archetype, and perfect-match ingredients."
+                }
+              </Text>
+
+              <Pressable 
+                onPress={() => {
+                  if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push('/(main)/paywall');
+                }}
+                style={styles.lockedActionBtn}
+              >
+                <Text style={styles.lockedActionText}>
+                  {dna ? "Reveal Beauty DNA ✦" : "Unlock Beauty DNA ✨"}
+                </Text>
+              </Pressable>
             </View>
           )}
         </Animated.View>
