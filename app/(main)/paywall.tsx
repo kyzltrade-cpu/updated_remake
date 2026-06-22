@@ -10,6 +10,8 @@ import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase';
 import { useSubscription } from '@/contexts/subscription-context';
+import { tokens } from '@/components/theme';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 type Plan = 'weekly' | 'monthly' | 'yearly';
 
@@ -36,12 +38,17 @@ const PLANS: { id: Plan; label: string; price: string; sub: string; savings?: st
   },
 ];
 
-const VALUE_BULLETS = [
-  '✦  Detailed coaching per category',
-  '✦  Watch Tutorial for every tip',
-  '✦  Full DNA Reveal (8 slides)',
-  '✦  Archetype identity card',
-  '✦  Unlimited scans',
+interface ValueBullet {
+  icon: keyof typeof MaterialIcons.glyphMap;
+  text: string;
+}
+
+const VALUE_BULLETS: ValueBullet[] = [
+  { icon: 'camera-alt', text: 'Unlimited Face & Product Scans' },
+  { icon: 'fingerprint', text: 'Full Makeup DNA Reveal (8 Custom Slides)' },
+  { icon: 'security', text: '100+ Comedogenic & Toxic Ingredient Alerts' },
+  { icon: 'palette', text: 'Shade Matching & Custom Archetype Cards' },
+  { icon: 'spa', text: 'Daily Skincare Coaching & Streak Rewards' },
 ];
 
 export default function PaywallScreen() {
@@ -145,8 +152,13 @@ export default function PaywallScreen() {
 
         {/* Value bullets */}
         <Animated.View entering={FadeInUp.delay(150).duration(500)} style={styles.bullets}>
-          {VALUE_BULLETS.map((b, i) => (
-            <Text key={i} style={styles.bullet}>{b}</Text>
+          {VALUE_BULLETS.map((bullet, i) => (
+            <View key={i} style={styles.bulletRow}>
+              <View style={styles.bulletIconCircle}>
+                <MaterialIcons name={bullet.icon} size={15} color="#C8A882" />
+              </View>
+              <Text style={styles.bulletText}>{bullet.text}</Text>
+            </View>
           ))}
         </Animated.View>
 
@@ -237,9 +249,21 @@ const styles = StyleSheet.create({
   sub: {
     fontFamily: 'Inter', fontSize: 15, color: 'rgba(255,249,247,0.65)', lineHeight: 23,
   },
-  bullets: { marginTop: 28, gap: 10 },
-  bullet: {
-    fontFamily: 'Inter', fontSize: 14, color: 'rgba(255,249,247,0.85)', lineHeight: 22,
+  bullets: { marginTop: 28, gap: 12 },
+  bulletRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  bulletIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(200,168,130,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bulletText: {
+    fontFamily: 'Inter',
+    fontSize: 14,
+    color: 'rgba(255,249,247,0.85)',
+    fontWeight: '400',
   },
   plans: { marginTop: 32, gap: 10 },
   plan: {
