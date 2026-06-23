@@ -39,13 +39,48 @@ export default function ProfileScreen() {
   const { settings, profilePhoto, setProfilePhoto } = useSettings();
   const { subscription } = useSubscription();
   const [history, setHistory] = useState<ScanRecord[]>([]);
-  const [stats, setStats] = useState<{ totalScans: number; avgScore: number; currentStreak: number } | null>(null);
+  const [stats, setStats] = useState<{ totalScans: number; avgScore: number; currentStreak: number; streakFreezes: number } | null>(null);
   const [dna, setDna] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [onboardingName, setOnboardingName] = useState('');
   const [expandedScanId, setExpandedScanId] = useState<string | null>(null);
+  const [usingFreeze, setUsingFreeze] = useState(false);
 
   const isPro = subscription?.plan === 'pro';
+
+  const handleUseFreeze = async () => {
+    if (!user) return;
+    if (!stats || stats.streakFreezes <= 0) {
+      Alert.alert('No Freezes ❄️', 'You don\'t have any streak freezes left, bestie! Scan daily to build up your streak.');
+      return;
+    }
+
+    Alert.alert('Use Streak Freeze?', 'This will consume 1 streak freeze and lock your active streak today so you don\'t lose progress if you can\'t scan.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Use Freeze ❄️',
+        style: 'default',
+        onPress: async () => {
+          if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          setUsingFreeze(true);
+          try {
+            const { useStreakFreeze } = require('@/lib/api/scan-storage');
+            const success = await useStreakFreeze(user.id);
+            if (success) {
+              Alert.alert('Streak Frozen!', 'Your active streak has been successfully protected for today. Stay safe, bestie! ❄️✨');
+              await loadData(); // Reload stats
+            } else {
+              Alert.alert('Failed', 'Could not apply streak freeze. Try again.');
+            }
+          } catch (e) {
+            console.warn('[Profile] Use freeze failed:', e);
+          } finally {
+            setUsingFreeze(false);
+          }
+        }
+      }
+    ]);
+  };
 
   useEffect(() => {
     getOnboardingData().then(data => { if (data.name) setOnboardingName(data.name); });
@@ -350,6 +385,80 @@ export default function ProfileScreen() {
               </Pressable>
             </View>
           )}
+        </Animated.View>
+
+        {/* Streak & Rewards Card */}
+        <Animated.View entering={FadeInUp.delay(220).duration(500)} style={styles.rewardsCard}>
+          <View style={styles.rewardsHeader}>
+            <View>
+              <Text style={styles.rewardsEyebrow}>STREAK & REWARDS</Text>
+              <Text style={styles.rewardsTitle}>
+                {stats?.currentStreak && stats.currentStreak > 0
+                  ? `Slaying ${stats.currentStreak} Days In A Row! 🔥`
+                  : 'Start Your Active Slay! ✨'}
+              </Text>
+            </View>
+            <View style={styles.freezeCounter}>
+              <Text style={styles.freezeEmoji}>❄️</Text>
+              <Text style={styles.freezeText}>{stats ? stats.streakFreezes : '2'} Freezes</Text>
+            </View>
+          </View>
+
+          {/* Progress bar towards next 7-day milestone */}
+          <View style={styles.milestoneProgressSection}>
+            <View style={styles.progressLabelRow}>
+              <Text style={styles.progressLabelText}>
+                Milestone progress: {stats ? (stats.currentStreak % 7) : 0}/7 days
+              </Text>
+              <Text style={styles.progressRewardText}>Sephora Gift Card 🎁</Text>
+            </View>
+            <View style={styles.progressBarBg}>
+              <View 
+                style={[
+                  styles.progressBarFill, 
+                  { width: `${stats ? Math.min(100, ((stats.currentStreak % 7) / 7) * 100) : 0}%` }
+                ]} 
+              />
+            </View>
+          </View>
+
+          <View style={styles.rewardsDivider} />
+
+          {/* Grid of milestones */}
+          <Text style={styles.rewardsSubLabel}>Unlocked Milestone Badges</Text>
+          <View style={styles.badgesGrid}>
+            <View style={[styles.badgeItem, (stats && stats.currentStreak >= 3) ? styles.badgeItemActive : undefined]}>
+              <Text style={[styles.badgeIcon, (!stats || (stats?.currentStreak ?? 0) < 3) ? styles.badgeIconLocked : undefined]}>💅</Text>
+              <Text style={styles.badgeLabel}>3-Day Slay</Text>
+            </View>
+            <View style={[styles.badgeItem, (stats && stats.currentStreak >= 7) ? styles.badgeItemActive : undefined]}>
+              <Text style={[styles.badgeIcon, (!stats || (stats?.currentStreak ?? 0) < 7) ? styles.badgeIconLocked : undefined]}>👑</Text>
+              <Text style={styles.badgeLabel}>7-Day Queen</Text>
+            </View>
+            <View style={[styles.badgeItem, (stats && stats.currentStreak >= 30) ? styles.badgeItemActive : undefined]}>
+              <Text style={[styles.badgeIcon, (!stats || (stats?.currentStreak ?? 0) < 30) ? styles.badgeIconLocked : undefined]}>🦄</Text>
+              <Text style={styles.badgeLabel}>30-Day Unicorn</Text>
+            </View>
+          </View>
+
+          <View style={styles.rewardsDivider} />
+
+          {/* Streak Freeze CTA button */}
+          <View style={styles.freezeActionRow}>
+            <Pressable 
+              onPress={handleUseFreeze} 
+              disabled={usingFreeze}
+              style={({ pressed }) => [
+                styles.freezeBtn, 
+                pressed && { opacity: 0.8 }, 
+                (!stats || stats.streakFreezes <= 0) && styles.freezeBtnDisabled
+              ]}
+            >
+              <Text style={styles.freezeBtnText}>
+                {usingFreeze ? 'Applying...' : 'Apply Streak Freeze ❄️'}
+              </Text>
+            </Pressable>
+          </View>
         </Animated.View>
 
         {/* Scan Archive Section */}
@@ -1019,5 +1128,166 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+
+  // Streak & Rewards Styling
+  rewardsCard: {
+    backgroundColor: tokens.colors.white,
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 3,
+    marginBottom: 24,
+  },
+  rewardsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  rewardsEyebrow: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 9,
+    fontWeight: '700',
+    color: tokens.colors.pinkDeep,
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  rewardsTitle: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 18,
+    color: tokens.colors.text,
+  },
+  freezeCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.pinkLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  freezeEmoji: {
+    fontSize: 13,
+  },
+  freezeText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    fontWeight: '700',
+    color: tokens.colors.pinkDeep,
+  },
+  milestoneProgressSection: {
+    marginBottom: 16,
+  },
+  progressLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  progressLabelText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    color: tokens.colors.gray,
+    fontWeight: '500',
+  },
+  progressRewardText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    color: tokens.colors.pinkDeep,
+    fontWeight: '700',
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: tokens.colors.cream,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 3,
+  },
+  rewardsDivider: {
+    height: 1,
+    backgroundColor: tokens.colors.border,
+    opacity: 0.6,
+    marginBottom: 14,
+  },
+  rewardsSubLabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    fontWeight: '700',
+    color: tokens.colors.gray,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
+  badgesGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 14,
+  },
+  badgeItem: {
+    flex: 1,
+    backgroundColor: tokens.colors.cream,
+    borderRadius: 14,
+    padding: 10,
+    alignItems: 'center',
+    borderWidth: 0.5,
+    borderColor: tokens.colors.border,
+    opacity: 0.5,
+  },
+  badgeItemActive: {
+    borderColor: tokens.colors.pinkDeep,
+    backgroundColor: tokens.colors.white,
+    opacity: 1,
+    shadowColor: tokens.colors.pinkDeep,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  badgeIcon: {
+    fontSize: 22,
+    marginBottom: 4,
+  },
+  badgeIconLocked: {
+    opacity: 0.25,
+  },
+  badgeLabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 9,
+    fontWeight: '600',
+    color: tokens.colors.text,
+  },
+  freezeActionRow: {
+    alignItems: 'center',
+  },
+  freezeBtn: {
+    width: '100%',
+    backgroundColor: '#EDF4FC',
+    borderColor: '#C6DDF8',
+    borderWidth: 1,
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  freezeBtnDisabled: {
+    backgroundColor: tokens.colors.cream,
+    borderColor: tokens.colors.border,
+    opacity: 0.6,
+  },
+  freezeBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1C60B3',
   },
 });

@@ -61,6 +61,7 @@ export async function getScanStats(userId: string): Promise<{
   totalScans: number;
   avgScore: number;
   currentStreak: number;
+  streakFreezes: number;
 }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createClient() as any;
@@ -72,7 +73,7 @@ export async function getScanStats(userId: string): Promise<{
       .eq('user_id', userId),
     supabase
       .from('streaks')
-      .select('current_streak')
+      .select('current_streak, streak_freezes')
       .eq('user_id', userId)
       .maybeSingle(),
   ]);
@@ -86,6 +87,7 @@ export async function getScanStats(userId: string): Promise<{
     totalScans: scansRes.count ?? 0,
     avgScore,
     currentStreak: streakRes.data?.current_streak ?? 0,
+    streakFreezes: streakRes.data?.streak_freezes ?? 2,
   };
 }
 
@@ -109,4 +111,28 @@ export async function getScanById(scanId: string): Promise<any | null> {
     .maybeSingle();
   if (error) console.warn('[scan-storage] getScanById failed:', error.message);
   return data ?? null;
+}
+
+export async function useStreakFreeze(userId: string): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createClient() as any;
+  const { data, error } = await supabase
+    .from('streaks')
+    .select('streak_freezes')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  if (data.streak_freezes <= 0) return false;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const { error: updateError } = await supabase
+    .from('streaks')
+    .update({
+      streak_freezes: data.streak_freezes - 1,
+      last_scan_date: todayStr,
+    })
+    .eq('user_id', userId);
+
+  return !updateError;
 }
