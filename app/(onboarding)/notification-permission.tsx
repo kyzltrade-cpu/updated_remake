@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Notifications from 'expo-notifications';
+import { registerForPushNotificationsAsync } from '@/lib/api/notifications';
 import * as Haptics from 'expo-haptics';
 import { tokens } from '@/components/theme';
 import { OnboardingHeader } from '@/components/onboarding-header';
@@ -21,7 +21,7 @@ export default function NotificationPermissionScreen() {
 
   const handleAllow = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await Notifications.requestPermissionsAsync();
+    await registerForPushNotificationsAsync();
     advance();
   };
 

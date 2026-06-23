@@ -10,6 +10,7 @@ import { isValidEmail, isValidPassword, sanitizeEmail } from '@/lib/validation';
 import { loadGloDraft, clearGloDraft } from '@/lib/glo-profile';
 import { tokens } from '@/components/theme';
 import { createClient } from '@/lib/supabase';
+import { setupUserPushNotifications } from '@/lib/api/notifications';
 
 const advance = (router: ReturnType<typeof useRouter>) => {
   router.replace('/(onboarding)/scan-prep');
@@ -35,9 +36,12 @@ export default function CreateAccountScreen() {
     if (DEV_BYPASS) {
       const { data } = await signInDev();
       const draft = await loadGloDraft();
-      if (data?.session?.user?.id && Object.keys(draft).length > 0) {
+      if (data?.session?.user?.id) {
         const supabase = createClient() as any;
-        await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.session.user.id);
+        if (Object.keys(draft).length > 0) {
+          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.session.user.id);
+        }
+        await setupUserPushNotifications(data.session.user.id).catch(() => {});
       }
       await clearGloDraft();
       advance(router);
@@ -55,9 +59,12 @@ export default function CreateAccountScreen() {
       if (error) { Alert.alert('Sign up failed', error.message); }
       else {
         const draft = await loadGloDraft();
-        if (data?.user?.id && Object.keys(draft).length > 0) {
+        if (data?.user?.id) {
           const supabase = createClient() as any;
-          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+          if (Object.keys(draft).length > 0) {
+            await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+          }
+          await setupUserPushNotifications(data.user.id).catch(() => {});
         }
         await clearGloDraft(); 
         advance(router); 
@@ -77,9 +84,12 @@ export default function CreateAccountScreen() {
         }
       } else {
         const draft = await loadGloDraft();
-        if (data?.user?.id && Object.keys(draft).length > 0) {
+        if (data?.user?.id) {
           const supabase = createClient() as any;
-          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+          if (Object.keys(draft).length > 0) {
+            await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+          }
+          await setupUserPushNotifications(data.user.id).catch(() => {});
         }
         await clearGloDraft();
         advance(router);
@@ -102,9 +112,12 @@ export default function CreateAccountScreen() {
         }
       } else {
         const draft = await loadGloDraft();
-        if (data?.user?.id && Object.keys(draft).length > 0) {
+        if (data?.user?.id) {
           const supabase = createClient() as any;
-          await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+          if (Object.keys(draft).length > 0) {
+            await supabase.from('profiles').update({ onboarding_data: draft }).eq('id', data.user.id);
+          }
+          await setupUserPushNotifications(data.user.id).catch(() => {});
         }
         await clearGloDraft();
         advance(router);

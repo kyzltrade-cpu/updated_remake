@@ -12,6 +12,8 @@ import { tokens } from '@/components/theme';
 import { useSettings } from '@/contexts/settings-context';
 import { useUser } from '@/contexts/user-context';
 import { useSubscription } from '@/contexts/subscription-context';
+import { setupUserPushNotifications } from '@/lib/api/notifications';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ─── Toggle ───────────────────────────────────────────────────────────────────
 
@@ -142,6 +144,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { settings, updateSettings, toggleSetting } = useSettings();
   const { user, logout, isLoggedIn } = useUser();
+  const { user: authUser } = useAuth();
   const { subscription } = useSubscription();
 
   const isPro = subscription?.plan === 'pro';
@@ -234,7 +237,12 @@ export default function SettingsScreen() {
             right={
               <Toggle
                 value={settings.notificationsEnabled}
-                onValueChange={() => toggleSetting('notificationsEnabled')}
+                onValueChange={async (value) => {
+                  toggleSetting('notificationsEnabled');
+                  if (value && authUser?.id) {
+                    await setupUserPushNotifications(authUser.id).catch(() => {});
+                  }
+                }}
               />
             }
           />
@@ -245,7 +253,12 @@ export default function SettingsScreen() {
             right={
               <Toggle
                 value={settings.notificationsEnabled}
-                onValueChange={() => toggleSetting('notificationsEnabled')}
+                onValueChange={async (value) => {
+                  toggleSetting('notificationsEnabled');
+                  if (value && authUser?.id) {
+                    await setupUserPushNotifications(authUser.id).catch(() => {});
+                  }
+                }}
               />
             }
           />
