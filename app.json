@@ -57,13 +57,6 @@
       ],
       "expo-font",
       "expo-secure-store",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/icon.png",
-          "color": "#E8399A"
-        }
-      ],
       "expo-location",
       "expo-tracking-transparency",
       [
@@ -71,8 +64,7 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.651518769892-jp8l89ckouivlfjf8rve8vi2veamkoh0"
         }
-      ],
-      "expo-apple-authentication"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
