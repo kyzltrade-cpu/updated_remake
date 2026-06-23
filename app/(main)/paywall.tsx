@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Dimensions, ActivityIndicator
+  View, Text, StyleSheet, Pressable, ScrollView, Dimensions, ActivityIndicator, Alert
 } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -64,7 +64,7 @@ export default function SettingsPaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { refreshSubscription } = useSubscription();
+  const { packages, purchasePackage, restorePurchases, mockUpgradeToPro } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('yearly');
   const [loading, setLoading] = useState(false);
 
@@ -78,35 +78,39 @@ export default function SettingsPaywallScreen() {
     setLoading(true);
     
     try {
-      if (user) {
-        const supabase = createClient() as any;
-        
-        // Update subscription to 'pro' plan with 'active' status in database
-        const { error: subError } = await supabase
-          .from('subscriptions')
-          .upsert({
-            user_id: user.id,
-            plan: 'pro',
-            status: 'active',
-            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year out
-          }, { onConflict: 'user_id' });
-
-        if (subError) {
-          console.warn('[Paywall] DB Subscription update failed:', subError.message);
+      // Find matching RevenueCat package if configured
+      const matchedPackage = packages.find(p => {
+        if (selectedPlan === 'yearly') {
+          return p.packageType === 'ANNUAL' || p.identifier.toLowerCase().includes('annual') || p.identifier.toLowerCase().includes('year');
         } else {
-          console.log('[Paywall] DB Subscription successfully upgraded to PRO!');
-          // Refresh active state in Subscription Context
-          await refreshSubscription();
+          return p.packageType === 'MONTHLY' || p.identifier.toLowerCase().includes('monthly');
         }
-      }
-      
-      // Close paywall and navigate back or go to home
-      if (router.canGoBack()) {
-        router.back();
+      });
+
+      let success = false;
+      if (matchedPackage) {
+        success = await purchasePackage(matchedPackage);
       } else {
-        router.replace('/(main)/home');
+        console.log('[Paywall] No matching App Store package found locally. Falling back to mock upgrade.');
+        success = await mockUpgradeToPro();
       }
-      
+
+      if (success) {
+        Alert.alert('Success', 'Thank you for upgrading to ReMake PRO! Your access is now fully unlocked.', [
+          {
+            text: 'Let\'s Slay',
+            onPress: () => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(main)/home');
+              }
+            }
+          }
+        ]);
+      } else {
+        Alert.alert('Purchase Failed', 'Unable to complete the transaction. Please try again or restore your purchase.');
+      }
     } catch (err) {
       console.warn('[Paywall] Subscription upgrade encountered error:', err);
     } finally {
@@ -114,9 +118,32 @@ export default function SettingsPaywallScreen() {
     }
   };
 
-  const handleRestore = () => {
+  const handleRestore = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    alert('Purchases restored successfully!');
+    setLoading(true);
+    try {
+      const success = await restorePurchases();
+      if (success) {
+        Alert.alert('Restored', 'Your premium access was successfully restored!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(main)/home');
+              }
+            }
+          }
+        ]);
+      } else {
+        Alert.alert('No Purchases Found', 'We couldn\'t find any active premium subscriptions for your account.');
+      }
+    } catch (e) {
+      console.warn('[Paywall] Restore error:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
