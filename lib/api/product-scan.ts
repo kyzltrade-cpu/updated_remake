@@ -275,6 +275,13 @@ export async function analyzeProduct(params: {
   uri?: string;
   referenceUri?: string;
 }): Promise<ProductScanResult> {
+  if (hasNimKey()) {
+    try {
+      return await analyzeProductReal(params);
+    } catch (e) {
+      console.warn('[ProductScan] Real product analysis failed, falling back to mock:', e);
+    }
+  }
   const dna = await loadDna();
   return mockResult(dna, params.barcode ?? '');
 }
