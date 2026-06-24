@@ -31,6 +31,7 @@ function Providers({ children }: { children: ReactNode }) {
 export default function RootLayout() {
   const fontsLoaded = useBrandFonts();
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+  const [splashAnimationDone, setSplashAnimationDone] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDING_KEY).then(val => {
@@ -38,8 +39,12 @@ export default function RootLayout() {
     });
   }, []);
 
-  if (!fontsLoaded || onboardingComplete === null) {
-    return <AppSplashScreen />;
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1, backgroundColor: tokens.colors.beige }} />;
+  }
+
+  if (onboardingComplete === null || !splashAnimationDone) {
+    return <AppSplashScreen onAnimationComplete={() => setSplashAnimationDone(true)} />;
   }
 
   return (
