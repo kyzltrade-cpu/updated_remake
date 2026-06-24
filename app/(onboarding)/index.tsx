@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,6 +9,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
+import { ONBOARDING_KEY } from '../_layout';
 
 const { width: W } = Dimensions.get('window');
 
@@ -33,8 +35,13 @@ export default function SplashScreen() {
     }, 1500);
 
     // 3. Router replace (Matches the end of the exit animation)
-    const routeTimer = setTimeout(() => {
-      router.replace('/(onboarding)/value');
+    const routeTimer = setTimeout(async () => {
+      const val = await AsyncStorage.getItem(ONBOARDING_KEY);
+      if (val === 'true') {
+        router.replace('/(main)/home');
+      } else {
+        router.replace('/(onboarding)/value');
+      }
     }, 2050);
 
     return () => {
