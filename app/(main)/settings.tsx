@@ -194,13 +194,15 @@ export default function SettingsScreen() {
                 </Text>
               </View>
             </View>
-            <Pressable
-              onPress={() => router.push('/(main)/paywall')}
-              style={styles.upgradeCta}
-              hitSlop={8}
-            >
-              {!isPro && <Text style={styles.upgradeCtaText}>Upgrade</Text>}
-            </Pressable>
+            {!isPro && (
+              <Pressable
+                onPress={() => router.push('/(main)/paywall')}
+                style={styles.upgradeCta}
+                hitSlop={8}
+              >
+                <Text style={styles.upgradeCtaText}>Upgrade</Text>
+              </Pressable>
+            )}
           </Animated.View>
         )}
 
