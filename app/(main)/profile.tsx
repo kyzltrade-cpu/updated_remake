@@ -282,7 +282,26 @@ export default function ProfileScreen() {
 
         {/* Dynamic Panel (Beauty DNA Card) */}
         <Animated.View entering={FadeInUp.delay(200).duration(500)}>
-          {(dna && isPro) ? (
+          {isLoading ? (
+            <View style={[styles.dnaLockedCard, { justifyContent: 'center', alignItems: 'center' }]}>
+              <LinearGradient
+                colors={[tokens.colors.darkBg, '#141416']}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <Animated.View entering={FadeIn.duration(400)}>
+                <Text style={{ 
+                  fontFamily: tokens.fonts.serif, 
+                  fontStyle: 'italic', 
+                  fontSize: 16, 
+                  color: tokens.colors.gray, 
+                  letterSpacing: 0.5,
+                  textAlign: 'center'
+                }}>
+                  Unsealing your Beauty DNA...
+                </Text>
+              </Animated.View>
+            </View>
+          ) : (dna && isPro) ? (
             <View style={styles.dnaActiveCard}>
               <View style={styles.dnaHeader}>
                 <View>
