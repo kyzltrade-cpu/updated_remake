@@ -80,6 +80,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: tokens.colors.pinkRich,
     letterSpacing: 2,
+    paddingHorizontal: 20, // Add horizontal padding to prevent Playfair Display glyph clipping
+    textAlign: 'center',
   },
   tagline: {
     fontFamily: tokens.fonts.regular,
@@ -87,5 +89,7 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     color: tokens.colors.gray,
     letterSpacing: 0.3,
+    paddingHorizontal: 20, // Prevent text clipping on narrow screens
+    textAlign: 'center',
   },
 });
