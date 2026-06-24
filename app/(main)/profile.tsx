@@ -402,19 +402,23 @@ export default function ProfileScreen() {
           )}
         </Animated.View>
 
-        {/* Streak & Rewards Card */}
+        {/* Streak Card */}
         <Animated.View entering={FadeInUp.delay(220).duration(500)} style={styles.rewardsCard}>
           <View style={styles.rewardsHeader}>
             <View>
-              <Text style={styles.rewardsEyebrow}>STREAK & REWARDS</Text>
+              <Text style={styles.rewardsEyebrow}>STREAK PROTECTION</Text>
               <Text style={styles.rewardsTitle}>
                 {stats?.currentStreak && stats.currentStreak > 0
-                  ? `Slaying ${stats.currentStreak} Days In A Row! 🔥`
-                  : 'Start Your Active Slay! ✨'}
+                  ? `Slaying ${stats.currentStreak} Days In A Row!`
+                  : 'Start Your Active Slay!'}
               </Text>
             </View>
             <View style={styles.freezeCounter}>
-              <Text style={styles.freezeEmoji}>❄️</Text>
+              <MaterialIcons 
+                name="ac-unit" 
+                size={14} 
+                color={tokens.colors.pinkDeep} 
+              />
               <Text style={styles.freezeText}>{stats ? stats.streakFreezes : '2'} Freezes</Text>
             </View>
           </View>
@@ -425,7 +429,7 @@ export default function ProfileScreen() {
               <Text style={styles.progressLabelText}>
                 Milestone progress: {stats ? (stats.currentStreak % 7) : 0}/7 days
               </Text>
-              <Text style={styles.progressRewardText}>Sephora Gift Card 🎁</Text>
+              <Text style={styles.progressRewardText}>Slay Milestone ✦</Text>
             </View>
             <View style={styles.progressBarBg}>
               <View 
@@ -443,15 +447,30 @@ export default function ProfileScreen() {
           <Text style={styles.rewardsSubLabel}>Unlocked Milestone Badges</Text>
           <View style={styles.badgesGrid}>
             <View style={[styles.badgeItem, (stats && stats.currentStreak >= 3) ? styles.badgeItemActive : undefined]}>
-              <Text style={[styles.badgeIcon, (!stats || (stats?.currentStreak ?? 0) < 3) ? styles.badgeIconLocked : undefined]}>💅</Text>
+              <MaterialIcons 
+                name="brush" 
+                size={22} 
+                color={(stats && stats.currentStreak >= 3) ? tokens.colors.pinkDeep : 'rgba(214, 199, 197, 0.4)'} 
+                style={{ marginBottom: 4 }}
+              />
               <Text style={styles.badgeLabel}>3-Day Slay</Text>
             </View>
             <View style={[styles.badgeItem, (stats && stats.currentStreak >= 7) ? styles.badgeItemActive : undefined]}>
-              <Text style={[styles.badgeIcon, (!stats || (stats?.currentStreak ?? 0) < 7) ? styles.badgeIconLocked : undefined]}>👑</Text>
+              <MaterialIcons 
+                name="workspace-premium" 
+                size={22} 
+                color={(stats && stats.currentStreak >= 7) ? tokens.colors.pinkDeep : 'rgba(214, 199, 197, 0.4)'} 
+                style={{ marginBottom: 4 }}
+              />
               <Text style={styles.badgeLabel}>7-Day Queen</Text>
             </View>
             <View style={[styles.badgeItem, (stats && stats.currentStreak >= 30) ? styles.badgeItemActive : undefined]}>
-              <Text style={[styles.badgeIcon, (!stats || (stats?.currentStreak ?? 0) < 30) ? styles.badgeIconLocked : undefined]}>🦄</Text>
+              <MaterialIcons 
+                name="diamond" 
+                size={22} 
+                color={(stats && stats.currentStreak >= 30) ? tokens.colors.pinkDeep : 'rgba(214, 199, 197, 0.4)'} 
+                style={{ marginBottom: 4 }}
+              />
               <Text style={styles.badgeLabel}>30-Day Unicorn</Text>
             </View>
           </View>
@@ -470,7 +489,7 @@ export default function ProfileScreen() {
               ]}
             >
               <Text style={styles.freezeBtnText}>
-                {usingFreeze ? 'Applying...' : 'Apply Streak Freeze ❄️'}
+                {usingFreeze ? 'Applying...' : 'Apply Streak Freeze'}
               </Text>
             </Pressable>
           </View>
