@@ -14,6 +14,7 @@ import { useUser } from '@/contexts/user-context';
 import { useSubscription } from '@/contexts/subscription-context';
 import { setupUserPushNotifications } from '@/lib/api/notifications';
 import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase';
 
 // ─── Toggle ───────────────────────────────────────────────────────────────────
 
@@ -161,6 +162,38 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const handleDeleteAccount = () => {
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Delete Account',
+      'Are you absolutely sure? This will instantly wipe all of your Beauty DNA analyses, habit streaks, scan history, and active subscription access. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Permanently',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              const supabase = createClient();
+              const { error } = await supabase.rpc('delete_user_account');
+              if (error) {
+                console.error('[Settings] Account deletion failed:', error);
+                Alert.alert('Error', 'Failed to delete account. Please try again or email support.');
+              } else {
+                Alert.alert('Account Deleted', 'Your account has been permanently erased. Best of luck on your skin journey, bestie! 🌸');
+                await logout();
+              }
+            } catch (e) {
+              console.error('[Settings] Account deletion exception:', e);
+              Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {/* Header */}
@@ -295,14 +328,23 @@ export default function SettingsScreen() {
           )}
         </Section>
 
-        {/* Sign out */}
+        {/* Sign out & Delete Account */}
         {isLoggedIn && (
-          <Animated.View entering={FadeInUp.delay(390).duration(400)}>
-            <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
-              <MaterialIcons name="logout" size={16} color="#B04040" />
-              <Text style={styles.signOutText}>Sign Out</Text>
-            </Pressable>
-          </Animated.View>
+          <View style={{ gap: 10, marginBottom: 20 }}>
+            <Animated.View entering={FadeInUp.delay(390).duration(400)}>
+              <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
+                <MaterialIcons name="logout" size={16} color="#B04040" />
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </Pressable>
+            </Animated.View>
+
+            <Animated.View entering={FadeInUp.delay(420).duration(400)}>
+              <Pressable style={styles.deleteAccountBtn} onPress={handleDeleteAccount}>
+                <MaterialIcons name="delete-forever" size={16} color="rgba(176,64,64,0.6)" />
+                <Text style={styles.deleteAccountText}>Delete Account</Text>
+              </Pressable>
+            </Animated.View>
+          </View>
         )}
       </ScrollView>
     </View>
@@ -517,5 +559,16 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: '#B04040',
+  },
+
+  // Delete account
+  deleteAccountBtn: {
+    backgroundColor: '#FFFFFF', borderRadius: 18,
+    borderWidth: 1.5, borderColor: 'rgba(192,64,64,0.08)',
+    paddingVertical: 15, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center', gap: 8,
+  },
+  deleteAccountText: {
+    fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: '#B04040', opacity: 0.7,
   },
 });
