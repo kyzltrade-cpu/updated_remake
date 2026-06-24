@@ -40,7 +40,7 @@ export default function ScanSuccessScreen() {
         </Animated.Text>
         
         <Animated.Text entering={FadeInUp.delay(500).duration(500)} style={styles.sub}>
-          We have finished analyzing your features. Your custom profile is now sealed in your Vanity File.
+          We have finished analyzing your features. Your custom profile is now sealed in your Profile.
         </Animated.Text>
 
         {/* Feature Highlights Card */}

@@ -355,10 +355,6 @@ export default function ProductScanResultsScreen() {
     router.replace('/(main)/scan');
   };
 
-  const handlePaoReminder = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
   if (loading) {
     return <ResultsSkeleton insetTop={insets.top} />;
   }
@@ -566,7 +562,7 @@ export default function ProductScanResultsScreen() {
       {/* Sticky save bar */}
       <Animated.View
         entering={FadeIn.delay(400).duration(400)}
-        style={[s.saveWrap, { paddingBottom: insets.bottom }]}
+        style={[s.saveWrap, { paddingBottom: Math.max(insets.bottom, 12) }]}
       >
         <Pressable
           onPress={handleSave}
@@ -574,10 +570,6 @@ export default function ProductScanResultsScreen() {
         >
           <MaterialIcons name="bookmark-border" size={16} color={tokens.colors.white} />
           <Text style={s.saveTxt}>Save</Text>
-        </Pressable>
-        <Pressable onPress={handlePaoReminder} style={s.paoBtn}>
-          <MaterialIcons name="notifications-none" size={14} color={tokens.colors.gray} />
-          <Text style={s.paoTxt}>Opens in {data.pao} · Set expiry reminder</Text>
         </Pressable>
       </Animated.View>
 

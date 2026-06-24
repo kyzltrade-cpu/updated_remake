@@ -174,7 +174,7 @@ export default function ProfileScreen() {
         <Pressable onPress={() => router.back()} style={styles.iconCircle} hitSlop={8}>
           <Text style={styles.back}>‹</Text>
         </Pressable>
-        <Text style={styles.title}>Vanity File</Text>
+        <Text style={styles.title}>Profile</Text>
         <Pressable 
           onPress={() => {
             if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -220,8 +220,8 @@ export default function ProfileScreen() {
             </View>
             <Text style={styles.userSubtitle}>
               {stats?.avgScore && stats.avgScore >= 80 
-                ? 'Barrier Protected & Glowing 🌸' 
-                : 'Curating Skin Health 🧬'}
+                ? 'Barrier Protected & Glowing' 
+                : 'Curating Skin Health'}
             </Text>
           </View>
         </Animated.View>

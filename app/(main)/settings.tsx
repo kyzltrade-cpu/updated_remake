@@ -248,22 +248,6 @@ export default function SettingsScreen() {
               />
             }
           />
-          <View style={styles.divider} />
-          <Row
-            label="Product expiry reminders"
-            sub="Alerts when scanned items expire"
-            right={
-              <Toggle
-                value={settings.notificationsEnabled}
-                onValueChange={async (value) => {
-                  toggleSetting('notificationsEnabled');
-                  if (value && authUser?.id) {
-                    await setupUserPushNotifications(authUser.id).catch(() => {});
-                  }
-                }}
-              />
-            }
-          />
         </Section>
 
         {/* ── Reference Photo ── */}
@@ -281,7 +265,14 @@ export default function SettingsScreen() {
             sub={isPro ? 'Pro · $39.99 / year' : 'Free — 1 scan included'}
             right={
               <Pressable
-                onPress={() => router.push('/(main)/paywall')}
+                onPress={() => {
+                  if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  if (isPro) {
+                    router.push('/(main)/subscription-details');
+                  } else {
+                    router.push('/(main)/paywall');
+                  }
+                }}
                 style={styles.changePlanBtn}
               >
                 <Text style={styles.changePlanText}>
