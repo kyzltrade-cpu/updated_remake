@@ -235,7 +235,12 @@ export default function ProfileScreen() {
               router.push('/(main)/wrapped');
             }}
           >
-            <Text style={styles.statEmoji}>🔥</Text>
+            <MaterialIcons 
+              name="whatshot" 
+              size={20} 
+              color={tokens.colors.pinkDeep} 
+              style={{ marginBottom: 4 }}
+            />
             <Text style={styles.statVal}>{stats ? stats.currentStreak : '--'}</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
           </Pressable>
@@ -247,7 +252,12 @@ export default function ProfileScreen() {
               router.push('/(main)/wrapped');
             }}
           >
-            <Text style={styles.statEmoji}>📸</Text>
+            <MaterialIcons 
+              name="camera-alt" 
+              size={20} 
+              color={tokens.colors.pinkDeep} 
+              style={{ marginBottom: 4 }}
+            />
             <Text style={styles.statVal}>{stats ? stats.totalScans : '--'}</Text>
             <Text style={styles.statLabel}>Total Scans</Text>
           </Pressable>
@@ -259,7 +269,12 @@ export default function ProfileScreen() {
               router.push('/(main)/wrapped');
             }}
           >
-            <Text style={styles.statEmoji}>💖</Text>
+            <MaterialIcons 
+              name="favorite-border" 
+              size={20} 
+              color={tokens.colors.pinkDeep} 
+              style={{ marginBottom: 4 }}
+            />
             <Text style={styles.statVal}>{stats ? `${stats.avgScore}%` : '--'}</Text>
             <Text style={styles.statLabel}>Avg Score</Text>
           </Pressable>
