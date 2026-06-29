@@ -20,6 +20,19 @@
       "channel": "production",
       "android": {
         "gradleCommand": ":app:bundleRelease"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://vfrmfnxfaocknnkxocvg.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmcm1mbnhmYW9ja25ua3hvY3ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzY1ODUsImV4cCI6MjA5NTkxMjU4NX0.9Di1Qzm9vfOJDAYHsVtkUpVA6hWAAo-rJWCQ-ryRSzY",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_uhEnFeXZdSVVWvwZieCFFA_dklS1jaA",
+        "EXPO_PUBLIC_DEV_BYPASS": "false",
+        "EXPO_PUBLIC_DEV_EMAIL": "dev@remake.local",
+        "EXPO_PUBLIC_DEV_PASSWORD": "devpass123!",
+        "EXPO_PUBLIC_COHERE_API_KEY": "cohere_pMei0irbPBLWtI4vULKnb5dEmwg6KpYCIxyeam3I33B1Fg",
+        "EXPO_PUBLIC_NIM_API_KEY": "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",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "651518769892-jp8l89ckouivlfjf8rve8vi2veamkoh0.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "651518769892-v5dr6uufdd47e021478vhl6hik54m9si.apps.googleusercontent.com",
+        "EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY": "appl_gbtVVRSGhiOIIvltFaONuiIxqit"
       }
     }
   },
