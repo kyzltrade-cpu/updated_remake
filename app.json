@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.remake",
+      "bundleIdentifier": "com.remake.ios",
       "infoPlist": {
         "NSCameraUsageDescription": "REMAKE analyses your face and beauty products through your camera. Photos are never stored or shared.",
         "NSPhotoLibraryUsageDescription": "REMAKE lets you scan beauty products from photos in your library.",
@@ -28,7 +28,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.remake",
+      "package": "com.remake.android",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
