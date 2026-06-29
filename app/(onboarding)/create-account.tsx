@@ -77,7 +77,7 @@ export default function CreateAccountScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
-      const { data, error } = await signInWithGoogle();
+      const { data, error } = (await signInWithGoogle()) as any;
       if (error) {
         if (error.code !== 'CANCELED') {
           Alert.alert('Google Sign-In failed', error.message);
@@ -105,7 +105,7 @@ export default function CreateAccountScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
-      const { data, error } = await signInWithApple();
+      const { data, error } = (await signInWithApple()) as any;
       if (error) {
         if (error.code !== 'CANCELED') {
           Alert.alert('Apple Sign-In failed', error.message);
