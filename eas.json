@@ -18,12 +18,6 @@
     "production": {
       "distribution": "store",
       "channel": "production",
-      "ios": {
-        "entitlements": {
-          "com.apple.developer.applesignin": ["Default"],
-          "com.apple.developer.in-app-payments": []
-        }
-      },
       "android": {
         "gradleCommand": ":app:bundleRelease"
       }

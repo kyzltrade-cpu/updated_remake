@@ -11,6 +11,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.remake.ios",
+      "entitlements": {
+        "com.apple.developer.applesignin": ["Default"]
+      },
       "infoPlist": {
         "NSCameraUsageDescription": "REMAKE analyses your face and beauty products through your camera. Photos are never stored or shared.",
         "NSPhotoLibraryUsageDescription": "REMAKE lets you scan beauty products from photos in your library.",
