@@ -7,7 +7,6 @@ import {
   validationResult,
   type ValidationResult
 } from '@/lib/validation'
-import type { GoogleSignin as GoogleSigninType } from '@react-native-google-signin/google-signin'
 import type * as AppleAuthenticationType from 'expo-apple-authentication'
 import Constants from 'expo-constants'
 
@@ -175,60 +174,14 @@ export async function signInDev() {
 // Configure Google Sign-In lazily or once
 let googleConfigured = false;
 function configureGoogle() {
-  if (googleConfigured) return;
-
-  const { GoogleSignin } = require('@react-native-google-signin/google-signin') as { GoogleSignin: typeof GoogleSigninType };
-
-  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-
-  GoogleSignin.configure({
-    webClientId,
-    iosClientId,
-    offlineAccess: false,
-  });
-  googleConfigured = true;
+  // Google Sign-In is deprecated in favor of Apple Sign-In
 }
 
 /**
  * Native Sign-In with Google
  */
 export async function signInWithGoogle() {
-  if (Constants.executionEnvironment === 'storeClient') {
-    return { data: null, error: { message: 'Google Sign-In is only available in a custom development build. Please build the native app to use this feature.', code: 'UNSUPPORTED' } };
-  }
-  try {
-    const { GoogleSignin } = require('@react-native-google-signin/google-signin') as { GoogleSignin: typeof GoogleSigninType };
-    configureGoogle();
-
-    await GoogleSignin.hasPlayServices();
-    const response = await GoogleSignin.signIn();
-    
-    // Support newer structure (v11+) and older structure
-    const idToken = response.data?.idToken || (response as any).idToken;
-
-    if (!idToken) {
-      throw new Error('Google Sign-In: No ID token returned.');
-    }
-
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
-      token: idToken,
-    });
-
-    return { data, error };
-  } catch (err: any) {
-    if (err.message?.includes('RNGoogleSignin') || err.message?.includes('could not be found') || err.message?.includes('Cannot find module')) {
-      return { data: null, error: { message: 'Google Sign-In is only available in a custom development build. Please build the native app to use this feature.', code: 'UNSUPPORTED' } };
-    }
-    const msg = err.message || '';
-    if (msg.includes('Sign in action cancelled') || err.code === '12501' || err.code === 'SIGN_IN_CANCELLED') {
-      return { data: null, error: { message: 'Sign in was cancelled.', code: 'CANCELED' } };
-    }
-    console.error('[Auth] Google Sign-In error:', err);
-    return { data: null, error: { message: err.message || 'Google Sign-In failed.', code: 'ERROR' } };
-  }
+  return { data: null, error: { message: 'Google Sign-In is not configured. Please use Sign in with Apple.', code: 'UNSUPPORTED' } };
 }
 
 /**
