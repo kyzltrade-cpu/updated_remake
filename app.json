@@ -17,6 +17,7 @@
         ]
       },
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "REMAKE analyses your face and beauty products through your camera. Photos are never stored or shared.",
         "NSPhotoLibraryUsageDescription": "REMAKE lets you scan beauty products from photos in your library.",
         "NSLocationWhenInUseUsageDescription": "REMAKE reads your local UV index to recommend the right SPF protection for your makeup.",
