@@ -81,7 +81,7 @@ export default function LegalScreen() {
 
             <Text style={styles.heading}>4. Subscription & Billing</Text>
             <Text style={styles.paragraph}>
-              ReMake is a premium service that requires an active weekly or annual paid subscription. Subscriptions are billed directly through Apple In-App Purchases (App Store) and will auto-renew unless cancelled at least 24 hours before the end of the current billing cycle. No refunds are provided for partial periods.
+              ReMake is a premium service that requires an active monthly or annual paid subscription. Subscriptions are billed directly through Apple In-App Purchases (App Store) and will auto-renew unless cancelled at least 24 hours before the end of the current billing cycle. No refunds are provided for partial periods.
             </Text>
             <Text style={styles.paragraph}>
               By using and subscribing to the App, you agree to be bound by Apple's standard Terms of Use (EULA), which can be accessed here:
