@@ -38,7 +38,7 @@ export default function RatingScreen() {
       <View style={[styles.body, { paddingTop: 20 }]}>
         <Animated.View entering={FadeIn.delay(100).duration(600)} style={styles.badgeCard}>
           <Text style={styles.badgeStars}>★★★★★</Text>
-          <Text style={styles.badgeCount}>4.9 · Esthetician & Skin Expert Approved</Text>
+          <Text style={styles.badgeCount}>Esthetician & Skin Expert Approved</Text>
         </Animated.View>
 
         <Animated.Text entering={FadeInUp.delay(180).duration(500)} style={styles.title}>
@@ -60,7 +60,7 @@ export default function RatingScreen() {
               <Text style={styles.avatarL}>{l}</Text>
             </View>
           ))}
-          <Text style={styles.usersText}>  500K+ REMAKE users</Text>
+          <Text style={styles.usersText}>  Loved by 1,000+ Beta Testers</Text>
         </Animated.View>
       </View>
 
