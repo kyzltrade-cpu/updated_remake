@@ -66,9 +66,13 @@ export default function OnboardingPaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { packages, purchasePackage, restorePurchases, mockUpgradeToPro } = useSubscription();
+  const { 
+    packages, purchasePackage, restorePurchases, mockUpgradeToPro, 
+    rcConfigured, offerings, customerInfo 
+  } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('yearly');
   const [loading, setLoading] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   const handleSelect = (id: PlanId) => {
     Haptics.selectionAsync();
@@ -293,6 +297,31 @@ export default function OnboardingPaywallScreen() {
               <Text style={styles.auxText}>Terms & Privacy</Text>
             </Pressable>
           </View>
+
+          {/* Sandbox & TestFlight Diagnostics Panel */}
+          <Pressable 
+            onPress={() => setShowDebug(!showDebug)} 
+            style={styles.debugToggle}
+          >
+            <Text style={styles.debugToggleText}>
+              {showDebug ? '▼ Hide Diagnostics' : '▲ Show Sandbox Diagnostics'}
+            </Text>
+          </Pressable>
+
+          {showDebug && (
+            <View style={styles.debugPanel}>
+              <Text style={styles.debugTitle}>REMAKE SUBSCRIPTION DIAGNOSTICS</Text>
+              <Text style={styles.debugItem}>• RC Configured: <Text style={styles.debugVal}>{rcConfigured ? 'YES' : 'NO'}</Text></Text>
+              <Text style={styles.debugItem}>• Local Packages Count: <Text style={styles.debugVal}>{packages.length}</Text></Text>
+              {packages.length > 0 && (
+                <Text style={styles.debugItem}>• Package IDs: <Text style={styles.debugVal}>{packages.map(p => p.identifier).join(', ')}</Text></Text>
+              )}
+              <Text style={styles.debugItem}>• Offering Current: <Text style={styles.debugVal}>{offerings?.current ? offerings.current.identifier : 'None'}</Text></Text>
+              <Text style={styles.debugItem}>• User ID: <Text style={styles.debugVal}>{user?.id || 'Anonymous'}</Text></Text>
+              <Text style={styles.debugItem}>• Entitlements Active: <Text style={styles.debugVal}>{customerInfo ? Object.keys(customerInfo.entitlements.active).join(', ') || 'None' : 'None'}</Text></Text>
+              <Text style={styles.debugItem}>• Mode: <Text style={styles.debugVal}>{__DEV__ ? 'Local Dev' : 'TestFlight / Prod'}</Text></Text>
+            </View>
+          )}
         </Animated.View>
       </ScrollView>
     </View>
@@ -522,5 +551,47 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: 'rgba(255,249,247,0.35)',
     letterSpacing: 0.3,
+  },
+  
+  // Debug panel styles
+  debugToggle: {
+    marginTop: 20,
+    paddingVertical: 10,
+  },
+  debugToggleText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    fontWeight: '700',
+    color: tokens.colors.gray,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  debugPanel: {
+    marginTop: 12,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    width: '100%',
+    alignItems: 'flex-start',
+  },
+  debugTitle: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    fontWeight: '800',
+    color: tokens.colors.pinkDeep,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  debugItem: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    color: tokens.colors.gray,
+    marginBottom: 4,
+  },
+  debugVal: {
+    color: tokens.colors.white,
+    fontWeight: '600',
   },
 });

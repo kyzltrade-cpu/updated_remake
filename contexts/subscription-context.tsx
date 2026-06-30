@@ -12,6 +12,7 @@ interface SubscriptionContextValue {
   packages: PurchasesPackage[];
   isLoading: boolean;
   isPro: boolean;
+  rcConfigured: boolean;
   refreshSubscription: () => Promise<void>;
   purchasePackage: (pack: PurchasesPackage) => Promise<boolean>;
   restorePurchases: () => Promise<boolean>;
@@ -25,6 +26,7 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
   packages: [],
   isLoading: true,
   isPro: false,
+  rcConfigured: false,
   refreshSubscription: async () => {},
   purchasePackage: async () => false,
   restorePurchases: async () => false,
@@ -330,6 +332,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         packages,
         isLoading,
         isPro,
+        rcConfigured,
         refreshSubscription: fetchSubscription,
         purchasePackage,
         restorePurchases,
