@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet, TextInput, Alert, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, Pressable, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -131,7 +131,11 @@ export default function CreateAccountScreen() {
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 12 }]}>
+    <Pressable
+      style={[styles.root, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 12 }]}
+      onPress={Keyboard.dismiss}
+      accessible={false}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -252,7 +256,7 @@ export default function CreateAccountScreen() {
           .
         </Text>
       </Animated.View>
-    </View>
+    </Pressable>
   );
 }
 

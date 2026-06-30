@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   View, Text, StyleSheet, TextInput, Alert, Pressable,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -128,7 +128,11 @@ export default function SignInScreen() {
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 }]}>
+    <Pressable
+      style={[styles.root, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 }]}
+      onPress={Keyboard.dismiss}
+      accessible={false}
+    >
       {/* Back */}
       <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
         <Text style={styles.backIcon}>‹</Text>
@@ -241,7 +245,7 @@ export default function SignInScreen() {
           </Text>
         </Pressable>
       </Animated.View>
-    </View>
+    </Pressable>
   );
 }
 
