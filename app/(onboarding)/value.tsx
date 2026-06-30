@@ -76,45 +76,61 @@ function PhoneMockup() {
         {/* Shadow lives here so overflow:hidden on body doesn't clip it */}
         <View style={styles.shadowHost}>
 
-          {/* Metallic band — horizontal gradient, thin ring around screen */}
+          {/* Outer Chamfer Highlighting Ring */}
           <LinearGradient
-            colors={RING_COLORS}
-            locations={RING_LOCS}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.body}
+            colors={['#f4f1ea', '#bdae9c', '#4d463b']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.outerChamfer}
           >
-            {/* Top chamfer — 1 pt bright line on the flat top edge */}
-            <View style={styles.chamferTop} />
-            {/* Bottom edge — dim reflection */}
-            <View style={styles.chamferBottom} />
+            {/* Metallic band — diagonal gradient, thin ring around screen */}
+            <LinearGradient
+              colors={['#eae5da', '#c8bfae', '#928876', '#595347', '#363127']}
+              locations={[0, 0.25, 0.5, 0.75, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.body}
+            >
+              {/* Top chamfer — 1 pt bright line on the flat top edge */}
+              <View style={styles.chamferTop} />
+              {/* Bottom edge — dim reflection */}
+              <View style={styles.chamferBottom} />
 
-            {/* Left side buttons */}
-            <SideButton side="left" top={BODY_H * 0.115} height={ACTION_H} />
-            <SideButton side="left" top={BODY_H * 0.200} height={VOL_H} />
-            <SideButton side="left" top={BODY_H * 0.330} height={VOL_H} />
+              {/* Left side buttons */}
+              <SideButton side="left" top={BODY_H * 0.115} height={ACTION_H} />
+              <SideButton side="left" top={BODY_H * 0.200} height={VOL_H} />
+              <SideButton side="left" top={BODY_H * 0.330} height={VOL_H} />
 
-            {/* Right: power button */}
-            <SideButton side="right" top={BODY_H * 0.250} height={POWER_H} />
+              {/* Right: power button */}
+              <SideButton side="right" top={BODY_H * 0.250} height={POWER_H} />
 
-            {/* Near-black gasket + screen */}
-            <View style={styles.gasket}>
-              <View style={styles.screen}>
-                <Image
-                  source={require('@/assets/images/app-preview.png')}
-                  style={{ width: PHONE_W, height: PHONE_H }}
-                  resizeMode="stretch"
-                />
-                {/* Screen glass glare — subtle diagonal highlight */}
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.055)', 'transparent']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0.55, y: 0.55 }}
-                  style={StyleSheet.absoluteFill}
-                  pointerEvents="none"
-                />
+              {/* Near-black gasket + screen */}
+              <View style={styles.gasket}>
+                <View style={styles.screen}>
+                  <Image
+                    source={require('@/assets/images/app-preview.png')}
+                    style={{ width: PHONE_W, height: PHONE_H }}
+                    resizeMode="stretch"
+                  />
+                  {/* Left physical metal frame glint (light reflection) */}
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.45)', 'rgba(255,255,255,0.10)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.leftGlint}
+                    pointerEvents="none"
+                  />
+                  {/* Screen glass glare — subtle diagonal highlight */}
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.055)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0.55, y: 0.55 }}
+                    style={StyleSheet.absoluteFill}
+                    pointerEvents="none"
+                  />
+                </View>
               </View>
-            </View>
+            </LinearGradient>
           </LinearGradient>
 
         </View>
@@ -204,12 +220,30 @@ const styles = StyleSheet.create({
 
   // Soft directional shadow — phone floating above surface
   shadowHost: {
-    borderRadius: BODY_R,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
+    borderRadius: BODY_R + 1,
+    shadowColor: '#362722',
+    shadowOffset: { width: 12, height: 16 },
+    shadowOpacity: 0.38,
+    shadowRadius: 28,
     elevation: 22,
+  },
+
+  outerChamfer: {
+    width: BODY_W + 3,
+    height: BODY_H + 3,
+    borderRadius: BODY_R + 1.5,
+    padding: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  leftGlint: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 4,
+    height: '100%',
+    zIndex: 20,
   },
 
   // Body: metallic ring (only RING pt visible on each side; rest hidden by screen)
