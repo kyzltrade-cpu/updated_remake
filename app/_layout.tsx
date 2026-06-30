@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as SplashScreen from 'expo-splash-screen';
 import { tokens } from '@/components/theme';
 import { useBrandFonts } from '@/hooks/use-brand-fonts';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -13,6 +14,9 @@ import { SubscriptionProvider } from '@/contexts/subscription-context';
 import { View } from 'react-native';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AppSplashScreen } from '@/components/splash-screen';
+
+// Prevent the native splash screen from automatically hiding before assets are loaded.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const ONBOARDING_KEY = '@remake_onboarding_complete';
 
@@ -38,6 +42,13 @@ export default function RootLayout() {
       setOnboardingComplete(val === 'true');
     });
   }, []);
+
+  // Hide native splash screen once our custom fonts have loaded.
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return <View style={{ flex: 1, backgroundColor: tokens.colors.beige }} />;
