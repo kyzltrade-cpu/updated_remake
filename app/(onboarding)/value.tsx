@@ -78,15 +78,15 @@ function PhoneMockup() {
 
           {/* Outer Chamfer Highlighting Ring */}
           <LinearGradient
-            colors={['#f4f1ea', '#bdae9c', '#4d463b']}
+            colors={['#ffffff', '#f4f1ea', '#bdae9c']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.outerChamfer}
           >
             {/* Metallic band — diagonal gradient, thin ring around screen */}
             <LinearGradient
-              colors={['#eae5da', '#c8bfae', '#928876', '#595347', '#363127']}
-              locations={[0, 0.25, 0.5, 0.75, 1]}
+              colors={['#eae5da', '#c8bfae', '#7c766b']}
+              locations={[0, 0.5, 1]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.body}
