@@ -92,7 +92,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           await loadOfferings();
         } else {
           console.log('[SubscriptionContext] Logging out of RevenueCat (anonymous user state)');
-          await Purchases.logOut();
+          const isAnon = await Purchases.isAnonymous();
+          if (!isAnon) {
+            await Purchases.logOut();
+          }
           setCustomerInfo(null);
           setOfferings(null);
           setPackages([]);
