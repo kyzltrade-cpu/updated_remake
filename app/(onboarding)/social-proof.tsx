@@ -42,7 +42,7 @@ export default function SocialProofScreen() {
         <Animated.View entering={FadeIn.delay(100).duration(600)} style={styles.badgeRow}>
           <View style={styles.badge}>
             <Text style={styles.badgeStar}>★★★★★</Text>
-            <Text style={styles.badgeText}>4.9 on the App Store</Text>
+            <Text style={styles.badgeText}>4.9 · Esthetician & Skin Expert Approved</Text>
           </View>
         </Animated.View>
 
