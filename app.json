@@ -12,6 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.remake.ios",
       "buildNumber": "2",
+      "useFrameworks": "dynamic",
       "entitlements": {
         "com.apple.developer.applesignin": [
           "Default"
