@@ -34,7 +34,7 @@ BEGIN
   UPDATE public.streaks
   SET 
     streak_freezes = current_freezes - 1,
-    last_scan_date = today_date::text
+    last_scan_date = today_date
   WHERE user_id = calling_user_id;
 
   RETURN true;
