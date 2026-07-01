@@ -95,8 +95,14 @@ export default function SettingsPaywallScreen() {
       if (matchedPackage) {
         success = await purchasePackage(matchedPackage);
       } else {
-        console.log('[Paywall] No matching App Store package found locally. Falling back to mock upgrade.');
-        success = await mockUpgradeToPro();
+        if (rcConfigured) {
+          console.warn('[Paywall] No matching App Store package found locally, but RevenueCat is configured. Rejecting mock bypass.');
+          Alert.alert('Store Unavailable', 'App Store products are not loaded yet. Please check your internet connection or try again shortly.');
+          success = false;
+        } else {
+          console.log('[Paywall] Falling back to mock upgrade since RevenueCat is not configured.');
+          success = await mockUpgradeToPro();
+        }
       }
 
       if (success) {

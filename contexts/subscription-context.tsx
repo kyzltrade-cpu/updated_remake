@@ -177,9 +177,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         }
 
         // Keep local database synced with RevenueCat state
-        if (user && hasRcPro && !dbHasActivePro) {
-          await syncRcSubscriptionToDb(user.id, info);
-          dbHasActivePro = true; // Set to true since we are syncing
+        if (user) {
+          if (hasRcPro && !dbHasActivePro) {
+            await syncRcSubscriptionToDb(user.id, info);
+            dbHasActivePro = true; // Set to true since we are syncing
+          } else if (!hasRcPro && dbHasActivePro) {
+            await syncRcSubscriptionFreeToDb(user.id);
+            dbHasActivePro = false; // Set to false since we are downgrading
+          }
         }
       } catch (e) {
         console.warn('[SubscriptionContext] RevenueCat getCustomerInfo failed:', e);
@@ -187,8 +192,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
 
     // Computed combined status (dual-redundant safety net!)
-    setIsPro(dbHasActivePro || rcHasActivePro || localMockPro);
+    // If RevenueCat is configured (TestFlight / App Store), real receipt entitlement is the absolute source of truth.
+    // If RevenueCat is not configured (Local Sim / Dev), fall back to Supabase DB or mock bypass.
+    setIsPro(rcConfigured ? rcHasActivePro : (dbHasActivePro || localMockPro));
     setIsLoading(false);
+  };
+
+  // Automated write-through: Sync downgraded RevenueCat state to Supabase table
+  const syncRcSubscriptionFreeToDb = async (userId: string) => {
+    try {
+      const supabase = createClient() as any;
+      await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: userId,
+          plan: 'free',
+          status: 'active',
+          current_period_end: null,
+        }, { onConflict: 'user_id' });
+      console.log('[SubscriptionContext] Successfully downgraded local Supabase subscription to match RevenueCat Free state.');
+    } catch (e) {
+      console.warn('[SubscriptionContext] Failed to write RC free sync to DB:', e);
+    }
   };
 
   // Automated write-through: Synced RevenueCat state to Supabase table
