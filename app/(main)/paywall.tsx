@@ -118,8 +118,6 @@ export default function SettingsPaywallScreen() {
             }
           }
         ]);
-      } else {
-        Alert.alert('Purchase Failed', 'Unable to complete the transaction. Please try again or restore your purchase.');
       }
     } catch (err) {
       console.warn('[Paywall] Subscription upgrade encountered error:', err);

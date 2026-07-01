@@ -261,6 +261,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         console.log('[SubscriptionContext] User cancelled the App Store payment sheet.');
       } else {
         console.error('[SubscriptionContext] Purchase package encountered error:', e);
+        const { Alert } = require('react-native');
+        Alert.alert(
+          'Purchase Failed',
+          e.message || 'Unable to complete the transaction. Please check your App Store account and payment details.'
+        );
       }
       return false;
     }
