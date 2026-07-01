@@ -116,23 +116,16 @@ export async function getScanById(scanId: string): Promise<any | null> {
 export async function useStreakFreeze(userId: string): Promise<boolean> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createClient() as any;
-  const { data, error } = await supabase
-    .from('streaks')
-    .select('streak_freezes')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error || !data) return false;
-  if (data.streak_freezes <= 0) return false;
-
-  const todayStr = new Date().toISOString().split('T')[0];
-  const { error: updateError } = await supabase
-    .from('streaks')
-    .update({
-      streak_freezes: data.streak_freezes - 1,
-      last_scan_date: todayStr,
-    })
-    .eq('user_id', userId);
-
-  return !updateError;
+  
+  try {
+    const { data, error } = await supabase.rpc('use_streak_freeze');
+    if (error) {
+      console.warn('[scan-storage] use_streak_freeze RPC failed:', error.message);
+      return false;
+    }
+    return !!data;
+  } catch (e) {
+    console.warn('[scan-storage] useStreakFreeze exception:', e);
+    return false;
+  }
 }
