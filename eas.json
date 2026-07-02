@@ -18,6 +18,7 @@
     "production": {
       "distribution": "store",
       "channel": "production",
+      "autoSubmit": true,
       "android": {
         "gradleCommand": ":app:bundleRelease"
       },
