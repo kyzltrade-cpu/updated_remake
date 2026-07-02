@@ -146,9 +146,7 @@ export default function SettingsScreen() {
   const { settings, updateSettings, toggleSetting } = useSettings();
   const { user, logout, isLoggedIn } = useUser();
   const { user: authUser } = useAuth();
-  const { subscription } = useSubscription();
-
-  const isPro = subscription?.plan === 'pro';
+  const { subscription, isPro } = useSubscription();
 
   const handleRetake = () => {
     if (settings.hapticsEnabled) Haptics.selectionAsync();

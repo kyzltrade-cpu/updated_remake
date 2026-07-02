@@ -99,8 +99,7 @@ function CategoryCard({ cat, index }: { cat: CategoryAnalysis; index: number }) 
 export default function ResultsScreen() {
   const router   = useRouter();
   const insets   = useSafeAreaInsets();
-  const { subscription } = useSubscription();
-  const isPro = subscription?.plan === 'pro';
+  const { subscription, isPro } = useSubscription();
 
   useEffect(() => {
     if (!isPro) {

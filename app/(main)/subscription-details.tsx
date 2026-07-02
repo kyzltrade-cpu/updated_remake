@@ -203,13 +203,23 @@ export default function SubscriptionDetails() {
         <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.notesCard}>
           <MaterialIcons name="help-outline" size={18} color={tokens.colors.pinkDeep} style={{ marginTop: 1 }} />
           <View style={styles.notesTextContainer}>
-            <Text style={styles.notesTitle}>About Your ReMake Premium Plan</Text>
-            <Text style={styles.notesBody}>
-              ReMake operates directly under premium App Store subcontracts. Payment flows are end-to-end encrypted and managed securely via Apple. 
+            <Text style={styles.notesTitle}>
+              {isPro ? 'About Your ReMake Premium Plan' : 'About Your ReMake Free Plan'}
             </Text>
-            <Text style={styles.notesBody}>
-              If you ever want to change payment plans, view invoice histories, or update payment methods, please manage them directly within your personal phone's iCloud Account Subscriptions interface.
-            </Text>
+            {isPro ? (
+              <>
+                <Text style={styles.notesBody}>
+                  ReMake operates directly under premium App Store subcontracts. Payment flows are end-to-end encrypted and managed securely via Apple. 
+                </Text>
+                <Text style={styles.notesBody}>
+                  If you ever want to change payment plans, view invoice histories, or update payment methods, please manage them directly within your personal phone's iCloud Account Subscriptions interface.
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.notesBody}>
+                You are currently on our Free Tier. You have access to one complimentary face analysis. To unlock unlimited daily scans, face alignment diagnostics, and custom shade matchmaking, consider upgrading to our premium plan.
+              </Text>
+            )}
             <Text style={styles.notesBody}>
               Need absolute concierge support? Write directly to our skin engineering squad at <Text style={styles.linkText}>theremakeapp@gmail.com</Text>. We respond within 12 hours.
             </Text>

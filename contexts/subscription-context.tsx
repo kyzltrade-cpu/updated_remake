@@ -181,9 +181,21 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           if (hasRcPro && !dbHasActivePro) {
             await syncRcSubscriptionToDb(user.id, info);
             dbHasActivePro = true; // Set to true since we are syncing
+            setSubscription({
+              user_id: user.id,
+              plan: 'pro',
+              status: 'active',
+              current_period_end: info.entitlements.active['pro']?.expirationDate || info.entitlements.active['premium']?.expirationDate || null,
+            } as any);
           } else if (!hasRcPro && dbHasActivePro) {
             await syncRcSubscriptionFreeToDb(user.id);
             dbHasActivePro = false; // Set to false since we are downgrading
+            setSubscription({
+              user_id: user.id,
+              plan: 'free',
+              status: 'active',
+              current_period_end: null,
+            } as any);
           }
         }
       } catch (e) {

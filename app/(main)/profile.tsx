@@ -37,7 +37,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { settings, profilePhoto, setProfilePhoto } = useSettings();
-  const { subscription } = useSubscription();
+  const { subscription, isPro } = useSubscription();
   const [history, setHistory] = useState<ScanRecord[]>([]);
   const [stats, setStats] = useState<{ totalScans: number; avgScore: number; currentStreak: number; streakFreezes: number } | null>(null);
   const [dna, setDna] = useState<any | null>(null);
@@ -45,8 +45,6 @@ export default function ProfileScreen() {
   const [onboardingName, setOnboardingName] = useState('');
   const [expandedScanId, setExpandedScanId] = useState<string | null>(null);
   const [usingFreeze, setUsingFreeze] = useState(false);
-
-  const isPro = subscription?.plan === 'pro';
 
   const handleUseFreeze = async () => {
     if (!user) return;
