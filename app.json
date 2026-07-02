@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.remake.ios",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "entitlements": {
         "com.apple.developer.applesignin": [
           "Default"
