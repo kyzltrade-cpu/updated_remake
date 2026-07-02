@@ -208,9 +208,6 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
 
   return (
     <Animated.View style={[styles.container, animatedContainerStyle]}>
-      {/* Background radial highlight glow */}
-      <Animated.View style={[styles.ambientGlow, animatedGlowStyle]} />
-
       <View style={styles.center}>
         {/* Main Logo Container */}
         <View style={styles.svgWrapper}>

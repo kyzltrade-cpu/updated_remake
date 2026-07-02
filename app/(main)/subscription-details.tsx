@@ -62,12 +62,16 @@ export default function SubscriptionDetails() {
         const purchaseTime = purchaseDateStr ? new Date(purchaseDateStr).getTime() : Date.now();
         const expiryTime = new Date(expiryDate).getTime();
         
-        // Detect Apple Sandbox Time Compression (if trial expires within 12 hours of purchase)
-        const isSandboxCompressed = isTrial && (expiryTime - purchaseTime < 12 * 60 * 60 * 1000);
+        // Detect Apple Sandbox Time Compression (if expiration is within 24 hours of purchase)
+        const isSandbox = (expiryTime - purchaseTime < 24 * 60 * 60 * 1000);
         
-        if (isSandboxCompressed) {
-          // De-compress and virtualize the real 3-day trial period for clean TestFlight verification
-          const virtualExpiryTime = purchaseTime + 3 * 24 * 60 * 60 * 1000; // 3-day duration
+        if (isSandbox) {
+          // De-compress and virtualize the true production durations for clean TestFlight verification
+          const durationMs = isTrial 
+            ? 3 * 24 * 60 * 60 * 1000      // 3-day Trial Plan
+            : 365 * 24 * 60 * 60 * 1000;   // 365-day Annual Plan
+            
+          const virtualExpiryTime = purchaseTime + durationMs;
           expiryDate = new Date(virtualExpiryTime).toISOString();
           const diffMs = virtualExpiryTime - Date.now();
           daysRemaining = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
