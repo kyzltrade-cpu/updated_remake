@@ -344,17 +344,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
             console.log(`[SubscriptionContext] Logging user into RevenueCat: ${user.id}`);
             const result = await Purchases.logIn(user.id);
             setCustomerInfo(result.customerInfo);
-            await loadOfferings();
           } else {
-            console.log('[SubscriptionContext] Logging out of RevenueCat (anonymous user state)');
+            console.log('[SubscriptionContext] Running in anonymous user state for RevenueCat');
             const isAnon = await Purchases.isAnonymous();
             if (!isAnon) {
               await Purchases.logOut();
             }
-            setCustomerInfo(null);
-            setOfferings(null);
-            setPackages([]);
+            const info = await Purchases.getCustomerInfo();
+            setCustomerInfo(info);
           }
+          
+          // ALWAYS load offerings so packages are never zero for both anonymous (onboarding) and logged-in users!
+          await loadOfferings();
         } catch (e) {
           console.warn('[SubscriptionContext] Error syncing user with RevenueCat:', e);
         }

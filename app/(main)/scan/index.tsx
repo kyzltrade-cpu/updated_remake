@@ -303,9 +303,8 @@ export default function ScanScreen() {
   const cameraRef = useRef<CameraView>(null);
   const { settings, profilePhoto } = useSettings();
   const { user } = useAuth();
-  const { subscription } = useSubscription();
+  const { isPro } = useSubscription();
   const [scanCount, setScanCount] = useState<number>(0);
-  const isPro = subscription?.plan === 'pro';
 
   useFocusEffect(
     useCallback(() => {

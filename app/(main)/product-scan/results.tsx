@@ -276,7 +276,7 @@ export default function ProductScanResultsScreen() {
 
   const { user } = useAuth();
   const { user: profileUser, refreshProfile } = useUser();
-  const { subscription } = useSubscription();
+  const { isPro } = useSubscription();
 
   const [isLocked, setIsLocked] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
@@ -296,7 +296,6 @@ export default function ProductScanResultsScreen() {
           }
         }
 
-        const isPro = subscription?.plan === 'pro';
         const isUnlockedByReferral = profileUser?.shelf_audit_unlocked === true || referralCount >= 3;
 
         if (isPro || isUnlockedByReferral) {
@@ -310,7 +309,7 @@ export default function ProductScanResultsScreen() {
     };
 
     checkGating();
-  }, [subscription, profileUser, referralCount, user]);
+  }, [isPro, profileUser, referralCount, user]);
 
   const handleShareReferral = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

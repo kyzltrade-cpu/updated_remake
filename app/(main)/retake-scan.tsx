@@ -29,8 +29,7 @@ export default function RetakeScanScreen() {
   const insets = useSafeAreaInsets();
   const { updateSettings, settings } = useSettings();
   const { user } = useAuth();
-  const { subscription } = useSubscription();
-  const isPro = subscription?.plan === 'pro';
+  const { isPro } = useSubscription();
 
   useEffect(() => {
     if (!isPro) {

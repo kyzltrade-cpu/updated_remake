@@ -305,30 +305,7 @@ export default function SettingsPaywallScreen() {
             </Pressable>
           </View>
 
-          {/* Sandbox & TestFlight Diagnostics Panel */}
-          <Pressable 
-            onPress={() => setShowDebug(!showDebug)} 
-            style={styles.debugToggle}
-          >
-            <Text style={styles.debugToggleText}>
-              {showDebug ? '▼ Hide Diagnostics' : '▲ Show Sandbox Diagnostics'}
-            </Text>
-          </Pressable>
-
-          {showDebug && (
-            <View style={styles.debugPanel}>
-              <Text style={styles.debugTitle}>REMAKE SUBSCRIPTION DIAGNOSTICS</Text>
-              <Text style={styles.debugItem}>• RC Configured: <Text style={styles.debugVal}>{rcConfigured ? 'YES' : 'NO'}</Text></Text>
-              <Text style={styles.debugItem}>• Local Packages Count: <Text style={styles.debugVal}>{packages.length}</Text></Text>
-              {packages.length > 0 && (
-                <Text style={styles.debugItem}>• Package IDs: <Text style={styles.debugVal}>{packages.map(p => p.identifier).join(', ')}</Text></Text>
-              )}
-              <Text style={styles.debugItem}>• Offering Current: <Text style={styles.debugVal}>{offerings?.current ? offerings.current.identifier : 'None'}</Text></Text>
-              <Text style={styles.debugItem}>• User ID: <Text style={styles.debugVal}>{user?.id || 'Anonymous'}</Text></Text>
-              <Text style={styles.debugItem}>• Entitlements Active: <Text style={styles.debugVal}>{customerInfo ? Object.keys(customerInfo.entitlements.active).join(', ') || 'None' : 'None'}</Text></Text>
-              <Text style={styles.debugItem}>• Mode: <Text style={styles.debugVal}>{__DEV__ ? 'Local Dev' : 'TestFlight / Prod'}</Text></Text>
-            </View>
-          )}
+          {/* Terms & Privacy */}
         </Animated.View>
       </ScrollView>
     </View>

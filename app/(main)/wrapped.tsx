@@ -431,7 +431,7 @@ export default function WrappedScreen() {
   const { user } = useAuth();
   
   const { user: profileUser, refreshProfile } = useUser();
-  const { subscription } = useSubscription();
+  const { isPro } = useSubscription();
 
   const [isLocked, setIsLocked] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
@@ -488,10 +488,10 @@ export default function WrappedScreen() {
           }
         }
 
-        const isPro = subscription?.plan === 'pro' || (__DEV__ && params.bypass === '1');
+        const isProActual = isPro || (__DEV__ && params.bypass === '1');
         const isUnlockedByReferral = profileUser?.shelf_audit_unlocked === true || referralCount >= 3;
 
-        if (isPro || isUnlockedByReferral) {
+        if (isProActual || isUnlockedByReferral) {
           setIsLocked(false);
         } else {
           setIsLocked(true);
@@ -502,7 +502,7 @@ export default function WrappedScreen() {
     };
 
     checkGating();
-  }, [subscription, profileUser, referralCount, user]);
+  }, [isPro, profileUser, referralCount, user]);
 
   const handleShareReferral = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

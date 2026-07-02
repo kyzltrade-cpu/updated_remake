@@ -162,8 +162,7 @@ function ScoreBar({ scoreA, scoreB }: { scoreA: number; scoreB: number }) {
 export default function ProductCompareScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { subscription } = useSubscription();
-  const isPro = subscription?.plan === 'pro';
+  const { isPro } = useSubscription();
 
   useEffect(() => {
     if (!isPro) {

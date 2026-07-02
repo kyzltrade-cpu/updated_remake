@@ -2423,9 +2423,9 @@ export default function DnaRevealScreen() {
   const clearOutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shareCardRef = useRef<View>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
-  const { subscription } = useSubscription();
+  const { isPro: ctxPro } = useSubscription();
   const { user } = useAuth();
-  const isPro = subscription?.plan === 'pro' || (__DEV__ && params.bypass === '1');
+  const isPro = ctxPro || (__DEV__ && params.bypass === '1');
 
   useEffect(() => {
     if (!isPro) {
