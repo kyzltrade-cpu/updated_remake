@@ -228,7 +228,8 @@ export default function DnaLoadingScreen() {
           priorityCategory: (priorityCategory ?? 'Blending') as PriorityCategory,
         });
         await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
-        if (user?.id) saveDnaResult(user.id, dna).catch(() => null);
+        // Keep dna_result as NULL in the database until they complete their first official in-app scan.
+        // Do NOT sync onboarding DNA to the Supabase profile row.
         router.replace('/(onboarding)/scan-success');
       } catch (err) {
         console.warn('[DNA Loading] Failed to analyze DNA:', err);

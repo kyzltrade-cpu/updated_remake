@@ -58,17 +58,8 @@ export default function RetakeScanScreen() {
         lastFaceScanTime: Date.now(),
       });
 
-      // 2. Re-run DNA analysis in background to keep Beauty DNA synced
-      const { priorityCategory } = await getOnboardingData();
-      const dna = await analyzeDna({
-        imageUri: uri,
-        priorityCategory: priorityCategory ?? 'Blending',
-      });
-      
-      await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
-      if (user?.id) {
-        await saveDnaResult(user.id, dna).catch(() => null);
-      }
+      // We do NOT re-run DNA analysis here. The permanent Beauty DNA is calculated exactly once
+      // on their first official in-app scan and remains frozen forever to maintain scientific authority.
 
       // Success feedback
       if (settings.hapticsEnabled) {

@@ -128,9 +128,9 @@ const VALID_ENERGIES = new Set<EnergyType>(['Sharp', 'Soft', 'Balanced']);
 const VALID_EYE_SHAPES = new Set<EyeShape>(['Siren Eye', 'Doe Eye', 'Almond Eye', 'Hooded Eye', 'Monolid Eye', 'Dove Eye']);
 
 const DNA_PROMPT = `
-You are a professional beauty analyst. Carefully study this face photo.
+You are an expert high-end cosmetic chemist and makeup artist specializing in facial anatomy and color theory. Study this face photo with high precision.
 
-Return ONLY this JSON (no markdown, no extra text):
+Return ONLY a JSON object matching this exact format (do not include markdown block ticks or extra text, just raw JSON):
 {
   "faceShape": "Oval",
   "skinToneHex": "#C9956A",
@@ -139,10 +139,40 @@ Return ONLY this JSON (no markdown, no extra text):
   "browSymmetryPct": 86,
   "lashProfile": "Long & Sparse",
   "energy": "Balanced",
-  "eyeShape": "Almond Eye"
+  "eyeShape": "Almond Eye",
+  "archetype": "The Sunlit Muse",
+  "archetypeDescription": "Write 2-3 sentences explaining exactly how their features (like cheek structure, eye shape, and skin undertones) merge to define this editorial aesthetic. Speak with supreme prestige and editorial authority.",
+  "celebrityLookalike": "Celebrity Name — 1 sentence explaining exactly why they look alike structurally based on their brows, eyes, or face ratios.",
+  "eyeMakeup": "1-2 sentences of custom eyeliner, shadow, or lash mapping designed specifically for their analyzed eye shape, tilt, and depth.",
+  "lipProfile": "Custom lip product style (e.g., satin glaze, velvet matte) and precise shade (e.g., warm terra-cotta nude, sheer peach-rose) tailored to their undertones.",
+  "blushProfile": "Custom blush shade and strategic placement guide tailored specifically to their cheekbone structure and face shape.",
+  "foundationShade": "Specific brand, product, and shade match that fits their skin tone (e.g., 'Giorgio Armani Luminous Silk in 5.5')",
+  "recommendations": [
+    {
+      "category": "Lips",
+      "brand": "Chanel",
+      "product": "Rouge Coco Flash in 54 Boy",
+      "why": "Detailed explanation of why this specific formula and shade enhances their color season and lip profile.",
+      "price": "$$"
+    },
+    {
+      "category": "Cheeks",
+      "brand": "NARS",
+      "product": "Liquid Blush in Orgasm",
+      "why": "Detailed explanation of why this specific cheek color and placement elevates their facial structure.",
+      "price": "$$"
+    },
+    {
+      "category": "Eyes",
+      "brand": "Charlotte Tilbury",
+      "product": "Luxury Palette in Pillow Talk",
+      "why": "Detailed explanation of why this specific shadow harmony matches their eye shape and energy.",
+      "price": "$$$"
+    }
+  ]
 }
 
-Field rules — use EXACTLY one of these values:
+Classification rules — use EXACTLY one of these values for the respective keys:
 - faceShape: Oval | Round | Heart | Square | Oblong
 - skinToneHex: 6-digit hex matching the person's skin tone (sample cheek/forehead, include #)
 - colorSeason: Warm Spring | Light Spring | Warm Autumn | Deep Autumn | Cool Summer | Light Summer | Deep Winter | Cool Winter
@@ -152,12 +182,8 @@ Field rules — use EXACTLY one of these values:
 - energy: Sharp | Soft | Balanced
 - eyeShape: Siren Eye | Doe Eye | Almond Eye | Hooded Eye | Monolid Eye | Dove Eye
 
-Analysis notes:
-- Face shape: compare forehead width, cheekbone width, jawline width, and face length ratios
-- Color season: warm vs cool undertone first, then depth (light / medium / deep)
-- Eye shape: compare width-to-height ratio, presence of a lid fold, and corner angles (outer vs inner corner tilt)
-- Energy: Sharp = angular jaw/features, Soft = rounded features, Balanced = mix
-- If a feature is not clearly visible, make a best-effort assessment
+Editorial Voice:
+Keep the tone professional, ultra-exclusive, and highly personalized. Speak directly to their unique structural qualities. Do NOT output placeholder templates or generic descriptions.
 `.trim();
 
 interface NimDnaResponse {
@@ -169,6 +195,14 @@ interface NimDnaResponse {
   lashProfile: string;
   energy: string;
   eyeShape: string;
+  archetype: string;
+  archetypeDescription: string;
+  celebrityLookalike: string;
+  eyeMakeup: string;
+  lipProfile: string;
+  blushProfile: string;
+  foundationShade: string;
+  recommendations: ProductRecommendation[];
 }
 
 const LIP_BY_SEASON: Record<ColorSeason, string> = {
@@ -293,8 +327,12 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
     ? (raw.eyeShape as EyeShape)
     : 'Almond Eye';
 
-  const archetype = (ARCHETYPES[faceShape] as Record<string, string>)[request.priorityCategory]
-    ?? 'The Glazed Canvas';
+  // Fallback to beautiful default archetypes if AI fails to supply custom archetype strings
+  const archetype = raw.archetype || (ARCHETYPES[faceShape] as Record<string, string>)[request.priorityCategory] || 'The Glazed Canvas';
+  const archetypeDescription = raw.archetypeDescription || ARCHETYPE_DESCRIPTIONS[archetype] || '';
+  const recommendations = raw.recommendations && raw.recommendations.length > 0
+    ? raw.recommendations
+    : ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'];
 
   return {
     faceShape,
@@ -304,14 +342,14 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
     browSymmetryPct,
     lashProfile,
     energy,
-    lipProfile: LIP_BY_SEASON[colorSeason] ?? 'Warm Satin',
-    blushProfile: BLUSH_BY_SEASON[colorSeason] ?? 'Peach Flush',
-    foundationShade: FOUNDATION_BY_SEASON[colorSeason] ?? '',
+    lipProfile: raw.lipProfile || LIP_BY_SEASON[colorSeason] || 'Warm Satin',
+    blushProfile: raw.blushProfile || BLUSH_BY_SEASON[colorSeason] || 'Peach Flush',
+    foundationShade: raw.foundationShade || FOUNDATION_BY_SEASON[colorSeason] || '',
     archetype,
-    archetypeDescription: ARCHETYPE_DESCRIPTIONS[archetype] ?? '',
-    recommendations: ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'],
+    archetypeDescription,
+    recommendations,
     eyeShape,
-    eyeMakeup: EYE_MAKEUP_BY_SHAPE[eyeShape]?.makeup ?? '',
-    celebrityLookalike: EYE_MAKEUP_BY_SHAPE[eyeShape]?.celebrity ?? '',
+    eyeMakeup: raw.eyeMakeup || EYE_MAKEUP_BY_SHAPE[eyeShape]?.makeup || '',
+    celebrityLookalike: raw.celebrityLookalike || EYE_MAKEUP_BY_SHAPE[eyeShape]?.celebrity || '',
   };
 }

@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
   withDelay,
   Easing,
+  SharedValue,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { tokens } from './theme';
@@ -197,7 +198,7 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
   });
 
   // Generate dynamic stroke props for drawing each line category
-  const createAnimatedPathProps = (progressValue: Animated.SharedValue<number>, length: number) => {
+  const createAnimatedPathProps = (progressValue: SharedValue<number>, length: number) => {
     return useAnimatedProps(() => {
       return {
         strokeDashoffset: progressValue.value * length,

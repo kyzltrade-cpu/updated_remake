@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { View, Alert, AppState, AppStateStatus } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient } from '@/lib/supabase';
 import { ScanLoadingScreen } from '@/components/scan-loading-screen';
 import { analyzeImage, getCoaching } from '@/lib/api';
 import { analyzeDna } from '@/lib/api/dna';
@@ -74,19 +76,53 @@ export default function LoadingPage() {
       const { priorityCategory, skillLevel } = await getOnboardingData();
       const referenceUri = settings.referencePhoto ?? undefined;
 
-      // Perform both makeup analysis and beauty DNA evaluation in parallel
-      const [diagnosis, dna] = await Promise.all([
-        analyzeImage({
+      // 1. Check if the user already has a saved Beauty DNA profile
+      let hasExistingDna = false;
+      if (user?.id) {
+        try {
+          const supabase = createClient() as any;
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('dna_result')
+            .eq('id', user.id)
+            .maybeSingle();
+          if (!error && data?.dna_result) {
+            hasExistingDna = true;
+          }
+        } catch (e) {
+          console.warn('[loading] failed to check existing DNA:', e);
+        }
+      }
+
+      // 2. Perform analysis (skipping DNA evaluation if it is already generated & frozen)
+      let diagnosis: any;
+      let dna: any = null;
+
+      if (hasExistingDna) {
+        console.log('[loading] Existing Beauty DNA found. Skipping DNA analysis and freezing results.');
+        diagnosis = await analyzeImage({
           imageUri: validUri,
           priorityCategory: priorityCategory ?? 'Blending',
           skillLevel: skillLevel ?? 'Intermediate',
           referenceUri,
-        }),
-        analyzeDna({
-          imageUri: validUri,
-          priorityCategory: priorityCategory ?? 'Blending',
-        })
-      ]);
+        });
+      } else {
+        console.log('[loading] No existing Beauty DNA found. Executing 100% personalized dynamic first-scan evaluation.');
+        const [diagResult, dnaResult] = await Promise.all([
+          analyzeImage({
+            imageUri: validUri,
+            priorityCategory: priorityCategory ?? 'Blending',
+            skillLevel: skillLevel ?? 'Intermediate',
+            referenceUri,
+          }),
+          analyzeDna({
+            imageUri: validUri,
+            priorityCategory: priorityCategory ?? 'Blending',
+          })
+        ]);
+        diagnosis = diagResult;
+        dna = dnaResult;
+      }
 
       const coaching = await getCoaching({ diagnosis });
 
@@ -99,16 +135,24 @@ export default function LoadingPage() {
           console.warn('[loading] failed to get last scan:', e);
         }
 
-        // Save the scan record and update their Profile DNA results in parallel
-        await Promise.all([
+        // 3. Save the scan record and update their permanent Profile DNA if it was just calculated
+        const savePromises: Promise<any>[] = [
           saveScan({
             userId: user.id,
             imageUri: validUri,
             diagnosis,
             coaching,
-          }),
-          saveDnaResult(user.id, dna)
-        ]).catch((err) => console.warn('[loading] parallel DB saves failed:', err));
+          })
+        ];
+
+        if (dna) {
+          savePromises.push(saveDnaResult(user.id, dna));
+          savePromises.push(AsyncStorage.setItem('dna_result', JSON.stringify(dna)));
+        }
+
+        await Promise.all(savePromises).catch((err) =>
+          console.warn('[loading] parallel DB/Cache saves failed:', err)
+        );
       }
 
       isScanning.current = false;
