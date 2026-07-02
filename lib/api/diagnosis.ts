@@ -61,11 +61,12 @@ function weightedScore(categories: CategoryAnalysis[]): number {
   return Math.round(weighted / totalWeight);
 }
 
-// Maps any raw objective score [0, 100] to a confidence-preserving [72, 100] range with organic jitter
+// Reverts to raw LLM scores with a confidence-preserving soft floor of 50 and organic jitter
 function scaleScore(raw: number): number {
-  const scaled = 72 + (raw * 0.26);
+  const floor = 50;
+  const scaled = Math.max(floor, raw);
   const jitterVal = Math.floor(Math.random() * 3); // 0, 1, or 2 points
-  return Math.min(100, Math.max(72, Math.round(scaled) + jitterVal));
+  return Math.min(100, scaled + jitterVal);
 }
 
 const DIAGNOSIS_PROMPT = (priority: string, skill: string, hasReference: boolean) => `
