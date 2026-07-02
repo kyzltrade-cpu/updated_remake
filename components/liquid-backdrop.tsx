@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -131,9 +130,6 @@ export function LiquidBackdrop() {
           ]}
         />
       </View>
-
-      {/* Real Gaussian Blur Overlay to blend them into a premium editorial mesh */}
-      <BlurView intensity={95} tint="light" style={StyleSheet.absoluteFill} />
     </View>
   );
 }
