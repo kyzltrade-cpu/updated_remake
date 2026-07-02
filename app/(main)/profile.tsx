@@ -228,13 +228,7 @@ export default function ProfileScreen() {
 
         {/* Stats Pod Grid */}
         <Animated.View entering={FadeInUp.delay(150).duration(500)} style={styles.statsGrid}>
-          <Pressable 
-            style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
-            onPress={() => {
-              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/(main)/wrapped');
-            }}
-          >
+          <View style={styles.statCard}>
             <MaterialIcons 
               name="whatshot" 
               size={20} 
@@ -243,15 +237,9 @@ export default function ProfileScreen() {
             />
             <Text style={styles.statVal}>{stats ? stats.currentStreak : '--'}</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
-          </Pressable>
+          </View>
 
-          <Pressable 
-            style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
-            onPress={() => {
-              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/(main)/wrapped');
-            }}
-          >
+          <View style={styles.statCard}>
             <MaterialIcons 
               name="camera-alt" 
               size={20} 
@@ -260,15 +248,9 @@ export default function ProfileScreen() {
             />
             <Text style={styles.statVal}>{stats ? stats.totalScans : '--'}</Text>
             <Text style={styles.statLabel}>Total Scans</Text>
-          </Pressable>
+          </View>
 
-          <Pressable 
-            style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
-            onPress={() => {
-              if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/(main)/wrapped');
-            }}
-          >
+          <View style={styles.statCard}>
             <MaterialIcons 
               name="favorite-border" 
               size={20} 
@@ -277,7 +259,7 @@ export default function ProfileScreen() {
             />
             <Text style={styles.statVal}>{stats ? `${stats.avgScore}%` : '--'}</Text>
             <Text style={styles.statLabel}>Avg Score</Text>
-          </Pressable>
+          </View>
         </Animated.View>
 
         {/* Dynamic Panel (Beauty DNA Card) */}
