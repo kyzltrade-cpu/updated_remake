@@ -255,6 +255,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (user && hasPro) {
         await syncRcSubscriptionToDb(user.id, updatedInfo);
       }
+      await fetchSubscription();
       return hasPro;
     } catch (e: any) {
       if (e.userCancelled) {
@@ -289,6 +290,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (user && hasPro) {
         await syncRcSubscriptionToDb(user.id, restoredInfo);
       }
+      await fetchSubscription();
       return hasPro;
     } catch (e) {
       console.error('[SubscriptionContext] Restore purchases encountered error:', e);

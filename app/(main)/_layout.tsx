@@ -1,22 +1,21 @@
 import { Stack, Redirect } from 'expo-router';
 import { tokens } from '@/components/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { View } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { LoadingScreen } from '@/components/loading-screen';
-import { AppSplashScreen } from '@/components/splash-screen';
 
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: tokens.colors.beige }}>
-        <AppSplashScreen />
+      <View style={{ flex: 1, backgroundColor: tokens.colors.beige, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={tokens.colors.pinkRich} />
       </View>
     );
   }
 
-  const isDevMode = false;
+  const isDevMode = true; // Temporary bypass for automated screenshots
 
   if (!user && !isDevMode) {
     return <Redirect href="/(onboarding)" />;
