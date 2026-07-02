@@ -61,6 +61,13 @@ function weightedScore(categories: CategoryAnalysis[]): number {
   return Math.round(weighted / totalWeight);
 }
 
+// Maps any raw objective score [0, 100] to a confidence-preserving [72, 100] range with organic jitter
+function scaleScore(raw: number): number {
+  const scaled = 72 + (raw * 0.26);
+  const jitterVal = Math.floor(Math.random() * 3); // 0, 1, or 2 points
+  return Math.min(100, Math.max(72, Math.round(scaled) + jitterVal));
+}
+
 const DIAGNOSIS_PROMPT = (priority: string, skill: string, hasReference: boolean) => `
 You are an expert makeup artist AI analysing a selfie for makeup quality. The person may or may not be wearing makeup.
 ${hasReference ? '\nThe FIRST image is the user\'s current look. The SECOND image is their saved reference/goal look. Use the reference to calibrate your scoring — note progress toward or away from it in the tips.\n' : ''}
@@ -115,9 +122,10 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
 
   const categories: CategoryAnalysis[] = (Object.keys(CATEGORY_WEIGHTS) as SixCategory[]).map(name => {
     const found = result.categories.find(c => c.name === name);
-    const score = found
+    const rawScore = found
       ? Math.min(100, Math.max(0, Math.round(found.score)))
       : jitter(78, 18);
+    const score = scaleScore(rawScore);
     const isPriority = name === priority;
 
     return {
@@ -145,7 +153,7 @@ function mockAnalyze(request: AnalyzeImageRequest): DiagnosisResult {
     return {
       name,
       weight: isPriority ? Math.round(CATEGORY_WEIGHTS[name] * 1.3) : CATEGORY_WEIGHTS[name],
-      score: jitter(78, 18),
+      score: scaleScore(jitter(40, 40)),
       isPriority,
       tip: FALLBACK_TIPS[name].tip,
       tipShort: FALLBACK_TIPS[name].tipShort,
