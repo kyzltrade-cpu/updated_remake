@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { Platform } from 'react-native';
 import Purchases, { PurchasesOffering, PurchasesPackage, CustomerInfo, PurchasesOfferings } from 'react-native-purchases';
 import { createClient } from '@/lib/supabase';
@@ -35,6 +35,11 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [offerings, setOfferings] = useState<PurchasesOfferings | null>(null);
@@ -60,7 +65,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         // Configure Purchases SDK
         Purchases.configure({
           apiKey,
-          appUserID: user?.id || undefined,
+          appUserID: userRef.current?.id || undefined,
         });
         
         // Enable debugging in local development
@@ -70,6 +75,19 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         setRcConfigured(true);
         console.log('[SubscriptionContext] RevenueCat Purchases SDK initialized successfully!');
+
+        // ── Real-time CustomerInfo listener (Instantly updates Pro status on payment sheets/popups) ──
+        Purchases.addCustomerInfoUpdateListener((info) => {
+          console.log('[SubscriptionContext] Real-time CustomerInfo event from RevenueCat SDK:', info);
+          setCustomerInfo(info);
+          const hasPro = info.entitlements.active['pro'] !== undefined || info.entitlements.active['premium'] !== undefined;
+          setIsPro(hasPro);
+          
+          const currentUser = userRef.current;
+          if (currentUser && hasPro) {
+            syncRcSubscriptionToDb(currentUser.id, info);
+          }
+        });
       } catch (e) {
         console.error('[SubscriptionContext] Failed to configure Purchases SDK:', e);
         setRcConfigured(false);
@@ -79,34 +97,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     initPurchases();
   }, []);
 
-  // Sync user logging state to RevenueCat
-  useEffect(() => {
-    if (!rcConfigured) return;
-
-    const syncUser = async () => {
-      try {
-        if (user?.id) {
-          console.log(`[SubscriptionContext] Logging user into RevenueCat: ${user.id}`);
-          const result = await Purchases.logIn(user.id);
-          setCustomerInfo(result.customerInfo);
-          await loadOfferings();
-        } else {
-          console.log('[SubscriptionContext] Logging out of RevenueCat (anonymous user state)');
-          const isAnon = await Purchases.isAnonymous();
-          if (!isAnon) {
-            await Purchases.logOut();
-          }
-          setCustomerInfo(null);
-          setOfferings(null);
-          setPackages([]);
-        }
-      } catch (e) {
-        console.warn('[SubscriptionContext] Error syncing user with RevenueCat:', e);
-      }
-    };
-
-    syncUser();
-  }, [user, rcConfigured]);
+  // Sequential RevenueCat sync & local DB subscription check is handled below in a unified effect to prevent race conditions.
 
   const loadOfferings = async () => {
     if (!rcConfigured) return;
@@ -341,9 +332,35 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Sync subscription state on mount / user change, including local mock-pro upgrades
+  // Sync user state and fetch subscription status in a clean, non-race-conditioned, sequential flow
   useEffect(() => {
-    const syncMockProAndFetch = async () => {
+    const syncAndFetch = async () => {
+      setIsLoading(true);
+      
+      // 1. Synchronously execute user login/logout state to RevenueCat first
+      if (rcConfigured) {
+        try {
+          if (user?.id) {
+            console.log(`[SubscriptionContext] Logging user into RevenueCat: ${user.id}`);
+            const result = await Purchases.logIn(user.id);
+            setCustomerInfo(result.customerInfo);
+            await loadOfferings();
+          } else {
+            console.log('[SubscriptionContext] Logging out of RevenueCat (anonymous user state)');
+            const isAnon = await Purchases.isAnonymous();
+            if (!isAnon) {
+              await Purchases.logOut();
+            }
+            setCustomerInfo(null);
+            setOfferings(null);
+            setPackages([]);
+          }
+        } catch (e) {
+          console.warn('[SubscriptionContext] Error syncing user with RevenueCat:', e);
+        }
+      }
+
+      // 2. Sync local mock-pro bypass if active
       if (user) {
         try {
           const { default: AsyncStorage } = require('@react-native-async-storage/async-storage');
@@ -364,10 +381,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           //
         }
       }
+
+      // 3. Fetch latest subscription and update isPro state (completely race-condition free!)
       await fetchSubscription();
     };
 
-    syncMockProAndFetch();
+    syncAndFetch();
   }, [user, rcConfigured]);
 
   return (
