@@ -18,13 +18,30 @@ BEGIN
     RETURN false;
   END IF;
 
-  -- 1. Check if user has freezes left
+  -- 1. Check if user has freezes left, auto-creating/healing row if missing or NULL
   SELECT streak_freezes INTO current_freezes
   FROM public.streaks
   WHERE user_id = calling_user_id;
 
-  -- If streak row doesn't exist or no freezes left, return false
-  IF current_freezes IS NULL OR current_freezes <= 0 THEN
+  -- If streak row doesn't exist, create it with 2 freezes (minus 1 for this consumption = 1)
+  IF current_freezes IS NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM public.streaks WHERE user_id = calling_user_id) THEN
+      INSERT INTO public.streaks (user_id, streak_freezes, current_streak, longest_streak, last_scan_date)
+      VALUES (calling_user_id, 1, 0, 0, CURRENT_DATE);
+      RETURN true;
+    ELSE
+      -- Row exists but streak_freezes is NULL. Set to 1 freeze left (2 - 1 consumed)
+      UPDATE public.streaks
+      SET 
+        streak_freezes = 1,
+        last_scan_date = CURRENT_DATE
+      WHERE user_id = calling_user_id;
+      RETURN true;
+    END IF;
+  END IF;
+
+  -- If no freezes left, return false
+  IF current_freezes <= 0 THEN
     RETURN false;
   END IF;
 
