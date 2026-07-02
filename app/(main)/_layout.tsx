@@ -15,7 +15,7 @@ export default function MainLayout() {
     );
   }
 
-  const isDevMode = true; // Temporary bypass for automated screenshots
+  const isDevMode = false;
 
   if (!user && !isDevMode) {
     return <Redirect href="/(onboarding)" />;
