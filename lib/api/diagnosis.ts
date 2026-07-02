@@ -109,11 +109,23 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
   const hasReference = !!request.referenceUri && isSafeImageUri(request.referenceUri);
 
   const imageBase64 = await uriToBase64(request.imageUri);
-  const prompt = DIAGNOSIS_PROMPT(priority, skill, hasReference);
-
+  
   let result: NimDiagnosisResponse;
+  let actualHasReference = hasReference;
+  let refBase64: string | null = null;
+
   if (hasReference) {
-    const refBase64 = await uriToBase64(request.referenceUri!);
+    try {
+      refBase64 = await uriToBase64(request.referenceUri!);
+    } catch (e) {
+      console.warn('[Diagnosis] Reference photo failed to load (possibly deleted from cache). Falling back to single-image scan:', e);
+      actualHasReference = false;
+    }
+  }
+
+  const prompt = DIAGNOSIS_PROMPT(priority, skill, actualHasReference);
+
+  if (actualHasReference && refBase64) {
     result = await nimVisionDual<NimDiagnosisResponse>(imageBase64, refBase64, prompt);
   } else {
     result = await nimVision<NimDiagnosisResponse>(imageBase64, prompt);
