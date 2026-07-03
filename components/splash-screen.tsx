@@ -394,7 +394,7 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
                 <AnimatedPath
                   key={`hair-${i}`}
                   d={p.d}
-                  stroke={tokens.colors.pinkDeep}
+                  stroke={tokens.colors.pinkMid}
                   strokeWidth={2.8}
                   fill="none"
                   strokeLinecap="round"
@@ -412,7 +412,7 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
                 <AnimatedPath
                   key={`face-${i}`}
                   d={p.d}
-                  stroke={tokens.colors.pinkDeep}
+                  stroke={tokens.colors.pinkMid}
                   strokeWidth={2.8}
                   fill="none"
                   strokeLinecap="round"
@@ -430,7 +430,7 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
                 <AnimatedPath
                   key={`feat-${i}`}
                   d={p.d}
-                  stroke={tokens.colors.pinkDeep}
+                  stroke={tokens.colors.pinkMid}
                   strokeWidth={2.2}
                   fill="none"
                   strokeLinecap="round"
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     fontFamily: tokens.fonts.serif,
     fontSize: 50,
     fontWeight: '400',
-    color: tokens.colors.pinkRich,
+    color: tokens.colors.pinkDeep,
     letterSpacing: 4,
     paddingHorizontal: 20, // Prevent Playfair slant clipping
     textAlign: 'center',
