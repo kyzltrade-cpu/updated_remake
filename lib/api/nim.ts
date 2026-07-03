@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase';
 import * as FileSystem from 'expo-file-system/legacy';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 export function hasNimKey(): boolean {
   // Always true in production because the key is secured on the backend in Supabase Edge Functions!
@@ -14,9 +15,22 @@ export async function uriToBase64(uri: string): Promise<string> {
     return base64Cache.get(uri)!;
   }
   try {
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    console.log('[Image Compression] Shrinking and compressing raw selfie client-side...');
+    
+    // Scale maximum dimension to 1024px while keeping aspect ratio, and compress to 0.7 JPEG
+    const manipResult = await manipulateAsync(
+      uri,
+      [{ resize: { width: 1024 } }],
+      { compress: 0.7, format: SaveFormat.JPEG, base64: true }
+    );
+
+    const base64 = manipResult.base64;
+    if (!base64) {
+      throw new Error('Base64 result is empty after manipulation');
+    }
+
+    console.log('[Image Compression] Compression complete! Shrank payload from raw format to optimized base64 string.');
+
     base64Cache.set(uri, base64);
     // Prevent memory leaks by keeping only the most recent scans in cache
     if (base64Cache.size > 3) {
@@ -25,8 +39,19 @@ export async function uriToBase64(uri: string): Promise<string> {
     }
     return base64;
   } catch (e) {
-    console.error('Error converting URI to Base64:', e);
-    throw new Error('Failed to read image file');
+    console.error('Error compressing/converting URI to Base64:', e);
+    
+    // Graceful fallback to raw reading in case manipulator fails
+    console.warn('[Image Compression] Manipulator failed, falling back to raw disk read...');
+    try {
+      const rawBase64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return rawBase64;
+    } catch (err) {
+      console.error('Raw read fallback also failed:', err);
+      throw new Error('Failed to read or compress image file');
+    }
   }
 }
 
