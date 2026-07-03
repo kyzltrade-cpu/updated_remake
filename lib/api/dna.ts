@@ -296,60 +296,65 @@ function mockDna(request: DnaAnalysisRequest): DnaResult {
 }
 
 export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult> {
-  const [imageBase64, glo] = await Promise.all([uriToBase64(request.imageUri), loadGloDraft()]);
-  const hints = [
-    glo.skin_type ? `User self-reported skin type: ${glo.skin_type}` : null,
-    glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
-  ].filter(Boolean).join('\n');
-  const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
-  const raw = await nimVision<NimDnaResponse>(imageBase64, prompt);
+  try {
+    const [imageBase64, glo] = await Promise.all([uriToBase64(request.imageUri), loadGloDraft()]);
+    const hints = [
+      glo.skin_type ? `User self-reported skin type: ${glo.skin_type}` : null,
+      glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
+    ].filter(Boolean).join('\n');
+    const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
+    const raw = await nimVision<NimDnaResponse>(imageBase64, prompt);
 
-  const faceShape = VALID_FACE_SHAPES.has(raw.faceShape as FaceShape)
-    ? (raw.faceShape as FaceShape)
-    : 'Oval';
-  const colorSeason = VALID_SEASONS.has(raw.colorSeason as ColorSeason)
-    ? (raw.colorSeason as ColorSeason)
-    : 'Warm Autumn';
-  const browShape = VALID_BROW_SHAPES.has(raw.browShape as BrowShape)
-    ? (raw.browShape as BrowShape)
-    : 'Soft Arch';
-  const lashProfile = VALID_LASH_PROFILES.has(raw.lashProfile as LashProfile)
-    ? (raw.lashProfile as LashProfile)
-    : 'Long & Sparse';
-  const energy = VALID_ENERGIES.has(raw.energy as EnergyType)
-    ? (raw.energy as EnergyType)
-    : 'Balanced';
-  const skinToneHex = /^#[0-9A-Fa-f]{6}$/.test(raw.skinToneHex)
-    ? raw.skinToneHex
-    : '#C9956A';
-  const browSymmetryPct = Math.min(100, Math.max(70, Math.round(raw.browSymmetryPct ?? 85)));
-  const eyeShape = VALID_EYE_SHAPES.has(raw.eyeShape as EyeShape)
-    ? (raw.eyeShape as EyeShape)
-    : 'Almond Eye';
+    const faceShape = VALID_FACE_SHAPES.has(raw.faceShape as FaceShape)
+      ? (raw.faceShape as FaceShape)
+      : 'Oval';
+    const colorSeason = VALID_SEASONS.has(raw.colorSeason as ColorSeason)
+      ? (raw.colorSeason as ColorSeason)
+      : 'Warm Autumn';
+    const browShape = VALID_BROW_SHAPES.has(raw.browShape as BrowShape)
+      ? (raw.browShape as BrowShape)
+      : 'Soft Arch';
+    const lashProfile = VALID_LASH_PROFILES.has(raw.lashProfile as LashProfile)
+      ? (raw.lashProfile as LashProfile)
+      : 'Long & Sparse';
+    const energy = VALID_ENERGIES.has(raw.energy as EnergyType)
+      ? (raw.energy as EnergyType)
+      : 'Balanced';
+    const skinToneHex = /^#[0-9A-Fa-f]{6}$/.test(raw.skinToneHex)
+      ? raw.skinToneHex
+      : '#C9956A';
+    const browSymmetryPct = Math.min(100, Math.max(70, Math.round(raw.browSymmetryPct ?? 85)));
+    const eyeShape = VALID_EYE_SHAPES.has(raw.eyeShape as EyeShape)
+      ? (raw.eyeShape as EyeShape)
+      : 'Almond Eye';
 
-  // Fallback to beautiful default archetypes if AI fails to supply custom archetype strings
-  const archetype = raw.archetype || (ARCHETYPES[faceShape] as Record<string, string>)[request.priorityCategory] || 'The Glazed Canvas';
-  const archetypeDescription = raw.archetypeDescription || ARCHETYPE_DESCRIPTIONS[archetype] || '';
-  const recommendations = raw.recommendations && raw.recommendations.length > 0
-    ? raw.recommendations
-    : ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'];
+    // Fallback to beautiful default archetypes if AI fails to supply custom archetype strings
+    const archetype = raw.archetype || (ARCHETYPES[faceShape] as Record<string, string>)[request.priorityCategory] || 'The Glazed Canvas';
+    const archetypeDescription = raw.archetypeDescription || ARCHETYPE_DESCRIPTIONS[archetype] || '';
+    const recommendations = raw.recommendations && raw.recommendations.length > 0
+      ? raw.recommendations
+      : ARCHETYPE_RECS[archetype] ?? ARCHETYPE_RECS['The Glazed Canvas'];
 
-  return {
-    faceShape,
-    skinToneHex,
-    colorSeason,
-    browShape,
-    browSymmetryPct,
-    lashProfile,
-    energy,
-    lipProfile: raw.lipProfile || LIP_BY_SEASON[colorSeason] || 'Warm Satin',
-    blushProfile: raw.blushProfile || BLUSH_BY_SEASON[colorSeason] || 'Peach Flush',
-    foundationShade: raw.foundationShade || FOUNDATION_BY_SEASON[colorSeason] || '',
-    archetype,
-    archetypeDescription,
-    recommendations,
-    eyeShape,
-    eyeMakeup: raw.eyeMakeup || EYE_MAKEUP_BY_SHAPE[eyeShape]?.makeup || '',
-    celebrityLookalike: raw.celebrityLookalike || EYE_MAKEUP_BY_SHAPE[eyeShape]?.celebrity || '',
-  };
+    return {
+      faceShape,
+      skinToneHex,
+      colorSeason,
+      browShape,
+      browSymmetryPct,
+      lashProfile,
+      energy,
+      lipProfile: raw.lipProfile || LIP_BY_SEASON[colorSeason] || 'Warm Satin',
+      blushProfile: raw.blushProfile || BLUSH_BY_SEASON[colorSeason] || 'Peach Flush',
+      foundationShade: raw.foundationShade || FOUNDATION_BY_SEASON[colorSeason] || '',
+      archetype,
+      archetypeDescription,
+      recommendations,
+      eyeShape,
+      eyeMakeup: raw.eyeMakeup || EYE_MAKEUP_BY_SHAPE[eyeShape]?.makeup || '',
+      celebrityLookalike: raw.celebrityLookalike || EYE_MAKEUP_BY_SHAPE[eyeShape]?.celebrity || '',
+    };
+  } catch (e) {
+    console.warn('[DNA] NVIDIA NIM failed, falling back to mock:', e);
+    return mockDna(request);
+  }
 }

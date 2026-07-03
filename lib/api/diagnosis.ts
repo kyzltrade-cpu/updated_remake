@@ -184,7 +184,12 @@ class SixCategoryDiagnosisProvider implements DiagnosisProvider {
       throw new Error('Invalid image URI');
     }
 
-    return await analyzeWithNim(request);
+    try {
+      return await analyzeWithNim(request);
+    } catch (e) {
+      console.warn('[Diagnosis] NVIDIA NIM failed, falling back to mock:', e);
+      return mockAnalyze(request);
+    }
   }
 }
 
