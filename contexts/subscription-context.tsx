@@ -34,7 +34,7 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const userRef = useRef(user);
   useEffect(() => {
     userRef.current = user;
@@ -333,6 +333,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   // Sync user state and fetch subscription status in a clean, non-race-conditioned, sequential flow
   useEffect(() => {
+    if (authLoading) return; // Prevent initial flash of null user states from logging out and wiping DB subscriptions!
+
     const syncAndFetch = async () => {
       setIsLoading(true);
       
@@ -387,7 +389,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
 
     syncAndFetch();
-  }, [user, rcConfigured]);
+  }, [user, rcConfigured, authLoading]);
 
   return (
     <SubscriptionContext.Provider
