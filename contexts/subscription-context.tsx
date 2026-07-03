@@ -178,7 +178,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
               status: 'active',
               current_period_end: info.entitlements.active['pro']?.expirationDate || info.entitlements.active['premium']?.expirationDate || null,
             } as any);
-          } else if (!hasRcPro && dbHasActivePro) {
+          } else if (!hasRcPro && dbHasActivePro && !localMockPro && !__DEV__) {
             await syncRcSubscriptionFreeToDb(user.id);
             dbHasActivePro = false; // Set to false since we are downgrading
             setSubscription({
@@ -195,9 +195,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
 
     // Computed combined status (dual-redundant safety net!)
-    // If RevenueCat is configured (TestFlight / App Store), real receipt entitlement is the absolute source of truth.
-    // If RevenueCat is not configured (Local Sim / Dev), fall back to Supabase DB or mock bypass.
-    setIsPro(rcConfigured ? rcHasActivePro : (dbHasActivePro || localMockPro));
+    // Safe, multi-layered union of Pro access sources to prevent accidental lockouts during dev/sandbox testing.
+    setIsPro(rcHasActivePro || dbHasActivePro || localMockPro);
     setIsLoading(false);
   };
 
