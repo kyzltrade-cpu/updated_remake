@@ -72,12 +72,51 @@ function PhoneMockup() {
   return (
     <View style={{ paddingHorizontal: BTN_PROTRUDE + 1 }}>
       <Animated.View entering={FadeIn.delay(200).duration(700)}>
+
+        {/* Shadow lives here so overflow:hidden on body doesn't clip it */}
         <View style={styles.shadowHost}>
-          <Image
-            source={require('@/assets/images/mockup-scanner.png')}
-            style={{ width: BODY_W, height: BODY_H }}
-            resizeMode="contain"
-          />
+
+          {/* Metallic band — horizontal gradient, thin ring around screen */}
+          <LinearGradient
+            colors={RING_COLORS}
+            locations={RING_LOCS}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.body}
+          >
+            {/* Top chamfer — 1 pt bright line on the flat top edge */}
+            <View style={styles.chamferTop} />
+            {/* Bottom edge — dim reflection */}
+            <View style={styles.chamferBottom} />
+
+            {/* Left side buttons */}
+            <SideButton side="left" top={BODY_H * 0.115} height={ACTION_H} />
+            <SideButton side="left" top={BODY_H * 0.200} height={VOL_H} />
+            <SideButton side="left" top={BODY_H * 0.330} height={VOL_H} />
+
+            {/* Right: power button */}
+            <SideButton side="right" top={BODY_H * 0.250} height={POWER_H} />
+
+            {/* Near-black gasket + screen */}
+            <View style={styles.gasket}>
+              <View style={styles.screen}>
+                <Image
+                  source={require('@/assets/images/app-preview.png')}
+                  style={{ width: PHONE_W, height: PHONE_H }}
+                  resizeMode="stretch"
+                />
+                {/* Screen glass glare — subtle diagonal highlight */}
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.055)', 'transparent']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0.55, y: 0.55 }}
+                  style={StyleSheet.absoluteFill}
+                  pointerEvents="none"
+                />
+              </View>
+            </View>
+          </LinearGradient>
+
         </View>
       </Animated.View>
     </View>
