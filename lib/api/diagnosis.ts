@@ -13,28 +13,28 @@ const CATEGORY_WEIGHTS: Record<SixCategory, number> = {
 
 const FALLBACK_TIPS: Record<SixCategory, { tip: string; tipShort: string }> = {
   Blending: {
-    tip: 'Your eyeshadow transitions show hard edges on the outer V — use a large fluffy brush with a windshield-wiper motion to soften the boundary. Blend for 30 extra seconds with zero product on the brush.',
-    tipShort: 'Soften the outer V with a clean fluffy brush.',
+    tip: 'Analysis of blending boundaries is unavailable. Ensure your eyes are in focus and evenly lit for precise evaluation.',
+    tipShort: 'Blending analysis currently unavailable.',
   },
   Symmetry: {
-    tip: "Your left brow arch sits approximately 2mm higher than your right — lower the peak subtly by pressing a damp Q-tip along the top edge, then re-fill. Check in a mirror held at arm's length.",
-    tipShort: 'Left brow arch reads slightly higher — adjust the peak.',
+    tip: 'Facial structural symmetry could not be fully mapped under current angles. Keep your face centered within the camera guide.',
+    tipShort: 'Symmetry analysis currently unavailable.',
   },
   'Colour Harmony': {
-    tip: "Your foundation reads slightly warm against your undertone — try a shade with a cooler or more neutral base. The side-of-neck test will show whether you're pulling orange or pink against your natural skin.",
-    tipShort: 'Foundation shade may be pulling warm against your undertone.',
+    tip: 'Colour undertone contrast could not be verified. Avoid yellow background lighting or heavy shadows for an accurate reading.',
+    tipShort: 'Colour analysis currently unavailable.',
   },
   Coverage: {
-    tip: 'Your undereye concealer needs one more thin layer — the redness is still visible. Apply with a damp sponge using a patting (not dragging) motion, then set immediately with a micro-dusting of translucent powder.',
-    tipShort: 'Add one more thin layer of concealer under the eyes.',
+    tip: 'Product application thickness could not be determined. Check that the lens is clear and snap under direct natural light.',
+    tipShort: 'Coverage analysis currently unavailable.',
   },
   Cleanliness: {
-    tip: 'There is slight eyeshadow fallout beneath your left eye. Tap it away with a dry sponge using a light pressing motion — do not wipe, as wiping spreads the pigment. Then set the area with loose translucent powder.',
-    tipShort: 'Tap fallout below the left eye with a dry sponge.',
+    tip: 'Detail inspection of fallout or residue is unavailable. For accurate results, avoid using front-camera flash.',
+    tipShort: 'Cleanliness analysis currently unavailable.',
   },
   'Brow Framing': {
-    tip: 'Both brows are well-shaped but the arch is sitting slightly far from centre for your face shape. Moving the peak 2–3mm inward will soften the look and better frame your eye socket. Use a small angled brush to adjust.',
-    tipShort: 'Moving the brow arch slightly inward will better frame your eyes.',
+    tip: 'Brow shape outline could not be calculated. Ensure both eyebrows are completely uncovered by hair or glasses.',
+    tipShort: 'Brow analysis currently unavailable.',
   },
 };
 
