@@ -16,7 +16,6 @@ interface SubscriptionContextValue {
   refreshSubscription: () => Promise<void>;
   purchasePackage: (pack: PurchasesPackage) => Promise<boolean>;
   restorePurchases: () => Promise<boolean>;
-  mockUpgradeToPro: () => Promise<boolean>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue>({
@@ -30,7 +29,6 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
   refreshSubscription: async () => {},
   purchasePackage: async () => false,
   restorePurchases: async () => false,
-  mockUpgradeToPro: async () => false,
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
@@ -117,18 +115,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     let dbHasActivePro = false;
     let rcHasActivePro = false;
-    let localMockPro = false;
-
-    // 0. Check local AsyncStorage mock pro bypass (for easy anonymous TestFlight testing)
-    try {
-      const { default: AsyncStorage } = require('@react-native-async-storage/async-storage');
-      const storedVal = await AsyncStorage.getItem('MOCK_PRO_ACTIVE');
-      if (storedVal === 'true') {
-        localMockPro = true;
-      }
-    } catch (e) {
-      //
-    }
 
     // 1. Fetch from Supabase Database (our local database redundant check)
     if (user) {
@@ -178,7 +164,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
               status: 'active',
               current_period_end: info.entitlements.active['pro']?.expirationDate || info.entitlements.active['premium']?.expirationDate || null,
             } as any);
-          } else if (!hasRcPro && dbHasActivePro && !localMockPro && !__DEV__) {
+          } else if (!hasRcPro && dbHasActivePro && !__DEV__) {
             await syncRcSubscriptionFreeToDb(user.id);
             dbHasActivePro = false; // Set to false since we are downgrading
             setSubscription({
@@ -196,7 +182,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
     // Computed combined status (dual-redundant safety net!)
     // Safe, multi-layered union of Pro access sources to prevent accidental lockouts during dev/sandbox testing.
-    setIsPro(rcHasActivePro || dbHasActivePro || localMockPro);
+    setIsPro(rcHasActivePro || dbHasActivePro);
     setIsLoading(false);
   };
 
@@ -242,8 +228,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // Perform purchase via RevenueCat Purchases
   const purchasePackage = async (pack: PurchasesPackage): Promise<boolean> => {
     if (!rcConfigured) {
-      console.warn('[SubscriptionContext] Purchase called but RevenueCat is not configured. Falling back to local DB bypass.');
-      return await mockUpgradeToPro();
+      console.warn('[SubscriptionContext] Purchase called but RevenueCat is not configured.');
+      return false;
     }
 
     try {
@@ -300,37 +286,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Mock Developer bypass upgrade (highly premium dev tooling)
-  const mockUpgradeToPro = async (): Promise<boolean> => {
-    try {
-      const { default: AsyncStorage } = require('@react-native-async-storage/async-storage');
-      await AsyncStorage.setItem('MOCK_PRO_ACTIVE', 'true');
-
-      if (user) {
-        const supabase = createClient() as any;
-        const { error } = await supabase
-          .from('subscriptions')
-          .upsert({
-            user_id: user.id,
-            plan: 'pro',
-            status: 'active',
-            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-          }, { onConflict: 'user_id' });
-
-        if (error) {
-          console.warn('[SubscriptionContext] Mock upgrade DB upsert failed:', error.message);
-        }
-      }
-      
-      console.log('[SubscriptionContext] Mock upgrade successful. Local & DB state set to PRO!');
-      await fetchSubscription();
-      return true;
-    } catch (e) {
-      console.error('[SubscriptionContext] Mock upgrade exception:', e);
-      return false;
-    }
-  };
-
   // Sync user state and fetch subscription status in a clean, non-race-conditioned, sequential flow
   useEffect(() => {
     if (authLoading) return; // Prevent initial flash of null user states from logging out and wiping DB subscriptions!
@@ -362,28 +317,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // 2. Sync local mock-pro bypass if active
-      if (user) {
-        try {
-          const { default: AsyncStorage } = require('@react-native-async-storage/async-storage');
-          const storedVal = await AsyncStorage.getItem('MOCK_PRO_ACTIVE');
-          if (storedVal === 'true') {
-            console.log('[SubscriptionContext] Active local mock pro detected on login. Syncing to DB...');
-            const supabase = createClient() as any;
-            await supabase
-              .from('subscriptions')
-              .upsert({
-                user_id: user.id,
-                plan: 'pro',
-                status: 'active',
-                current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-              }, { onConflict: 'user_id' });
-          }
-        } catch (e) {
-          //
-        }
-      }
-
       // 3. Fetch latest subscription and update isPro state (completely race-condition free!)
       await fetchSubscription();
     };
@@ -404,7 +337,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         refreshSubscription: fetchSubscription,
         purchasePackage,
         restorePurchases,
-        mockUpgradeToPro,
       }}
     >
       {children}

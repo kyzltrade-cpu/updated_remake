@@ -67,7 +67,7 @@ export default function OnboardingPaywallScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { 
-    packages, purchasePackage, restorePurchases, mockUpgradeToPro, 
+    packages, purchasePackage, restorePurchases, 
     rcConfigured, offerings, customerInfo 
   } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('yearly');
@@ -97,14 +97,9 @@ export default function OnboardingPaywallScreen() {
       if (matchedPackage) {
         success = await purchasePackage(matchedPackage);
       } else {
-        if (rcConfigured) {
-          console.warn('[OnboardingPaywall] No matching App Store package found locally, but RevenueCat is configured. Rejecting mock bypass.');
-          Alert.alert('Store Unavailable', 'App Store products are not loaded yet. Please check your internet connection or try again shortly.');
-          success = false;
-        } else {
-          console.log('[OnboardingPaywall] Falling back to mock upgrade since RevenueCat is not configured.');
-          success = await mockUpgradeToPro();
-        }
+        console.warn('[OnboardingPaywall] No matching App Store package found.');
+        Alert.alert('Store Unavailable', 'App Store products are not loaded yet. Please check your internet connection or try again shortly.');
+        success = false;
       }
 
       if (success) {
