@@ -151,7 +151,7 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
     (async () => {
       try {
         await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
+          playsInSilentModeIOS: false,
           staysActiveInBackground: false,
         });
         
