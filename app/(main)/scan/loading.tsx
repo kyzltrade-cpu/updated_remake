@@ -108,18 +108,16 @@ export default function LoadingPage() {
         });
       } else {
         console.log('[loading] No existing Beauty DNA found. Executing 100% personalized dynamic first-scan evaluation.');
-        const [diagResult, dnaResult] = await Promise.all([
-          analyzeImage({
-            imageUri: validUri,
-            priorityCategory: priorityCategory ?? 'Blending',
-            skillLevel: skillLevel ?? 'Intermediate',
-            referenceUri,
-          }),
-          analyzeDna({
-            imageUri: validUri,
-            priorityCategory: priorityCategory ?? 'Blending',
-          })
-        ]);
+        const diagResult = await analyzeImage({
+          imageUri: validUri,
+          priorityCategory: priorityCategory ?? 'Blending',
+          skillLevel: skillLevel ?? 'Intermediate',
+          referenceUri,
+        });
+        const dnaResult = await analyzeDna({
+          imageUri: validUri,
+          priorityCategory: priorityCategory ?? 'Blending',
+        });
         diagnosis = diagResult;
         dna = dnaResult;
       }

@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const NIM_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
 const NIM_API_KEY = Deno.env.get("NIM_API_KEY")
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY")
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,8 +27,12 @@ serve(async (req) => {
       })
     }
 
-    if (!NIM_API_KEY) {
-      return new Response(JSON.stringify({ error: 'NIM_API_KEY not configured on server' }), {
+    const isUsingOpenRouter = !!OPENROUTER_API_KEY
+    const apiKey = isUsingOpenRouter ? OPENROUTER_API_KEY : NIM_API_KEY
+    const apiUrl = isUsingOpenRouter ? OPENROUTER_URL : NIM_URL
+
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'Neither NIM_API_KEY nor OPENROUTER_API_KEY is configured on server' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -38,9 +45,19 @@ serve(async (req) => {
     let nimPayload: any = {}
     
     if (body.messages) {
+      // Map model names if we are routing through OpenRouter
+      let modelName = body.model || 'meta/llama-3.2-90b-vision-instruct'
+      if (isUsingOpenRouter) {
+        if (modelName === 'meta/llama-3.2-11b-vision-instruct') {
+          modelName = 'meta-llama/llama-3.2-11b-vision-instruct'
+        } else if (modelName === 'meta/llama-3.2-90b-vision-instruct') {
+          modelName = 'meta-llama/llama-3.2-90b-vision-instruct'
+        }
+      }
+
       // Generic proxy mode: Forward payload properties exactly
       nimPayload = {
-        model: body.model || 'meta/llama-3.2-90b-vision-instruct',
+        model: modelName,
         messages: body.messages,
         temperature: body.temperature ?? 0.1,
         max_tokens: body.max_tokens,
@@ -72,8 +89,10 @@ serve(async (req) => {
         })
       }
       
+      let defaultModel = isUsingOpenRouter ? 'meta-llama/llama-3.2-90b-vision-instruct' : 'meta/llama-3.2-90b-vision-instruct'
+      
       nimPayload = {
-        model: 'meta/llama-3.2-90b-vision-instruct',
+        model: defaultModel,
         messages,
         temperature: isJson ? 0.2 : 0.7,
         max_tokens: maxTokens,
@@ -83,19 +102,27 @@ serve(async (req) => {
       }
     }
 
-    // 3. Forward request to NVIDIA NIM with secure API Key
-    const response = await fetch(NIM_URL, {
+    // 3. Set headers for downstream call
+    const downstreamHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    }
+
+    if (isUsingOpenRouter) {
+      downstreamHeaders['HTTP-Referer'] = 'https://remake.beauty'
+      downstreamHeaders['X-Title'] = 'ReMake App'
+    }
+
+    // 4. Forward request to downstream AI model provider
+    const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${NIM_API_KEY}`
-      },
+      headers: downstreamHeaders,
       body: JSON.stringify(nimPayload),
     })
 
     if (!response.ok) {
       const errText = await response.text()
-      return new Response(JSON.stringify({ error: `NIM failed: ${response.status}`, details: errText }), {
+      return new Response(JSON.stringify({ error: `${isUsingOpenRouter ? 'OpenRouter' : 'NIM'} failed: ${response.status}`, details: errText }), {
         status: response.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
