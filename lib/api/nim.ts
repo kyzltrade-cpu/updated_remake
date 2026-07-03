@@ -6,11 +6,24 @@ export function hasNimKey(): boolean {
   return true;
 }
 
+const base64Cache = new Map<string, string>();
+
 export async function uriToBase64(uri: string): Promise<string> {
+  if (base64Cache.has(uri)) {
+    console.log('[NIM Cache] Reusing cached Base64 string for URI:', uri.substring(0, 60) + '...');
+    return base64Cache.get(uri)!;
+  }
   try {
-    return await FileSystem.readAsStringAsync(uri, {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
       encoding: FileSystem.EncodingType.Base64,
     });
+    base64Cache.set(uri, base64);
+    // Prevent memory leaks by keeping only the most recent scans in cache
+    if (base64Cache.size > 3) {
+      const firstKey = base64Cache.keys().next().value;
+      if (firstKey) base64Cache.delete(firstKey);
+    }
+    return base64;
   } catch (e) {
     console.error('Error converting URI to Base64:', e);
     throw new Error('Failed to read image file');
@@ -22,6 +35,7 @@ export async function nimText(prompt: string, maxTokens = 200): Promise<string> 
   
   const { data, error } = await supabase.functions.invoke('analyze-makeup', {
     body: {
+      model: 'meta/llama-3.2-11b-vision-instruct',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: maxTokens,
@@ -41,6 +55,7 @@ export async function nimTextJson<T>(prompt: string, maxTokens = 3000): Promise<
   
   const { data, error } = await supabase.functions.invoke('analyze-makeup', {
     body: {
+      model: 'meta/llama-3.2-11b-vision-instruct',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       max_tokens: maxTokens,
@@ -64,6 +79,7 @@ export async function nimVision<T>(imageBase64: string, prompt: string): Promise
   
   const { data, error } = await supabase.functions.invoke('analyze-makeup', {
     body: {
+      model: 'meta/llama-3.2-11b-vision-instruct',
       messages: [{
         role: 'user',
         content: [
