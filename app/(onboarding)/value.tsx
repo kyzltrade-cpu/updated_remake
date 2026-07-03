@@ -8,118 +8,61 @@ import { tokens } from '@/components/theme';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
-// ─── Dimensions ────────────────────────────────────────────────────────────────
-const IMG_RATIO = 2622 / 1206;
+// ─── Mockup Proportions (iPhone 16 Pro Frame) ──────────────────────────────────
+const FRAME_W = 1350;
+const FRAME_H = 2760;
+const FRAME_RATIO = FRAME_H / FRAME_W;
 
-// iPhone 15 Pro bezel ≈ 4 % of body width each side.
-// At our render scale that is ~4 pt — a thin ring, not a thick case.
-const RING      = 4;    // metallic band visible from front (all four sides)
-const GASKET    = 1;    // near-black glass-seal between ring and screen
-const BODY_R    = 22;   // outer body corner radius
-const SCREEN_R  = 17;   // screen-glass corner (slightly inside body arc)
+// Transparent inner screen coordinates inside the 1350x2760 frame
+const SCREEN_X = 72;
+const SCREEN_Y = 69;
+const SCREEN_W = 1206;
+const SCREEN_H = 2622;
 
-const MAX_BODY_H = SH * 0.54;
-const PHONE_H    = Math.min(SW * 0.50 * IMG_RATIO, MAX_BODY_H - (RING + GASKET) * 2);
-const PHONE_W    = PHONE_H / IMG_RATIO;
-const BODY_W     = PHONE_W + (RING + GASKET) * 2;
-const BODY_H     = PHONE_H + (RING + GASKET) * 2;
+const MAX_PHONE_H = SH * 0.50;
+const PHONE_W = Math.min(SW * 0.56, MAX_PHONE_H / FRAME_RATIO);
+const PHONE_H = PHONE_W * FRAME_RATIO;
 
-// ─── Side buttons ──────────────────────────────────────────────────────────────
-// iPhone 15 Pro physical proportions scaled to our render size:
-//   Action button  ~4 % of BODY_H
-//   Volume up/down ~10 % each
-//   Power          ~14 %
-const BTN_PROTRUDE = 2.5;
-const BTN_W        = BTN_PROTRUDE + 2;
-const ACTION_H     = BODY_H * 0.040;
-const VOL_H        = BODY_H * 0.100;
-const POWER_H      = BODY_H * 0.140;
-
-// ─── Metallic ring gradient ────────────────────────────────────────────────────
-// Horizontal L→R: chamfered left & right edges catch light, flat face is dark.
-// At RING=4 pt only the edge strips are visible, which is exactly right.
-const RING_COLORS = ['#606062', '#3A3A3C', '#222224', '#3A3A3C', '#606062'] as const;
-const RING_LOCS   = [0, 0.06, 0.5, 0.94, 1] as const;
-
-const BTN_COLORS  = ['#5A5A5C', '#3C3C3E'] as const;
-
-// ─── Side button ───────────────────────────────────────────────────────────────
-function SideButton({ top, height, side }: { top: number; height: number; side: 'left' | 'right' }) {
-  const isLeft = side === 'left';
-  return (
-    <LinearGradient
-      colors={BTN_COLORS}
-      start={{ x: isLeft ? 0 : 1, y: 0 }}
-      end={{ x: isLeft ? 1 : 0, y: 0 }}
-      style={[
-        styles.sideBtn,
-        {
-          top,
-          height,
-          [isLeft ? 'left' : 'right']: -BTN_PROTRUDE,
-          borderTopLeftRadius:     isLeft ? 0 : 2,
-          borderBottomLeftRadius:  isLeft ? 0 : 2,
-          borderTopRightRadius:    isLeft ? 2 : 0,
-          borderBottomRightRadius: isLeft ? 2 : 0,
-        },
-      ]}
-    />
-  );
-}
+// Scaled calculations for the absolute positioned app screenshot
+const INNER_W = PHONE_W * (SCREEN_W / FRAME_W);
+const INNER_H = PHONE_H * (SCREEN_H / FRAME_H);
+const INNER_L = PHONE_W * (SCREEN_X / FRAME_W);
+const INNER_T = PHONE_H * (SCREEN_Y / FRAME_H);
+const INNER_R = PHONE_W * (42 / FRAME_W); // 42px corner radius on 1350px frame matches perfectly
 
 // ─── Phone mockup ──────────────────────────────────────────────────────────────
 function PhoneMockup() {
   return (
-    <View style={{ paddingHorizontal: BTN_PROTRUDE + 1 }}>
-      <Animated.View entering={FadeIn.delay(200).duration(700)}>
+    <Animated.View entering={FadeIn.delay(200).duration(700)}>
+      <View style={[styles.phoneContainer, { width: PHONE_W, height: PHONE_H }]}>
+        
+        {/* Inner App Screen Screenshot */}
+        <Image
+          source={require('@/assets/images/app-preview.png')}
+          style={[
+            styles.innerScreen,
+            {
+              width: INNER_W,
+              height: INNER_H,
+              left: INNER_L,
+              top: INNER_T,
+              borderRadius: INNER_R,
+            }
+          ]}
+          resizeMode="cover"
+        />
 
-        {/* Shadow lives here so overflow:hidden on body doesn't clip it */}
-        <View style={styles.shadowHost}>
-
-          {/* Metallic band — horizontal gradient, thin ring around screen */}
-          <LinearGradient
-            colors={RING_COLORS}
-            locations={RING_LOCS}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.body}
-          >
-            {/* Top chamfer — 1 pt bright line on the flat top edge */}
-            <View style={styles.chamferTop} />
-            {/* Bottom edge — dim reflection */}
-            <View style={styles.chamferBottom} />
-
-            {/* Left side buttons */}
-            <SideButton side="left" top={BODY_H * 0.115} height={ACTION_H} />
-            <SideButton side="left" top={BODY_H * 0.200} height={VOL_H} />
-            <SideButton side="left" top={BODY_H * 0.330} height={VOL_H} />
-
-            {/* Right: power button */}
-            <SideButton side="right" top={BODY_H * 0.250} height={POWER_H} />
-
-            {/* Near-black gasket + screen */}
-            <View style={styles.gasket}>
-              <View style={styles.screen}>
-                <Image
-                  source={require('@/assets/images/app-preview.png')}
-                  style={{ width: PHONE_W, height: PHONE_H }}
-                  resizeMode="stretch"
-                />
-                {/* Screen glass glare — subtle diagonal highlight */}
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.055)', 'transparent']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0.55, y: 0.55 }}
-                  style={StyleSheet.absoluteFill}
-                  pointerEvents="none"
-                />
-              </View>
-            </View>
-          </LinearGradient>
-
+        {/* Photorealistic iPhone 16 Pro Frame Overlay */}
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Image
+            source={require('@/assets/images/iphone-frame.png')}
+            style={styles.frameImage}
+            resizeMode="stretch"
+          />
         </View>
-      </Animated.View>
-    </View>
+
+      </View>
+    </Animated.View>
   );
 }
 
@@ -202,75 +145,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  // Soft directional shadow — phone floating above surface
-  shadowHost: {
-    borderRadius: BODY_R,
+  // Soft high-end float shadow for the device mockup
+  phoneContainer: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.45,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.35,
     shadowRadius: 24,
-    elevation: 22,
+    elevation: 18,
+    backgroundColor: 'transparent',
   },
-
-  // Body: metallic ring (only RING pt visible on each side; rest hidden by screen)
-  body: {
-    width: BODY_W,
-    height: BODY_H,
-    borderRadius: BODY_R,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // 0.5 pt hairline border — top edge slightly bright, bottom slightly dim
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.10)',
-    borderTopColor: 'rgba(255,255,255,0.25)',
-    borderBottomColor: 'rgba(0,0,0,0.50)',
-  },
-
-  // 1 pt highlight on the flat top/bottom edges between the corner arcs
-  chamferTop: {
+  innerScreen: {
     position: 'absolute',
-    top: 0,
-    left: BODY_R,
-    right: BODY_R,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.20)',
-  },
-  chamferBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: BODY_R,
-    right: BODY_R,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-
-  // Side buttons — thin slivers, same tone as ring
-  sideBtn: {
-    position: 'absolute',
-    width: BTN_W,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.07)',
-    borderTopColor: 'rgba(255,255,255,0.16)',
-  },
-
-  // Near-black gasket between ring and screen glass
-  gasket: {
-    width: PHONE_W + GASKET * 2,
-    height: PHONE_H + GASKET * 2,
-    borderRadius: SCREEN_R + GASKET,
-    backgroundColor: '#060608',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Screen — content is clipped here
-  screen: {
-    width: PHONE_W,
-    height: PHONE_H,
-    borderRadius: SCREEN_R,
     overflow: 'hidden',
     backgroundColor: '#000',
+  },
+  frameImage: {
+    width: '100%',
+    height: '100%',
   },
 
   headline: {
