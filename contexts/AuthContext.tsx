@@ -31,33 +31,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient()
-    // In dev mode, block isLoading from clearing until signInDev() resolves.
-    // INITIAL_SESSION fires with null before signInDev completes, which would
-    // otherwise route to onboarding before the session is established.
-    let devReady = !isDevMode
+    let mounted = true
+
+    const checkSession = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession()
+        if (mounted) {
+          setSession(initialSession)
+          setUser(initialSession?.user ?? null)
+        }
+      } catch (e) {
+        console.warn('[AuthContext] Failed to get initial session:', e)
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    checkSession()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
       setUser(newSession?.user ?? null)
-      if (devReady) setIsLoading(false)
     })
 
-    if (isDevMode) {
-      signInDev()
-        .catch(() => {})
-        .finally(() => {
-          devReady = true
-          supabase.auth.getSession().then(({ data }) => {
-            setSession(data.session)
-            setUser(data.session?.user ?? null)
-            setIsLoading(false)
-          })
-        })
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
     }
-
-    return () => subscription.unsubscribe()
   }, [])
 
   const signInWithDevBypass = async () => {
