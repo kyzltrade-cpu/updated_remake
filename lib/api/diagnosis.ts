@@ -1,6 +1,6 @@
 import type { AnalyzeImageRequest, DiagnosisResult, DiagnosisProvider, CategoryAnalysis, SixCategory, Verdict } from './types';
 import { isSafeImageUri } from '@/lib/validation';
-import { hasNimKey, uriToBase64, nimVision, nimVisionDual } from './nim';
+import { hasOpenRouterKey, uriToBase64, openRouterVision, openRouterVisionDual } from './openrouter';
 
 const CATEGORY_WEIGHTS: Record<SixCategory, number> = {
   Blending: 25,
@@ -126,12 +126,14 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
 
   const prompt = DIAGNOSIS_PROMPT(priority, skill, actualHasReference);
 
+  const MODEL_ID = 'meta-llama/llama-3.2-11b-vision-instruct';
+
   if (actualHasReference && refBase64) {
-    result = await nimVisionDual<NimDiagnosisResponse>(imageBase64, refBase64, prompt);
+    result = await openRouterVisionDual<NimDiagnosisResponse>(imageBase64, refBase64, prompt, MODEL_ID);
   } else {
-    result = await nimVision<NimDiagnosisResponse>(imageBase64, prompt);
+    result = await openRouterVision<NimDiagnosisResponse>(imageBase64, prompt, MODEL_ID);
   }
-  console.log('[Diagnosis] Successfully fetched real NIM Vision payload!', JSON.stringify(result));
+  console.log('[Diagnosis] Successfully fetched real OpenRouter Vision payload!', JSON.stringify(result));
 
   const categories: CategoryAnalysis[] = (Object.keys(CATEGORY_WEIGHTS) as SixCategory[]).map(name => {
     const found = result.categories.find(c => c.name === name);
@@ -187,7 +189,7 @@ class SixCategoryDiagnosisProvider implements DiagnosisProvider {
     try {
       return await analyzeWithNim(request);
     } catch (e) {
-      console.warn('[Diagnosis] NVIDIA NIM failed, falling back to mock:', e);
+      console.warn('[Diagnosis] OpenRouter failed, falling back to mock:', e);
       return mockAnalyze(request);
     }
   }

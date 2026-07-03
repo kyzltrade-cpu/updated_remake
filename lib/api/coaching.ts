@@ -1,5 +1,5 @@
 import type { GetCoachingRequest, CoachingResult } from './types';
-import { hasNimKey, nimText } from './nim';
+import { hasOpenRouterKey, openRouterText } from './openrouter';
 import { getOnboardingData } from '@/lib/onboarding-store';
 import { loadGloDraft } from '@/lib/glo-profile';
 
@@ -73,10 +73,11 @@ function fallbackCompliment(score: number): string {
 
 export async function getCoaching(request: GetCoachingRequest): Promise<CoachingResult> {
   const score = request.diagnosis.overallScore;
-  if (hasNimKey()) {
+  if (hasOpenRouterKey()) {
     try {
       const prompt = await buildPrompt(request);
-      const compliment = await nimText(prompt);
+      const MODEL_ID = 'meta-llama/llama-3.2-11b-vision-instruct';
+      const compliment = await openRouterText(prompt, 200, MODEL_ID);
       if (typeof compliment === 'string') {
         return {
           compliment: sanitizeCompliment(compliment.trim(), score),
@@ -84,7 +85,7 @@ export async function getCoaching(request: GetCoachingRequest): Promise<Coaching
         };
       }
     } catch (e) {
-      console.warn('[Coaching] NIM failed, using fallback:', e);
+      console.warn('[Coaching] OpenRouter failed, using fallback:', e);
     }
   }
 

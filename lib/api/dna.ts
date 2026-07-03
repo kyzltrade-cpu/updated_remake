@@ -1,5 +1,5 @@
 import type { PriorityCategory } from '@/lib/onboarding-store';
-import { hasNimKey, uriToBase64, nimVision } from './nim';
+import { hasOpenRouterKey, uriToBase64, openRouterVision } from './openrouter';
 import { ARCHETYPE_RECS } from './recommendations';
 import { loadGloDraft } from '@/lib/glo-profile';
 
@@ -303,7 +303,8 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
       glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
     ].filter(Boolean).join('\n');
     const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
-    const raw = await nimVision<NimDnaResponse>(imageBase64, prompt);
+    const MODEL_ID = 'meta-llama/llama-3.2-11b-vision-instruct';
+    const raw = await openRouterVision<NimDnaResponse>(imageBase64, prompt, MODEL_ID);
 
     const faceShape = VALID_FACE_SHAPES.has(raw.faceShape as FaceShape)
       ? (raw.faceShape as FaceShape)
@@ -354,7 +355,7 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
       celebrityLookalike: raw.celebrityLookalike || EYE_MAKEUP_BY_SHAPE[eyeShape]?.celebrity || '',
     };
   } catch (e) {
-    console.warn('[DNA] NVIDIA NIM failed, falling back to mock:', e);
+    console.warn('[DNA] OpenRouter failed, falling back to mock:', e);
     return mockDna(request);
   }
 }

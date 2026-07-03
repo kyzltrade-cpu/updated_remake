@@ -72,6 +72,23 @@ export default function LoadingPage() {
     if (isScanning.current) return;
     isScanning.current = true;
 
+    // Verify face is present locally before wasting any API balance!
+    try {
+      const { detectFace } = require('@/modules/remake-face-detector');
+      const hasFace = await detectFace(validUri);
+      if (!hasFace) {
+        Alert.alert(
+          'No Face Detected',
+          'Make sure your face is clearly visible inside the alignment guide and take another photo.',
+          [{ text: 'OK', onPress: () => router.replace('/(main)/scan') }]
+        );
+        isScanning.current = false;
+        return;
+      }
+    } catch (e) {
+      console.warn('[FaceDetector] local Swift CIDetector check skipped:', e);
+    }
+
     try {
       const { priorityCategory, skillLevel } = await getOnboardingData();
       const referenceUri = settings.referencePhoto ?? undefined;

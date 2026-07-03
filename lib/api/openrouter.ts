@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase';
 import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
-export function hasNimKey(): boolean {
+export function hasOpenRouterKey(): boolean {
   // Always true in production because the key is secured on the backend in Supabase Edge Functions!
   return true;
 }
@@ -11,7 +11,7 @@ const base64Cache = new Map<string, string>();
 
 export async function uriToBase64(uri: string): Promise<string> {
   if (base64Cache.has(uri)) {
-    console.log('[NIM Cache] Reusing cached Base64 string for URI:', uri.substring(0, 60) + '...');
+    console.log('[OpenRouter Cache] Reusing cached Base64 string for URI:', uri.substring(0, 60) + '...');
     return base64Cache.get(uri)!;
   }
   try {
@@ -55,12 +55,16 @@ export async function uriToBase64(uri: string): Promise<string> {
   }
 }
 
-export async function nimText(prompt: string, maxTokens = 200): Promise<string> {
+export async function openRouterText(
+  prompt: string, 
+  maxTokens = 200, 
+  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+): Promise<string> {
   const supabase = createClient();
   
   const { data, error } = await supabase.functions.invoke('analyze-makeup', {
     body: {
-      model: 'meta/llama-3.2-11b-vision-instruct',
+      model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: maxTokens,
@@ -68,19 +72,23 @@ export async function nimText(prompt: string, maxTokens = 200): Promise<string> 
   });
 
   if (error) {
-    console.error('[NIM Proxy] Edge Function error for nimText:', error);
+    console.error('[OpenRouter Proxy] Edge Function error for openRouterText:', error);
     throw new Error(`Edge Function error: ${error.message}`);
   }
 
   return data?.choices?.[0]?.message?.content?.trim() ?? '';
 }
 
-export async function nimTextJson<T>(prompt: string, maxTokens = 3000): Promise<T> {
+export async function openRouterTextJson<T>(
+  prompt: string, 
+  maxTokens = 3000, 
+  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+): Promise<T> {
   const supabase = createClient();
   
   const { data, error } = await supabase.functions.invoke('analyze-makeup', {
     body: {
-      model: 'meta/llama-3.2-11b-vision-instruct',
+      model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       max_tokens: maxTokens,
@@ -89,22 +97,26 @@ export async function nimTextJson<T>(prompt: string, maxTokens = 3000): Promise<
   });
 
   if (error) {
-    console.error('[NIM Proxy] Edge Function error for nimTextJson:', error);
+    console.error('[OpenRouter Proxy] Edge Function error for openRouterTextJson:', error);
     throw new Error(`Edge Function error: ${error.message}`);
   }
 
   const raw = data?.choices?.[0]?.message?.content ?? '';
-  if (!raw) throw new Error('Empty NIM response');
+  if (!raw) throw new Error('Empty OpenRouter response');
   const text = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
   return JSON.parse(text) as T;
 }
 
-export async function nimVision<T>(imageBase64: string, prompt: string): Promise<T> {
+export async function openRouterVision<T>(
+  imageBase64: string, 
+  prompt: string, 
+  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+): Promise<T> {
   const supabase = createClient();
   
   const { data, error } = await supabase.functions.invoke('analyze-makeup', {
     body: {
-      model: 'meta/llama-3.2-11b-vision-instruct',
+      model,
       messages: [{
         role: 'user',
         content: [
@@ -118,18 +130,23 @@ export async function nimVision<T>(imageBase64: string, prompt: string): Promise
   });
 
   if (error) {
-    console.error('[NIM Proxy] Edge Function error for nimVision:', error);
+    console.error('[OpenRouter Proxy] Edge Function error for openRouterVision:', error);
     throw new Error(`Edge Function error: ${error.message}`);
   }
 
   const text = data?.choices?.[0]?.message?.content ?? '';
-  if (!text) throw new Error('Empty NIM response');
+  if (!text) throw new Error('Empty OpenRouter response');
   const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
   return JSON.parse(cleaned) as T;
 }
 
-export async function nimVisionDual<T>(image1Base64: string, image2Base64: string, prompt: string): Promise<T> {
+export async function openRouterVisionDual<T>(
+  image1Base64: string, 
+  image2Base64: string, 
+  prompt: string, 
+  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+): Promise<T> {
   // Since we pass only the primary image to avoid huge payload limits, we append the dual note to the prompt
   const dualPrompt = prompt + '\n\n(Note: Due to API limits, only the primary image is provided. Please perform your evaluation based on this image and the provided text details.)';
-  return nimVision<T>(image1Base64, dualPrompt);
+  return openRouterVision<T>(image1Base64, dualPrompt, model);
 }

@@ -1,4 +1,4 @@
-import { nimVision, nimVisionDual, nimTextJson, hasNimKey, uriToBase64 } from './nim';
+import { openRouterVision, openRouterVisionDual, openRouterTextJson, hasOpenRouterKey, uriToBase64 } from './openrouter';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DnaResult } from './dna';
 import { loadGloDraft } from '@/lib/glo-profile';
@@ -275,7 +275,7 @@ export async function analyzeProduct(params: {
   uri?: string;
   referenceUri?: string;
 }): Promise<ProductScanResult> {
-  if (hasNimKey()) {
+  if (hasOpenRouterKey()) {
     try {
       return await analyzeProductReal(params);
     } catch (e) {
@@ -310,14 +310,15 @@ async function analyzeProductReal(params: {
     } else {
       productInfo = `Barcode: ${params.barcode}\nProduct data not found in database.`;
     }
-  } else if (params.uri && hasNimKey()) {
-    // Photo path: extract product info via NIM Vision
+  } else if (params.uri && hasOpenRouterKey()) {
+    // Photo path: extract product info via OpenRouter Vision
     const imageBase64 = await uriToBase64(params.uri);
-    const extracted = await nimVision<{
+    const MODEL_ID = 'meta-llama/llama-3.2-11b-vision-instruct';
+    const extracted = await openRouterVision<{
       brand?: string; productName?: string; shade?: string;
       category?: string; barcode?: string; ingredients?: string;
       spfLevel?: number | null; pao?: string; labels?: string;
-    }>(imageBase64, PHOTO_EXTRACT_PROMPT);
+    }>(imageBase64, PHOTO_EXTRACT_PROMPT, MODEL_ID);
 
     detectedBarcode = extracted.barcode ?? '';
     productInfo = [
@@ -332,29 +333,30 @@ async function analyzeProductReal(params: {
     ].join('\n');
   }
 
-  if (!hasNimKey()) return mockResult(dna, detectedBarcode);
+  if (!hasOpenRouterKey()) return mockResult(dna, detectedBarcode);
 
   try {
     let parsed: ProductScanResult;
+    const MODEL_ID = 'meta-llama/llama-3.2-11b-vision-instruct';
 
     if (params.uri && params.referenceUri) {
-      // Visual comparison: send product photo + skin reference photo to NIM
+      // Visual comparison: send product photo + skin reference photo to OpenRouter
       const [productB64, skinB64] = await Promise.all([
         uriToBase64(params.uri),
         uriToBase64(params.referenceUri),
       ]);
       const dualPrompt = buildDualVisionPrompt(productInfo, dna, userAllergies);
-      parsed = await nimVisionDual<ProductScanResult>(productB64, skinB64, dualPrompt);
+      parsed = await openRouterVisionDual<ProductScanResult>(productB64, skinB64, dualPrompt, MODEL_ID);
     } else {
       const prompt = buildAnalysisPrompt(productInfo, dna, userAllergies);
-      parsed = await nimTextJson<ProductScanResult>(prompt);
+      parsed = await openRouterTextJson<ProductScanResult>(prompt, 3000, MODEL_ID);
     }
 
     parsed.barcode = detectedBarcode;
     parsed.shade.detected = dna?.skinToneHex ?? '#C9956A';
     return parsed;
   } catch (e) {
-    console.warn('[ProductScan] NIM failed:', e);
+    console.warn('[ProductScan] OpenRouter failed:', e);
     return mockResult(dna, detectedBarcode);
   }
 }

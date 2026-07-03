@@ -58,17 +58,17 @@ export function withRateLimit<T extends unknown[], R>(
 }
 
 /**
- * Pre-configured limiter for Nvidia NIM API
- * Default: 30 requests per minute (conservative for most NIM endpoints)
+ * Pre-configured limiter for OpenRouter API
+ * Default: 60 requests per minute
  */
-export function withNimRateLimit<T extends unknown[], R>(
+export function withOpenRouterRateLimit<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
-  requestsPerMinute: number = 30
+  requestsPerMinute: number = 60
 ): (...args: T) => Promise<R> {
   return withRateLimit(fn, {
     maxRequests: requestsPerMinute,
     windowMs: 60 * 1000, // 1 minute
-  }, 'nvidia-nim');
+  }, 'openrouter');
 }
 
 function sleep(ms: number): Promise<void> {
