@@ -63,12 +63,14 @@ export default function ProfileScreen() {
       const [h, s, { data: profileData }] = await Promise.all([
         getScanHistory(user.id, 10),
         getScanStats(user.id),
-        createClient().from('profiles').select('dna_result').eq('id', user.id).maybeSingle()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (createClient() as any).from('profiles').select('dna_result').eq('id', user.id).maybeSingle()
       ]);
       setHistory(h);
       setStats(s);
-      if (profileData?.dna_result) {
-        setDna(profileData.dna_result);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((profileData as any)?.dna_result) {
+        setDna((profileData as any).dna_result);
       }
     } catch (e) {
       console.warn('[Profile] Failed to load data:', e);
