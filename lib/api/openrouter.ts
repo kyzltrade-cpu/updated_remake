@@ -58,7 +58,7 @@ export async function uriToBase64(uri: string): Promise<string> {
 export async function openRouterText(
   prompt: string, 
   maxTokens = 200, 
-  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+  model = 'openai/gpt-4o-mini'
 ): Promise<string> {
   const supabase = createClient();
   
@@ -82,7 +82,7 @@ export async function openRouterText(
 export async function openRouterTextJson<T>(
   prompt: string, 
   maxTokens = 3000, 
-  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+  model = 'openai/gpt-4o-mini'
 ): Promise<T> {
   const supabase = createClient();
   
@@ -110,7 +110,7 @@ export async function openRouterTextJson<T>(
 export async function openRouterVision<T>(
   imageBase64: string, 
   prompt: string, 
-  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+  model = 'openai/gpt-4o-mini'
 ): Promise<T> {
   const supabase = createClient();
   
@@ -144,7 +144,7 @@ export async function openRouterVisionDual<T>(
   image1Base64: string, 
   image2Base64: string, 
   prompt: string, 
-  model = 'meta-llama/llama-3.2-11b-vision-instruct'
+  model = 'openai/gpt-4o-mini'
 ): Promise<T> {
   // Since we pass only the primary image to avoid huge payload limits, we append the dual note to the prompt
   const dualPrompt = prompt + '\n\n(Note: Due to API limits, only the primary image is provided. Please perform your evaluation based on this image and the provided text details.)';

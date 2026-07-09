@@ -76,7 +76,7 @@ export async function getCoaching(request: GetCoachingRequest): Promise<Coaching
   if (hasOpenRouterKey()) {
     try {
       const prompt = await buildPrompt(request);
-      const MODEL_ID = 'meta-llama/llama-3.2-11b-vision-instruct';
+      const MODEL_ID = 'openai/gpt-4o-mini';
       const compliment = await openRouterText(prompt, 200, MODEL_ID);
       if (typeof compliment === 'string') {
         return {

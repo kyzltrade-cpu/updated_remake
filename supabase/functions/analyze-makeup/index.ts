@@ -112,7 +112,7 @@ serve(async (req) => {
     let payload: any = {}
     if (body.messages) {
       payload = {
-        model: body.model || 'meta-llama/llama-3.2-11b-vision-instruct',
+        model: body.model || 'openai/gpt-4o-mini',
         messages: body.messages,
         temperature: body.temperature ?? 0.1,
         max_tokens: body.max_tokens,
@@ -141,7 +141,7 @@ serve(async (req) => {
       }
 
       payload = {
-        model: model || 'meta-llama/llama-3.2-11b-vision-instruct',
+        model: model || 'openai/gpt-4o-mini',
         messages,
         temperature: isJson ? 0.2 : 0.7,
         max_tokens: maxTokens,
