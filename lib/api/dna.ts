@@ -303,7 +303,7 @@ export async function analyzeDna(request: DnaAnalysisRequest): Promise<DnaResult
       glo.undertone_guess ? `User's undertone guess: ${glo.undertone_guess}` : null,
     ].filter(Boolean).join('\n');
     const prompt = hints ? `${DNA_PROMPT}\n\nAdditional context from user:\n${hints}` : DNA_PROMPT;
-    const MODEL_ID = 'openai/gpt-4o-mini';
+    const MODEL_ID = 'qwen/qwen-2.5-vl-72b-instruct';
     const raw = await openRouterVision<NimDnaResponse>(imageBase64, prompt, MODEL_ID);
 
     const faceShape = VALID_FACE_SHAPES.has(raw.faceShape as FaceShape)

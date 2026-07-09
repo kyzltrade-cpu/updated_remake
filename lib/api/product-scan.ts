@@ -313,7 +313,7 @@ async function analyzeProductReal(params: {
   } else if (params.uri && hasOpenRouterKey()) {
     // Photo path: extract product info via OpenRouter Vision
     const imageBase64 = await uriToBase64(params.uri);
-    const MODEL_ID = 'openai/gpt-4o-mini';
+    const MODEL_ID = 'qwen/qwen-2.5-vl-72b-instruct';
     const extracted = await openRouterVision<{
       brand?: string; productName?: string; shade?: string;
       category?: string; barcode?: string; ingredients?: string;
@@ -337,7 +337,7 @@ async function analyzeProductReal(params: {
 
   try {
     let parsed: ProductScanResult;
-    const MODEL_ID = 'openai/gpt-4o-mini';
+    const MODEL_ID = 'qwen/qwen-2.5-vl-72b-instruct';
 
     if (params.uri && params.referenceUri) {
       // Visual comparison: send product photo + skin reference photo to OpenRouter

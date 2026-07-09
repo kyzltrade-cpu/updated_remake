@@ -112,7 +112,7 @@ serve(async (req) => {
     let payload: any = {}
     if (body.messages) {
       payload = {
-        model: body.model || 'openai/gpt-4o-mini',
+        model: body.model || 'qwen/qwen-2.5-vl-72b-instruct',
         messages: body.messages,
         temperature: body.temperature ?? 0.1,
         max_tokens: body.max_tokens,
@@ -141,7 +141,7 @@ serve(async (req) => {
       }
 
       payload = {
-        model: model || 'openai/gpt-4o-mini',
+        model: model || 'qwen/qwen-2.5-vl-72b-instruct',
         messages,
         temperature: isJson ? 0.2 : 0.7,
         max_tokens: maxTokens,

@@ -126,7 +126,7 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
 
   const prompt = DIAGNOSIS_PROMPT(priority, skill, actualHasReference);
 
-  const MODEL_ID = 'openai/gpt-4o-mini';
+  const MODEL_ID = 'qwen/qwen-2.5-vl-72b-instruct';
 
   if (actualHasReference && refBase64) {
     result = await openRouterVisionDual<NimDiagnosisResponse>(imageBase64, refBase64, prompt, MODEL_ID);
