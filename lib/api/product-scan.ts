@@ -349,7 +349,7 @@ async function analyzeProductReal(params: {
       parsed = await openRouterVisionDual<ProductScanResult>(productB64, skinB64, dualPrompt, MODEL_ID);
     } else {
       const prompt = buildAnalysisPrompt(productInfo, dna, userAllergies);
-      parsed = await openRouterTextJson<ProductScanResult>(prompt, 3000, 'openai/gpt-4o-mini');
+      parsed = await openRouterTextJson<ProductScanResult>(prompt, 3000, 'qwen/qwen-2.5-72b-instruct');
     }
 
     parsed.barcode = detectedBarcode;
