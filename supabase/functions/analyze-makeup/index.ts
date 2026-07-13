@@ -65,17 +65,30 @@ serve(async (req) => {
 
     const userId = user.id
 
-    // Guard 2: 20-second request cooldown
-    const now = Date.now()
-    const lastRequestTime = cooldownCache.get(userId)
-    if (lastRequestTime && (now - lastRequestTime < 20000)) {
-      const waitTime = Math.ceil((20000 - (now - lastRequestTime)) / 1000)
-      return new Response(JSON.stringify({ error: `Please wait ${waitTime}s before scanning again.` }), {
-        status: 429,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    // 4. Parse request body first to detect payload structure
+    const body = await req.json()
+
+    // Detect if this request contains an image (is an expensive Vision Scan) or is text-only
+    const hasImage = body.imageBase64 || body.messages?.some((msg: any) => {
+      if (Array.isArray(msg.content)) {
+        return msg.content.some((item: any) => item.type === 'image_url')
+      }
+      return false
+    })
+
+    // Guard 2: 20-second request cooldown (Only enforce on expensive vision-based face scans!)
+    if (hasImage) {
+      const now = Date.now()
+      const lastRequestTime = cooldownCache.get(userId)
+      if (lastRequestTime && (now - lastRequestTime < 20000)) {
+        const waitTime = Math.ceil((20000 - (now - lastRequestTime)) / 1000)
+        return new Response(JSON.stringify({ error: `Please wait ${waitTime}s before scanning again.` }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      cooldownCache.set(userId, now)
     }
-    cooldownCache.set(userId, now)
 
     // Guard 1: Paywall Gate (Check active Pro subscription or trial onboarding scans)
     const { data: profile } = await supabaseClient
@@ -106,9 +119,6 @@ serve(async (req) => {
       })
     }
 
-    // 4. Parse & Forward Payload to OpenRouter
-    const body = await req.json()
-    
     let payload: any = {}
     if (body.messages) {
       payload = {
