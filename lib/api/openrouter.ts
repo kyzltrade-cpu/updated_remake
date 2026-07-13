@@ -110,7 +110,8 @@ export async function openRouterTextJson<T>(
 export async function openRouterVision<T>(
   imageBase64: string, 
   prompt: string, 
-  model = 'qwen/qwen-2.5-vl-72b-instruct'
+  model = 'qwen/qwen-2.5-vl-72b-instruct',
+  maxTokens = 3000
 ): Promise<T> {
   const supabase = createClient();
   
@@ -125,6 +126,7 @@ export async function openRouterVision<T>(
         ]
       }],
       temperature: 0.1,
+      max_tokens: maxTokens,
       response_format: { type: 'json_object' }
     }
   });
@@ -144,9 +146,10 @@ export async function openRouterVisionDual<T>(
   image1Base64: string, 
   image2Base64: string, 
   prompt: string, 
-  model = 'qwen/qwen-2.5-vl-72b-instruct'
+  model = 'qwen/qwen-2.5-vl-72b-instruct',
+  maxTokens = 3000
 ): Promise<T> {
   // Since we pass only the primary image to avoid huge payload limits, we append the dual note to the prompt
   const dualPrompt = prompt + '\n\n(Note: Due to API limits, only the primary image is provided. Please perform your evaluation based on this image and the provided text details.)';
-  return openRouterVision<T>(image1Base64, dualPrompt, model);
+  return openRouterVision<T>(image1Base64, dualPrompt, model, maxTokens);
 }
