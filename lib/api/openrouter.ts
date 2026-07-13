@@ -39,7 +39,7 @@ export async function uriToBase64(uri: string): Promise<string> {
     }
     return base64;
   } catch (e) {
-    console.error('Error compressing/converting URI to Base64:', e);
+    console.warn('[Image Compression] Error compressing/converting URI to Base64, attempting raw fallback:', e);
     
     // Graceful fallback to raw reading in case manipulator fails
     console.warn('[Image Compression] Manipulator failed, falling back to raw disk read...');
@@ -49,7 +49,7 @@ export async function uriToBase64(uri: string): Promise<string> {
       });
       return rawBase64;
     } catch (err) {
-      console.error('Raw read fallback also failed:', err);
+      console.warn('[Image Compression] Raw read fallback also failed:', err);
       throw new Error('Failed to read or compress image file');
     }
   }
