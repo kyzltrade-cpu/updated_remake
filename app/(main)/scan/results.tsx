@@ -14,7 +14,7 @@ import { ScoreRing } from '@/components/score-ring';
 import * as Haptics from 'expo-haptics';
 import type { DiagnosisResult, CoachingResult, CategoryAnalysis } from '@/lib/api/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { getScanById } from '@/lib/api/scan-storage';
+import { getScanById, getScanHistory } from '@/lib/api/scan-storage';
 import { useSubscription } from '@/contexts/subscription-context';
 
 const SCORE_GREEN = '#2D7D46';
@@ -133,8 +133,31 @@ export default function ResultsScreen() {
             };
             setDiagnosis(fetchedDiagnosis);
             setCoaching(fetchedCoaching);
-            setScoreDelta(0);
-            setLastScore(Number(record.overall_score));
+            
+            // Resolve the actual previous score from the user's history!
+            if (user?.id) {
+              getScanHistory(user.id, 10)
+                .then(history => {
+                  const currentIndex = history.findIndex(h => h.id === params.scanId);
+                  if (currentIndex !== -1 && currentIndex + 1 < history.length) {
+                    const prevScan = history[currentIndex + 1];
+                    const prevScore = Number(prevScan.overall_score);
+                    setLastScore(prevScore);
+                    setScoreDelta(Math.round(fetchedDiagnosis.overallScore - prevScore));
+                  } else {
+                    setLastScore(fetchedDiagnosis.overallScore);
+                    setScoreDelta(0);
+                  }
+                })
+                .catch(err => {
+                  console.warn('[Results] Failed to fetch scan history for previous score:', err);
+                  setLastScore(fetchedDiagnosis.overallScore);
+                  setScoreDelta(0);
+                });
+            } else {
+              setLastScore(fetchedDiagnosis.overallScore);
+              setScoreDelta(0);
+            }
           }
         })
         .catch(e => {
