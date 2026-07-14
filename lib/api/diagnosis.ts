@@ -197,12 +197,8 @@ class SixCategoryDiagnosisProvider implements DiagnosisProvider {
       throw new Error('Invalid image URI');
     }
 
-    try {
-      return await analyzeWithNim(request);
-    } catch (e) {
-      console.warn('[Diagnosis] OpenRouter failed, falling back to mock:', e);
-      return mockAnalyze(request);
-    }
+    // Propagate the actual OpenRouter Vision error upwards so the loader catches it and re-routes to error screen
+    return await analyzeWithNim(request);
   }
 }
 
