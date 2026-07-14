@@ -658,10 +658,9 @@ export default function ScanScreen() {
       <EdgeFlashOverlay
         visible={flash && mode === 'face'}
         brightness={flashBrightness}
-        temperature={flashTemp}
       />
 
-      {/* Snapchat-style Ring Light settings */}
+      {/* Snapchat-style Flash Brightness toggle */}
       {mode === 'face' && flash && (
         <Animated.View
           entering={FadeIn.delay(200)}
@@ -669,7 +668,6 @@ export default function ScanScreen() {
           style={[styles.ringLightControls, { top: insets.top + 140 }]}
         >
           <BlurView tint="dark" intensity={30} style={styles.ringLightInner}>
-            {/* Brightness tap toggle */}
             <Pressable
               style={({ pressed }) => [styles.ringLightBtn, pressed && { opacity: 0.75 }]}
               onPress={() => {
@@ -681,38 +679,9 @@ export default function ScanScreen() {
                 });
               }}
             >
-              <MaterialIcons name="wb-sunny" size={17} color="#FFF" style={{ marginBottom: 2 }} />
+              <MaterialIcons name="wb-sunny" size={18} color="#FFF" style={{ marginBottom: 3 }} />
               <Text style={styles.ringLightBtnText}>
                 {flashBrightness === 1.0 ? 'MAX' : flashBrightness === 0.7 ? 'MID' : 'LOW'}
-              </Text>
-            </Pressable>
-
-            <View style={styles.ringLightDivider} />
-
-            {/* Temperature tap toggle */}
-            <Pressable
-              style={({ pressed }) => [styles.ringLightBtn, pressed && { opacity: 0.75 }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setFlashTemp(prev => {
-                  if (prev === 'neutral') return 'warm';
-                  if (prev === 'warm') return 'cool';
-                  return 'neutral';
-                });
-              }}
-            >
-              <MaterialIcons
-                name="thermostat"
-                size={17}
-                color={flashTemp === 'warm' ? '#FFEAA7' : flashTemp === 'cool' ? '#90CAF9' : '#FFF'}
-                style={{ marginBottom: 2 }}
-              />
-              <Text style={[
-                styles.ringLightBtnText,
-                flashTemp === 'warm' && { color: '#FFEAA7' },
-                flashTemp === 'cool' && { color: '#90CAF9' },
-              ]}>
-                {flashTemp === 'warm' ? 'WARM' : flashTemp === 'cool' ? 'COOL' : 'NEUT'}
               </Text>
             </Pressable>
           </BlurView>
@@ -902,38 +871,32 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     zIndex: 12,
-    borderRadius: 24,
+    borderRadius: 27,
     overflow: 'hidden',
   },
   ringLightInner: {
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 24,
+    justifyContent: 'center',
+    borderRadius: 27,
     borderWidth: 0.5,
     borderColor: 'rgba(255,255,255,0.22)',
     width: 54,
+    height: 54,
   },
   ringLightBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 44,
-    paddingVertical: 6,
+    width: 54,
+    height: 54,
   },
   ringLightBtnText: {
     fontFamily: tokens.fonts.regular,
     fontSize: 8,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginTop: 2,
+    marginTop: 1,
     letterSpacing: 0.2,
     textAlign: 'center',
-  },
-  ringLightDivider: {
-    width: 24,
-    height: 0.5,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    marginVertical: 10,
   },
 
   // ── UV Panel ──────────────────────────────────────────────
