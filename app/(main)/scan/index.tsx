@@ -809,8 +809,6 @@ const styles = StyleSheet.create({
   makeupAlert: {
     marginTop: 10,
     alignSelf: 'center',
-    borderRadius: 20,
-    overflow: 'hidden',
   },
   makeupAlertInner: {
     flexDirection: 'row',
@@ -821,6 +819,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 20,
+    overflow: 'hidden',
   },
   makeupAlertIcon: {
     fontSize: 9,
