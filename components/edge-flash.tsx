@@ -43,6 +43,13 @@ export function EdgeFlashOverlay({
   const openW = W - DEPTH_H * 2;
   const openH = H - DEPTH_TOP - DEPTH_BOTTOM;
 
+  // Let some soft white light pass through the center opening at high brightness levels
+  // At brightness = 1.0, let ~35% white light wash over the face
+  // At brightness = 0.3, keep center 100% transparent (solid black mask)
+  const centerOpacity = Math.max(0, (brightness - 0.3) * 0.5);
+  const centerVal = Math.round(centerOpacity * 255);
+  const centerFill = `rgb(${centerVal}, ${centerVal}, ${centerVal})`;
+
   return (
     <AnimatedView pointerEvents="none" style={[StyleSheet.absoluteFill, animatedStyle]}>
       <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
@@ -50,7 +57,7 @@ export function EdgeFlashOverlay({
           {/* Mask: white everywhere except a rounded rect in the centre (black = transparent) */}
           <Mask id="openingMask">
             <Rect x="0" y="0" width={W} height={H} fill="white" />
-            <Rect x={openX} y={openY} width={openW} height={openH} rx={CORNER_R} ry={CORNER_R} fill="black" />
+            <Rect x={openX} y={openY} width={openW} height={openH} rx={CORNER_R} ry={CORNER_R} fill={centerFill} />
           </Mask>
 
           {/* Top */}

@@ -349,6 +349,14 @@ export default function ScanScreen() {
     });
   };
 
+  const handleSliderTouch = (evt: any) => {
+    const TRACK_H = 110;
+    const y = Math.min(TRACK_H, Math.max(0, evt.nativeEvent.locationY));
+    const pct = 1 - (y / TRACK_H);
+    const val = 0.3 + pct * 0.7; // scale between 0.3 and 1.0
+    setFlashBrightness(Math.min(1.0, Math.max(0.3, val)));
+  };
+
   const startCompare = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setComparing(true);
@@ -660,7 +668,7 @@ export default function ScanScreen() {
         brightness={flashBrightness}
       />
 
-      {/* Snapchat-style Flash Brightness toggle */}
+      {/* Snapchat-style Flash Brightness slider */}
       {mode === 'face' && flash && (
         <Animated.View
           entering={FadeIn.delay(200)}
@@ -668,22 +676,23 @@ export default function ScanScreen() {
           style={[styles.ringLightControls, { top: insets.top + 140 }]}
         >
           <BlurView tint="dark" intensity={30} style={styles.ringLightInner}>
-            <Pressable
-              style={({ pressed }) => [styles.ringLightBtn, pressed && { opacity: 0.75 }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setFlashBrightness(prev => {
-                  if (prev === 1.0) return 0.4;
-                  if (prev === 0.4) return 0.7;
-                  return 1.0;
-                });
-              }}
+            <MaterialIcons name="wb-sunny" size={14} color="#FFF" style={{ marginBottom: 8 }} />
+            
+            {/* The vertical slider track */}
+            <View
+              style={styles.sliderTrack}
+              onStartShouldSetResponder={() => true}
+              onMoveShouldSetResponder={() => true}
+              onResponderGrant={handleSliderTouch}
+              onResponderMove={handleSliderTouch}
             >
-              <MaterialIcons name="wb-sunny" size={18} color="#FFF" style={{ marginBottom: 3 }} />
-              <Text style={styles.ringLightBtnText}>
-                {flashBrightness === 1.0 ? 'MAX' : flashBrightness === 0.7 ? 'MID' : 'LOW'}
-              </Text>
-            </Pressable>
+              {/* Active fill */}
+              <View style={[styles.sliderFill, { height: `${((flashBrightness - 0.3) / 0.7) * 100}%` }]} pointerEvents="none" />
+              {/* Thumb */}
+              <View style={[styles.sliderThumb, { bottom: `${((flashBrightness - 0.3) / 0.7) * 100 - 8}%` }]} pointerEvents="none" />
+            </View>
+
+            <Text style={styles.sliderLabel}>BRIGHT</Text>
           </BlurView>
         </Animated.View>
       )}
@@ -871,32 +880,56 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     zIndex: 12,
-    borderRadius: 27,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   ringLightInner: {
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 27,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 20,
     borderWidth: 0.5,
     borderColor: 'rgba(255,255,255,0.22)',
-    width: 54,
-    height: 54,
+    width: 44,
+    height: 180,
   },
-  ringLightBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 54,
-    height: 54,
+  sliderTrack: {
+    width: 10,
+    height: 110,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 5,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.18)',
+    position: 'relative',
   },
-  ringLightBtnText: {
+  sliderFill: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 5,
+  },
+  sliderThumb: {
+    position: 'absolute',
+    left: -3,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.28,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sliderLabel: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 8,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginTop: 1,
-    letterSpacing: 0.2,
-    textAlign: 'center',
+    fontSize: 7,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.60)',
+    marginTop: 8,
+    letterSpacing: 0.6,
   },
 
   // ── UV Panel ──────────────────────────────────────────────
