@@ -51,8 +51,10 @@ function AnimatedBar({ score, delay, isPriority }: { score: number; delay: numbe
 
 function CategoryCard({ cat, index }: { cat: CategoryAnalysis; index: number }) {
   const delay      = 300 + index * 80;
-  const scoreColor = cat.score >= 80 ? SCORE_GREEN : cat.score >= 65 ? SCORE_GOLD : SCORE_RED;
-  const scoreBg    = cat.score >= 80 ? '#EDF7F2'   : cat.score >= 65 ? '#FFF8ED'  : '#FFF0F0';
+  const isDetected = cat.detected !== false;
+  const scoreColor = isDetected
+    ? (cat.score >= 80 ? SCORE_GREEN : cat.score >= 65 ? SCORE_GOLD : SCORE_RED)
+    : tokens.colors.gray;
 
   const openTutorial = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -75,11 +77,11 @@ function CategoryCard({ cat, index }: { cat: CategoryAnalysis; index: number }) 
             )}
           </View>
         </View>
-        <Text style={[s.scoreNum, { color: scoreColor }]}>{cat.score}</Text>
+        <Text style={[s.scoreNum, { color: scoreColor }]}>{isDetected ? cat.score : '—'}</Text>
       </View>
 
       {/* Animated bar */}
-      <AnimatedBar score={cat.score} delay={delay + 80} isPriority={cat.isPriority} />
+      <AnimatedBar score={isDetected ? cat.score : 0} delay={delay + 80} isPriority={cat.isPriority} />
 
       {/* Coaching tip */}
       <Text style={s.cardTip}>{cat.tip}</Text>

@@ -78,17 +78,23 @@ User's priority focus area: ${priority}
 Evaluate the photo carefully and score each of the six categories 0–100 based solely on what is visible in the photo.
 CRITICAL: Do NOT copy the template scores (like 50) shown in the example JSON. You must generate unique, varied, and realistic scores that accurately reflect the user's actual makeup quality.
 The "${priority}" category must receive the most detailed feedback.
-If a category is not visible (e.g. no eyeshadow), score it 75 and note that in the tip.
+
+For each category, determine if the user is wearing makeup/product relevant to that category. For example:
+- "Coverage": is the user wearing any foundation/concealer/base makeup?
+- "Blending": is the user wearing any eyeshadow, contour, or blush that requires blending?
+- "Brow Framing": is the user wearing any brow makeup?
+If no makeup/product is detected for a category (i.e., bare skin, bare eyes, natural brows with no product), set "detected" to false. If makeup/product is detected, set "detected" to true.
+If a category is not detected (detected is false), score it 75 and explain in the tip that no makeup was detected for this category (be constructive!).
 
 Return ONLY this JSON (no markdown, no extra text):
 {
   "categories": [
-    { "name": "Blending", "score": 50, "tip": "2-3 specific sentences referencing what you see in the photo. Tailored to ${skill} level.", "tipShort": "One clear action sentence." },
-    { "name": "Symmetry", "score": 50, "tip": "...", "tipShort": "..." },
-    { "name": "Colour Harmony", "score": 50, "tip": "...", "tipShort": "..." },
-    { "name": "Coverage", "score": 50, "tip": "...", "tipShort": "..." },
-    { "name": "Cleanliness", "score": 50, "tip": "...", "tipShort": "..." },
-    { "name": "Brow Framing", "score": 50, "tip": "...", "tipShort": "..." }
+    { "name": "Blending", "score": 50, "detected": true, "tip": "2-3 specific sentences referencing what you see in the photo. Tailored to ${skill} level.", "tipShort": "One clear action sentence." },
+    { "name": "Symmetry", "score": 50, "detected": true, "tip": "...", "tipShort": "..." },
+    { "name": "Colour Harmony", "score": 50, "detected": true, "tip": "...", "tipShort": "..." },
+    { "name": "Coverage", "score": 50, "detected": true, "tip": "...", "tipShort": "..." },
+    { "name": "Cleanliness", "score": 50, "detected": true, "tip": "...", "tipShort": "..." },
+    { "name": "Brow Framing", "score": 50, "detected": true, "tip": "...", "tipShort": "..." }
   ]
 }
 
@@ -101,6 +107,7 @@ interface NimDiagnosisResponse {
     score: number;
     tip: string;
     tipShort: string;
+    detected?: boolean;
   }>;
 }
 
@@ -151,6 +158,7 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
       tip: found?.tip ?? FALLBACK_TIPS[name].tip,
       tipShort: found?.tipShort ?? FALLBACK_TIPS[name].tipShort,
       tutorialQuery: buildQuery(name, skill),
+      detected: found?.detected !== false,
     };
   });
 
@@ -173,6 +181,7 @@ function mockAnalyze(request: AnalyzeImageRequest): DiagnosisResult {
       tip: FALLBACK_TIPS[name].tip,
       tipShort: FALLBACK_TIPS[name].tipShort,
       tutorialQuery: buildQuery(name, skill),
+      detected: true,
     };
   });
 

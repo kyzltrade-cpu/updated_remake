@@ -16,6 +16,7 @@ export interface CategoryAnalysis {
   tip: string;
   tipShort: string;
   tutorialQuery: string;
+  detected?: boolean;
 }
 
 export interface DiagnosisResult {
