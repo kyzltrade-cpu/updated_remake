@@ -295,6 +295,8 @@ export default function ScanScreen() {
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [flash, setFlash] = useState(false);
+  const [flashBrightness, setFlashBrightness] = useState<number>(1.0);
+  const [flashTemp, setFlashTemp] = useState<'warm' | 'neutral' | 'cool'>('neutral');
   const [mode, setMode] = useState<ScanMode>('face');
   const [scanned, setScanned] = useState(false);
   const [showLowLight, setShowLowLight] = useState(false);
@@ -653,7 +655,69 @@ export default function ScanScreen() {
         </Animated.View>
       )}
 
-      <EdgeFlashOverlay visible={flash && mode === 'face'} />
+      <EdgeFlashOverlay
+        visible={flash && mode === 'face'}
+        brightness={flashBrightness}
+        temperature={flashTemp}
+      />
+
+      {/* Snapchat-style Ring Light settings */}
+      {mode === 'face' && flash && (
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          exiting={FadeOut.duration(200)}
+          style={[styles.ringLightControls, { top: insets.top + 140 }]}
+        >
+          <BlurView tint="dark" intensity={30} style={styles.ringLightInner}>
+            {/* Brightness tap toggle */}
+            <Pressable
+              style={({ pressed }) => [styles.ringLightBtn, pressed && { opacity: 0.75 }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setFlashBrightness(prev => {
+                  if (prev === 1.0) return 0.4;
+                  if (prev === 0.4) return 0.7;
+                  return 1.0;
+                });
+              }}
+            >
+              <MaterialIcons name="wb-sunny" size={17} color="#FFF" style={{ marginBottom: 2 }} />
+              <Text style={styles.ringLightBtnText}>
+                {flashBrightness === 1.0 ? 'MAX' : flashBrightness === 0.7 ? 'MID' : 'LOW'}
+              </Text>
+            </Pressable>
+
+            <View style={styles.ringLightDivider} />
+
+            {/* Temperature tap toggle */}
+            <Pressable
+              style={({ pressed }) => [styles.ringLightBtn, pressed && { opacity: 0.75 }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setFlashTemp(prev => {
+                  if (prev === 'neutral') return 'warm';
+                  if (prev === 'warm') return 'cool';
+                  return 'neutral';
+                });
+              }}
+            >
+              <MaterialIcons
+                name="thermostat"
+                size={17}
+                color={flashTemp === 'warm' ? '#FFEAA7' : flashTemp === 'cool' ? '#90CAF9' : '#FFF'}
+                style={{ marginBottom: 2 }}
+              />
+              <Text style={[
+                styles.ringLightBtnText,
+                flashTemp === 'warm' && { color: '#FFEAA7' },
+                flashTemp === 'cool' && { color: '#90CAF9' },
+              ]}>
+                {flashTemp === 'warm' ? 'WARM' : flashTemp === 'cool' ? 'COOL' : 'NEUT'}
+              </Text>
+            </Pressable>
+          </BlurView>
+        </Animated.View>
+      )}
 
       {showUV && <UVPopup onClose={() => setShowUV(false)} insetTop={insets.top} />}
 
@@ -831,6 +895,45 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.78)',
     letterSpacing: 0.1,
+  },
+
+  // ── Snapchat Ring Light Controls ──────────────────────────
+  ringLightControls: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 12,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  ringLightInner: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 24,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.22)',
+    width: 54,
+  },
+  ringLightBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 44,
+    paddingVertical: 6,
+  },
+  ringLightBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 8,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 2,
+    letterSpacing: 0.2,
+    textAlign: 'center',
+  },
+  ringLightDivider: {
+    width: 24,
+    height: 0.5,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    marginVertical: 10,
   },
 
   // ── UV Panel ──────────────────────────────────────────────
