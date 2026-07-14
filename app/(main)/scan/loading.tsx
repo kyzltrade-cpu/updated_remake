@@ -143,7 +143,7 @@ export default function LoadingPage() {
 
       const coaching = await getCoaching({ diagnosis });
 
-      let lastScore: number | undefined;
+      let lastScore: number | null | undefined;
       if (user?.id) {
         try {
           const last = await getLastScan(user.id);

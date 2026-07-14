@@ -44,7 +44,8 @@ Write a single short coaching compliment (1-2 sentences max). Rules:
  * Sanity check post-processor to ensure any AI-hallucinated or rounded scores
  * mentioned in the coaching compliment text perfectly align with the actual score.
  */
-function sanitizeCompliment(compliment: string, score: number): string {
+function sanitizeCompliment(compliment: string, score: number | null): string {
+  if (score === null) return compliment;
   let result = compliment;
   
   // 1. Standard pattern corrections (e.g., "score of 82" or "rating of 82")
@@ -64,7 +65,8 @@ function sanitizeCompliment(compliment: string, score: number): string {
   return result;
 }
 
-function fallbackCompliment(score: number): string {
+function fallbackCompliment(score: number | null): string {
+  if (score === null) return 'Gorgeous bare skin canvas! Focus on keeping your natural skin barrier protected and your brows framed to look effortlessly glowing.';
   if (score >= 90) return 'Impeccable. Every category is working together — this is camera-ready.';
   if (score >= 80) return 'Beautiful technique. A few small refinements will take this to flawless.';
   if (score >= 70) return 'Solid foundation. Focus on the highlighted areas and you\'ll see a big shift.';

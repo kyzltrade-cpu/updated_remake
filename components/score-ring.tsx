@@ -21,18 +21,19 @@ const TIERS = {
   flawless: { word: 'Flawless', pct: 0.95 },
   strong: { word: 'Strong', pct: 0.80 },
   refine: { word: 'Refine', pct: 0.65 },
+  bare: { word: 'Natural', pct: 0.0 },
 };
 
 interface ScoreRingProps {
-  tier?: 'flawless' | 'strong' | 'refine';
-  score?: number; // 0–100, overrides tier pct
+  tier?: 'flawless' | 'strong' | 'refine' | 'bare';
+  score?: number | null; // 0–100, overrides tier pct
   visible?: boolean;
 }
 
 export function ScoreRing({ tier = 'strong', score, visible = true }: ScoreRingProps) {
   const { word, pct } = TIERS[tier] || TIERS.strong;
   // Use explicit score if provided, otherwise fall back to tier pct
-  const targetPct = score !== undefined ? score / 100 : pct;
+  const targetPct = score !== undefined && score !== null ? score / 100 : pct;
   const progress = useSharedValue(0);
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.92);

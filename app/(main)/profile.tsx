@@ -148,7 +148,8 @@ export default function ProfileScreen() {
     }
     try {
       // Formulate a beautiful message
-      const text = `✨ My Skin Health Score is ${Math.round(scan.overall_score)}/100 on Remake! 🌸\nVerdict: ${scan.verdict === 'GO' ? 'Clean & Acne-Safe! ✅' : 'Exposed Bad Ingredients! 🛑'}\n"${scan.coaching_compliment}"\nAnalyze your skin at remake.beauty 💖`;
+      const scoreStr = scan.overall_score !== null ? `${Math.round(scan.overall_score!)}/100` : 'Natural Skin (Bare)';
+      const text = `✨ My Skin Health Score is ${scoreStr} on Remake! 🌸\nVerdict: ${scan.verdict === 'GO' ? 'Clean & Acne-Safe! ✅' : 'Exposed Bad Ingredients! 🛑'}\n"${scan.coaching_compliment}"\nAnalyze your skin at remake.beauty 💖`;
       await Sharing.shareAsync('https://remake.beauty', { dialogTitle: 'Share Scan Results', mimeType: 'text/plain' });
     } catch (e) {
       console.warn('[Profile] Sharing failed:', e);
@@ -521,7 +522,8 @@ export default function ProfileScreen() {
           )}
 
           {history.map((scan, i) => {
-            const score = Math.round(scan.overall_score);
+            const hasScore = scan.overall_score !== null && scan.overall_score !== undefined;
+            const scoreText = hasScore ? String(Math.round(scan.overall_score!)) : '—';
             const isExpanded = expandedScanId === scan.id;
 
             return (
@@ -543,7 +545,7 @@ export default function ProfileScreen() {
                   </View>
                   <View style={styles.scanRight}>
                     <View style={styles.scorePill}>
-                      <Text style={styles.scanScore}>{score}</Text>
+                      <Text style={styles.scanScore}>{scoreText}</Text>
                     </View>
                     <MaterialIcons 
                       name={isExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"} 

@@ -113,7 +113,7 @@ export default function ResultsScreen() {
   const [diagnosis,  setDiagnosis]  = useState<DiagnosisResult | null>(null);
   const [coaching,   setCoaching]   = useState<CoachingResult | null>(null);
   const [scoreDelta, setScoreDelta] = useState<number>(5);
-  const [lastScore,  setLastScore]  = useState<number>(78);
+  const [lastScore,  setLastScore]  = useState<number | null>(78);
   const [isLoadingRecord, setIsLoadingRecord] = useState<boolean>(false);
   const { user } = useAuth();
   const savedRef = useRef(false);
@@ -125,7 +125,7 @@ export default function ResultsScreen() {
         .then(record => {
           if (record) {
             const fetchedDiagnosis: DiagnosisResult = {
-              overallScore: Number(record.overall_score),
+              overallScore: record.overall_score !== null ? Number(record.overall_score) : null,
               verdict: record.verdict,
               categories: record.category_scores,
             };
@@ -143,9 +143,13 @@ export default function ResultsScreen() {
                   const currentIndex = history.findIndex(h => h.id === params.scanId);
                   if (currentIndex !== -1 && currentIndex + 1 < history.length) {
                     const prevScan = history[currentIndex + 1];
-                    const prevScore = Number(prevScan.overall_score);
+                    const prevScore = prevScan.overall_score !== null ? Number(prevScan.overall_score) : null;
                     setLastScore(prevScore);
-                    setScoreDelta(Math.round(fetchedDiagnosis.overallScore - prevScore));
+                    if (fetchedDiagnosis.overallScore !== null && prevScore !== null) {
+                      setScoreDelta(Math.round(fetchedDiagnosis.overallScore - prevScore));
+                    } else {
+                      setScoreDelta(0);
+                    }
                   } else {
                     setLastScore(fetchedDiagnosis.overallScore);
                     setScoreDelta(0);
@@ -187,7 +191,11 @@ export default function ResultsScreen() {
       if (params.lastScore) {
         const prevScore = Number(params.lastScore);
         setLastScore(prevScore);
-        setScoreDelta(Math.round(parsed.diagnosis.overallScore - prevScore));
+        if (parsed.diagnosis.overallScore !== null) {
+          setScoreDelta(Math.round(parsed.diagnosis.overallScore - prevScore));
+        } else {
+          setScoreDelta(0);
+        }
       } else {
         setLastScore(parsed.diagnosis.overallScore);
         setScoreDelta(0);
@@ -206,18 +214,20 @@ export default function ResultsScreen() {
     );
   }
 
-  const score      = diagnosis?.overallScore ?? 0;
+  const score      = diagnosis?.overallScore ?? null;
   const categories = diagnosis?.categories ?? [];
   const compliment = coaching?.compliment ?? '';
+
+  const isBare     = score === null || score === undefined || categories.every(cat => cat.detected === false);
 
   const sorted = [...categories].sort((a, b) => {
     if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
     return a.score - b.score;
   });
 
-  const pillColor = score >= 80 ? SCORE_GREEN : score >= 65 ? SCORE_GOLD : SCORE_RED;
-  const pillBg    = score >= 80 ? '#EDF7F2'   : score >= 65 ? '#FFF8ED'  : '#FFF0F0';
-  const phrase    = score >= 80 ? 'Looking flawless' : score >= 65 ? 'Almost there' : 'Room to grow';
+  const pillColor = isBare ? tokens.colors.gray : (score! >= 80 ? SCORE_GREEN : score! >= 65 ? SCORE_GOLD : SCORE_RED);
+  const pillBg    = isBare ? 'rgba(0,0,0,0.04)' : (score! >= 80 ? '#EDF7F2'   : score! >= 65 ? '#FFF8ED'  : '#FFF0F0');
+  const phrase    = isBare ? 'Bare Skin' : (score! >= 80 ? 'Looking flawless' : score! >= 65 ? 'Almost there' : 'Room to grow');
   const deltaColor = scoreDelta >= 0 ? SCORE_GREEN : SCORE_RED;
 
   return (
@@ -237,16 +247,24 @@ export default function ResultsScreen() {
 
         {/* ── Centred hero ── */}
         <Animated.View entering={FadeIn.duration(500)} style={s.hero}>
-          <ScoreRing score={score} visible />
+          <ScoreRing
+            score={score}
+            tier={isBare ? 'bare' : (score! >= 80 ? 'flawless' : score! >= 65 ? 'strong' : 'refine')}
+            visible
+          />
 
           {/* Combined verdict + delta pill */}
           <View style={s.verdictRow}>
             <View style={[s.combinedPill, { borderColor: `${pillColor}50`, backgroundColor: pillBg }]}>
               <Text style={[s.combinedLabel, { color: pillColor }]}>{phrase}</Text>
-              <View style={[s.combinedSep, { backgroundColor: `${pillColor}35` }]} />
-              <Text style={[s.combinedDelta, { color: deltaColor }]}>
-                {scoreDelta >= 0 ? '↑' : '↓'} {Math.abs(scoreDelta)}
-              </Text>
+              {!isBare && (
+                <>
+                  <View style={[s.combinedSep, { backgroundColor: `${pillColor}35` }]} />
+                  <Text style={[s.combinedDelta, { color: deltaColor }]}>
+                    {scoreDelta >= 0 ? '↑' : '↓'} {Math.abs(scoreDelta)}
+                  </Text>
+                </>
+              )}
             </View>
           </View>
 
@@ -255,13 +273,13 @@ export default function ResultsScreen() {
           {/* Stats strip */}
           <View style={s.statsRow}>
             <View style={s.stat}>
-              <Text style={s.statNum}>{score}</Text>
+              <Text style={[s.statNum, isBare && { color: tokens.colors.grayLight }]}>{isBare ? '—' : score}</Text>
               <Text style={s.statLabel}>Score</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={[s.statNum, lastScore >= score ? { color: SCORE_RED } : { color: SCORE_GREEN }]}>
-                {lastScore}
+              <Text style={[s.statNum, { color: tokens.colors.pinkDeep }]}>
+                {lastScore !== null && lastScore !== undefined ? lastScore : '—'}
               </Text>
               <Text style={s.statLabel}>Last scan</Text>
             </View>

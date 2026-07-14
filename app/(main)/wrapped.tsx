@@ -109,9 +109,9 @@ type WrappedStats = {
 
 function deriveStats(scans: ScanRecord[], streak: number): WrappedStats {
   const sorted = [...scans].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  const scores = sorted.map(s => s.overall_score);
+  const scores = sorted.map(s => s.overall_score).filter((s): s is number => s !== null && s !== undefined);
   const best   = scores.length ? Math.max(...scores) : 0;
-  const bestScan  = sorted.find(s => s.overall_score === best);
+  const bestScan  = sorted.find(s => s.overall_score !== null && s.overall_score === best);
   const bestMonth = bestScan ? new Date(bestScan.created_at).toLocaleString('default', { month: 'long' }) : 'this month';
   const half      = Math.max(1, Math.floor(scores.length / 2));
   const startAvg  = scores.length >= 2 ? Math.round(scores.slice(0, half).reduce((a,b)=>a+b,0)/half) : 60;

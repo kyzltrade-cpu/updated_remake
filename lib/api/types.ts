@@ -20,7 +20,7 @@ export interface CategoryAnalysis {
 }
 
 export interface DiagnosisResult {
-  overallScore: number;
+  overallScore: number | null;
   verdict: Verdict;
   categories: CategoryAnalysis[];
   skinToneHex?: string;

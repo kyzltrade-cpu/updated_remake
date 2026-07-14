@@ -162,8 +162,9 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
     };
   });
 
-  const overallScore = weightedScore(categories);
-  const verdict: Verdict = overallScore >= 72 ? 'GO' : 'FIX';
+  const allBare = categories.every(cat => cat.detected === false);
+  const overallScore = allBare ? null : weightedScore(categories);
+  const verdict: Verdict = allBare ? 'GO' : (overallScore! >= 72 ? 'GO' : 'FIX');
   return { overallScore, verdict, categories };
 }
 
@@ -185,8 +186,9 @@ function mockAnalyze(request: AnalyzeImageRequest): DiagnosisResult {
     };
   });
 
-  const overallScore = weightedScore(categories);
-  return { overallScore, verdict: overallScore >= 72 ? 'GO' : 'FIX', categories };
+  const allBare = categories.every(cat => cat.detected === false);
+  const overallScore = allBare ? null : weightedScore(categories);
+  return { overallScore, verdict: allBare ? 'GO' : (overallScore! >= 72 ? 'GO' : 'FIX'), categories };
 }
 
 class SixCategoryDiagnosisProvider implements DiagnosisProvider {

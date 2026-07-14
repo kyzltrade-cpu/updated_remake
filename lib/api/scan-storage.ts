@@ -4,7 +4,7 @@ import type { DnaResult } from '@/lib/api/dna';
 
 export interface ScanRecord {
   id: string;
-  overall_score: number;
+  overall_score: number | null;
   verdict: 'GO' | 'FIX';
   coaching_compliment: string;
   created_at: string;
@@ -78,13 +78,15 @@ export async function getScanStats(userId: string): Promise<{
       .maybeSingle(),
   ]);
 
-  const scores: number[] = (scansRes.data ?? []).map((r: Record<string, number>) => r.overall_score);
+  const scores: number[] = (scansRes.data ?? [])
+    .map((r: any) => r.overall_score)
+    .filter((score: any) => score !== null && score !== undefined);
   const avgScore = scores.length > 0
     ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length)
     : 0;
 
   return {
-    totalScans: scansRes.count ?? 0,
+    totalScans: scores.length, // total scans with valid scores
     avgScore,
     currentStreak: streakRes.data?.current_streak ?? 0,
     streakFreezes: streakRes.data?.streak_freezes ?? 2,
