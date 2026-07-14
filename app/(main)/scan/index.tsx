@@ -553,6 +553,22 @@ export default function ScanScreen() {
             </Pressable>
           </BlurView>
         </Animated.View>
+
+        {/* Makeup Alert banner — subtle and beautiful */}
+        {mode === 'face' && (
+          <Animated.View
+            entering={FadeInDown.springify().damping(18)}
+            exiting={FadeOut.duration(200)}
+            style={styles.makeupAlert}
+          >
+            <BlurView tint="dark" intensity={35} style={styles.makeupAlertInner}>
+              <Text style={styles.makeupAlertIcon}>✦</Text>
+              <Text style={styles.makeupAlertText}>
+                Designed for makeup wearers — results may vary if scanned barefaced
+              </Text>
+            </BlurView>
+          </Animated.View>
+        )}
       </LinearGradient>
 
       {/* Bottom gradient + controls — both modes */}
@@ -787,6 +803,35 @@ const styles = StyleSheet.create({
   lowLightText: {
     fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '500',
     color: 'rgba(255,210,235,0.92)', letterSpacing: 0.3,
+  },
+
+  // ── Makeup Alert Banner ───────────────────────────────────
+  makeupAlert: {
+    marginTop: 10,
+    alignSelf: 'center',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  makeupAlertInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 20,
+  },
+  makeupAlertIcon: {
+    fontSize: 9,
+    color: tokens.colors.pinkDeep,
+  },
+  makeupAlertText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.78)',
+    letterSpacing: 0.1,
   },
 
   // ── UV Panel ──────────────────────────────────────────────
