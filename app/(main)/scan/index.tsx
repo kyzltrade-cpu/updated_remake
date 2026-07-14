@@ -692,7 +692,7 @@ export default function ScanScreen() {
               <View style={[styles.sliderThumb, { bottom: `${((flashBrightness - 0.3) / 0.7) * 100 - 8}%` }]} pointerEvents="none" />
             </View>
 
-            <Text style={styles.sliderLabel}>BRIGHT</Text>
+            <Text style={styles.sliderLabel} numberOfLines={1} adjustsFontSizeToFit>BRIGHT</Text>
           </BlurView>
         </Animated.View>
       )}
@@ -886,11 +886,11 @@ const styles = StyleSheet.create({
   ringLightInner: {
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     borderRadius: 20,
     borderWidth: 0.5,
     borderColor: 'rgba(255,255,255,0.22)',
-    width: 44,
+    width: 48,
     height: 180,
   },
   sliderTrack: {
@@ -929,7 +929,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: 'rgba(255,255,255,0.60)',
     marginTop: 8,
-    letterSpacing: 0.6,
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    width: '100%',
   },
 
   // ── UV Panel ──────────────────────────────────────────────
