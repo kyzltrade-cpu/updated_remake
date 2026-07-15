@@ -400,13 +400,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)',
   },
   planBadgePro: {
-    backgroundColor: 'rgba(212,175,55,0.12)',
-    borderColor: 'rgba(212,175,55,0.3)',
+    backgroundColor: tokens.colors.accent,
+    borderColor: tokens.colors.accent,
   },
   planBadgeText: {
     fontFamily: tokens.fonts.regular, fontSize: 11, fontWeight: '600', color: tokens.colors.gray,
   },
-  planBadgeTextPro: { color: tokens.colors.gold },
+  planBadgeTextPro: { color: tokens.colors.white },
   upgradeCta: {
     backgroundColor: tokens.colors.pinkDeep,
     borderRadius: 50, paddingHorizontal: 14, paddingVertical: 8,
