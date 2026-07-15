@@ -12,7 +12,6 @@ import Animated, {
   Easing,
   SharedValue,
 } from 'react-native-reanimated';
-import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { tokens } from './theme';
 
@@ -85,34 +84,7 @@ const LOGO_PATHS = {
   ]
 };
 
-interface BlobProps {
-  color: string;
-  size?: number;
-  opacity?: number;
-}
 
-// 100% cross-platform Radial Glow component (avoids native crashy filters)
-function RadialGlowBlob({ color, size = 400, opacity = 0.5 }: BlobProps) {
-  const gradId = `glow-${color.replace('#', '')}-${size}`;
-  return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Defs>
-        <RadialGradient
-          id={gradId}
-          cx="50%"
-          cy="50%"
-          rx="50%"
-          ry="50%"
-        >
-          <Stop offset="0%" stopColor={color} stopOpacity={opacity} />
-          <Stop offset="45%" stopColor={color} stopOpacity={opacity * 0.4} />
-          <Stop offset="100%" stopColor={color} stopOpacity="0" />
-        </RadialGradient>
-      </Defs>
-      <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={`url(#${gradId})`} />
-    </Svg>
-  );
-}
 
 export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?: () => void }) {
   // Shared values for drawing animations
@@ -128,101 +100,8 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
   const textOpacity = useSharedValue(0);
   const textTranslateY = useSharedValue(12);
 
-  // Shared values for moving background blobs (gentle, drifting liquid motion)
-  const blob1X = useSharedValue(-100);
-  const blob1Y = useSharedValue(-150);
-  const blob1Scale = useSharedValue(0.9);
-
-  const blob2X = useSharedValue(120);
-  const blob2Y = useSharedValue(180);
-  const blob2Scale = useSharedValue(1.1);
-
-  // Core impact glow that expands from under the logo
-  const centerGlowScale = useSharedValue(0.4);
-  const centerGlowOpacity = useSharedValue(0);
-
-  // Reference to hold our startup sound
-  const soundRef = useRef<Audio.Sound | null>(null);
-
   useEffect(() => {
     let mounted = true;
-
-    // 1. Play beautiful, high-end startup sound effect
-    (async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: false,
-          staysActiveInBackground: false,
-        });
-        
-        // We load the luscious ambient sound
-        const { sound } = await Audio.Sound.createAsync(
-          require('../assets/sounds/ambient.mp3'),
-          { isLooping: false, volume: 0.85 }
-        );
-
-        if (!mounted) {
-          sound.unloadAsync();
-          return;
-        }
-
-        soundRef.current = sound;
-        await sound.playAsync();
-      } catch (err) {
-        console.warn('[Splash Sound] Could not play startup sound effect:', err);
-      }
-    })();
-
-    // 2. Continuous background liquid drift animation
-    blob1X.value = withRepeat(
-      withSequence(
-        withTiming(80, { duration: 9000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(-100, { duration: 9000, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      true
-    );
-    blob1Y.value = withRepeat(
-      withSequence(
-        withTiming(50, { duration: 11000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(-150, { duration: 11000, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      true
-    );
-    blob1Scale.value = withRepeat(
-      withSequence(
-        withTiming(1.3, { duration: 10000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(0.9, { duration: 10000, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      true
-    );
-
-    blob2X.value = withRepeat(
-      withSequence(
-        withTiming(-80, { duration: 10000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(120, { duration: 10000, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      true
-    );
-    blob2Y.value = withRepeat(
-      withSequence(
-        withTiming(-100, { duration: 12000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(180, { duration: 12000, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      true
-    );
-    blob2Scale.value = withRepeat(
-      withSequence(
-        withTiming(1.4, { duration: 9000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(1.0, { duration: 9000, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      true
-    );
 
     // 3. Kick off hair swoop and profile lines simultaneously
     hairDraw.value = withTiming(0, {
@@ -244,21 +123,7 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
       })
     );
 
-    // 5. Ambient center glow blooms underneath as the lines snap in
-    centerGlowScale.value = withDelay(
-      800,
-      withTiming(2.2, {
-        duration: 1800,
-        easing: Easing.out(Easing.quad),
-      })
-    );
-    centerGlowOpacity.value = withDelay(
-      800,
-      withTiming(1, {
-        duration: 1500,
-        easing: Easing.out(Easing.quad),
-      })
-    );
+
 
     // 6. Elegant text fade-in
     textOpacity.value = withDelay(
@@ -305,8 +170,6 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
       clearTimeout(hapticTimer);
       clearTimeout(exitTimer);
       clearTimeout(completeTimer);
-      soundRef.current?.unloadAsync().catch(() => {});
-      soundRef.current = null;
     };
   }, []);
 
@@ -326,33 +189,7 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
     };
   });
 
-  // Animated background styles
-  const animatedBlob1Style = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: blob1X.value },
-        { translateY: blob1Y.value },
-        { scale: blob1Scale.value },
-      ],
-    };
-  });
 
-  const animatedBlob2Style = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: blob2X.value },
-        { translateY: blob2Y.value },
-        { scale: blob2Scale.value },
-      ],
-    };
-  });
-
-  const animatedCenterGlowStyle = useAnimatedStyle(() => {
-    return {
-      opacity: centerGlowOpacity.value,
-      transform: [{ scale: centerGlowScale.value }],
-    };
-  });
 
   // Generate dynamic stroke props for drawing each line category
   const createAnimatedPathProps = (progressValue: SharedValue<number>, length: number) => {
@@ -365,19 +202,6 @@ export function AppSplashScreen({ onAnimationComplete }: { onAnimationComplete?:
 
   return (
     <Animated.View style={[styles.container, animatedContainerStyle]}>
-      {/* Background Liquid Drifting Glows (Layered underneath the logo) */}
-      <View style={StyleSheet.absoluteFillObject}>
-        <Animated.View style={[styles.blobContainer, { left: SCREEN_WIDTH / 2 - 250, top: SCREEN_HEIGHT / 2 - 250 }, animatedBlob1Style]}>
-          <RadialGlowBlob color={tokens.colors.blush} size={500} opacity={0.55} />
-        </Animated.View>
-        <Animated.View style={[styles.blobContainer, { left: SCREEN_WIDTH / 2 - 200, top: SCREEN_HEIGHT / 2 - 200 }, animatedBlob2Style]}>
-          <RadialGlowBlob color={tokens.colors.pink} size={400} opacity={0.35} />
-        </Animated.View>
-        <Animated.View style={[styles.blobContainer, { left: SCREEN_WIDTH / 2 - 175, top: SCREEN_HEIGHT / 2 - 175 }, animatedCenterGlowStyle]}>
-          <RadialGlowBlob color={tokens.colors.pinkMid} size={350} opacity={0.45} />
-        </Animated.View>
-      </View>
-
       <View style={styles.center}>
         {/* Main Logo Container */}
         <View style={styles.svgWrapper}>
