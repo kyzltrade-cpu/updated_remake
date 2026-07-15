@@ -161,6 +161,43 @@ export default function ProfileScreen() {
     setExpandedScanId(expandedScanId === id ? null : id);
   };
 
+  const handleClearVault = () => {
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (!user?.id) {
+      Alert.alert('Error', 'You must be signed in to perform this action.');
+      return;
+    }
+
+    Alert.alert(
+      'Wipe Secure Scan Vault',
+      'This will permanently delete your entire chronological makeup scan history, product scores, and past diagnostic logs. This action is irreversible—once erased, your vaults cannot be restored.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Wipe Permanently',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              const supabase = createClient();
+              const { error } = await supabase.from('scans').delete().eq('user_id', user.id);
+              if (error) {
+                console.error('[Profile] Failed to clear scans:', error);
+                Alert.alert('Error', 'Failed to clear scan history. Please try again.');
+              } else {
+                Alert.alert('Vault Purged', 'Your secure scan history has been completely and permanently erased.');
+                loadData();
+              }
+            } catch (e) {
+              console.error('[Profile] Clear scans exception:', e);
+              Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const paletteColors = dna?.colorSeason ? SEASON_PALETTES[dna.colorSeason] : null;
 
   return (
@@ -591,6 +628,15 @@ export default function ProfileScreen() {
               </Animated.View>
             );
           })}
+
+          {history.length > 0 && (
+            <Pressable 
+              onPress={handleClearVault} 
+              style={({ pressed }) => [styles.clearVaultBtn, pressed && { opacity: 0.6 }]}
+            >
+              <Text style={styles.clearVaultText}>Wipe Secure Scan Vault</Text>
+            </Pressable>
+          )}
         </Animated.View>
 
         {/* Developer Bypass Test Actions */}
@@ -631,6 +677,22 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  clearVaultBtn: {
+    alignSelf: 'center',
+    paddingVertical: 16,
+    marginTop: 14,
+    marginBottom: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  clearVaultText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    fontWeight: '700',
+    color: tokens.colors.pinkRich,
+    letterSpacing: 2.5,
+    textTransform: 'uppercase',
+  },
   container: { flex: 1, backgroundColor: tokens.colors.beige },
   ambientGlow: {
     position: 'absolute',
