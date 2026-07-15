@@ -134,7 +134,7 @@ export default function SubscriptionDetails() {
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Subscription Details</Text>
-        <View style={{ width: 34 }} /> {/* Spacer */}
+        <View style={{ width: 34 }} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
