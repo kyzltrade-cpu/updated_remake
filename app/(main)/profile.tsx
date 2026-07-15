@@ -319,7 +319,7 @@ export default function ProfileScreen() {
                 </Text>
               </Animated.View>
             </View>
-          ) : (dna && isPro && stats && stats.totalScans > 0) ? (
+          ) : (dna && isPro) ? (
             <View style={styles.dnaActiveCard}>
               <View style={styles.dnaHeader}>
                 <View>
