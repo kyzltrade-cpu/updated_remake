@@ -143,6 +143,14 @@ export default function LoadingPage() {
 
       const coaching = await getCoaching({ diagnosis });
 
+      const allBare = diagnosis.overallScore === null || diagnosis.categories.every((cat: any) => cat.detected === false);
+      if (allBare) {
+        console.log('[loading] No makeup detected in any category. Re-routing to no-makeup screen and skipping DB save.');
+        isScanning.current = false;
+        router.replace('/(main)/scan/no-makeup');
+        return;
+      }
+
       let lastScore: number | null | undefined;
       if (user?.id) {
         try {
