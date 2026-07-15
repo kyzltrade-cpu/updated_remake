@@ -1,9 +1,11 @@
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, Alert } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
 import { useSettings } from '@/contexts/settings-context';
+import * as Sharing from 'expo-sharing';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function PreviewScreen() {
   const router = useRouter();
@@ -19,6 +21,20 @@ export default function PreviewScreen() {
   const handleDiscard = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.back();
+  };
+
+  const handleShare = async () => {
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const isAvailable = await Sharing.isAvailableAsync();
+    if (isAvailable && uri) {
+      try {
+        await Sharing.shareAsync(uri);
+      } catch (error) {
+        console.warn('[Preview] Sharing failed:', error);
+      }
+    } else {
+      Alert.alert('Sharing Unavailable', 'Native sharing is not supported on this device.');
+    }
   };
 
   return (
@@ -55,9 +71,9 @@ export default function PreviewScreen() {
           <Text style={styles.analyzeText}>Analyze</Text>
         </Pressable>
 
-        {/* Save — circle with ↓ */}
-        <Pressable style={({ pressed }) => [styles.circleBtn, pressed && styles.circleBtnPressed]}>
-          <Text style={styles.circleBtnIcon}>↓</Text>
+        {/* Share — circle with share icon */}
+        <Pressable onPress={handleShare} style={({ pressed }) => [styles.circleBtn, pressed && styles.circleBtnPressed]}>
+          <MaterialIcons name="share" size={18} color="rgba(255,255,255,0.6)" />
         </Pressable>
       </View>
     </View>
