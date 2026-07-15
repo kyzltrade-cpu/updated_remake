@@ -4,8 +4,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { tokens } from '@/components/theme';
 import * as Haptics from 'expo-haptics';
 import { useSettings } from '@/contexts/settings-context';
-import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from '@/lib/supabase';
 import * as Sharing from 'expo-sharing';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
@@ -14,7 +12,6 @@ export default function PreviewScreen() {
   const params = useLocalSearchParams<{ uri?: string }>();
   const uri = params.uri ?? '';
   const { settings } = useSettings();
-  const { user } = useAuth();
 
   const handleAnalyze = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -40,41 +37,7 @@ export default function PreviewScreen() {
     }
   };
 
-  const handleClearVault = () => {
-    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (!user?.id) {
-      Alert.alert('Error', 'You must be signed in to perform this action.');
-      return;
-    }
 
-    Alert.alert(
-      'Wipe Secure Scan Vault',
-      'This will permanently delete your entire chronological makeup scan history, product scores, and past diagnostic logs. This action is irreversible—once erased, your vaults cannot be restored.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Wipe Permanently',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              const supabase = createClient();
-              const { error } = await supabase.from('scans').delete().eq('user_id', user.id);
-              if (error) {
-                console.error('[Preview] Failed to clear scans:', error);
-                Alert.alert('Error', 'Failed to clear scan history. Please try again.');
-              } else {
-                Alert.alert('Vault Purged', 'Your secure scan history has been completely and permanently erased.');
-              }
-            } catch (e) {
-              console.error('[Preview] Clear scans exception:', e);
-              Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-            }
-          }
-        }
-      ]
-    );
-  };
 
   return (
     <View style={styles.container}>
@@ -115,11 +78,6 @@ export default function PreviewScreen() {
           <MaterialIcons name="share" size={18} color="rgba(255,255,255,0.6)" />
         </Pressable>
       </View>
-
-      {/* Clear Scan History Text Link */}
-      <Pressable onPress={handleClearVault} style={({ pressed }) => [styles.clearVaultBtn, pressed && { opacity: 0.6 }]}>
-        <Text style={styles.clearVaultText}>Wipe Secure Scan Vault</Text>
-      </Pressable>
     </View>
   );
 }
@@ -152,18 +110,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   bottomBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingBottom: 32, gap: 44 },
-  clearVaultBtn: {
-    alignSelf: 'center',
-    paddingBottom: 36,
-  },
-  clearVaultText: {
-    fontFamily: tokens.fonts.regular,
-    fontSize: 9,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.22)',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
   circleBtn: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
   circleBtnPressed: { transform: [{ scale: 0.90 }], backgroundColor: 'rgba(255,255,255,0.08)' },
   circleBtnIcon: { fontSize: 15, color: 'rgba(255,255,255,0.6)' },
