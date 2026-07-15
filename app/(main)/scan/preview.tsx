@@ -35,6 +35,14 @@ export default function PreviewScreen() {
         )}
       </Animated.View>
 
+      {/* Lighting sensitivity notification */}
+      <View style={styles.lightingTipContainer}>
+        <Text style={styles.lightingTipHeader}>⚡︎ LIGHTING SENSITIVITY: HIGH</Text>
+        <Text style={styles.lightingTipText}>
+          Ensure soft, front-facing light. Strong side-shadows, overhead bulbs, or backlights will alter your cosmetic score calibration.
+        </Text>
+      </View>
+
       {/* Bottom bar — HTML brand matching */}
       <View style={styles.bottomBar}>
         {/* Discard — circle with × */}
@@ -58,9 +66,31 @@ export default function PreviewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  preview: { flex: 1, marginTop: 60, marginHorizontal: 14, marginBottom: 14, borderRadius: 20, overflow: 'hidden', backgroundColor: '#111' },
+  preview: { flex: 1, marginTop: 60, marginHorizontal: 14, marginBottom: 12, borderRadius: 20, overflow: 'hidden', backgroundColor: '#111' },
   photo: { width: '100%', height: '100%' },
   placeholder: { flex: 1, textAlign: 'center', textAlignVertical: 'center', lineHeight: 200, color: 'rgba(232,160,170,0.15)', fontSize: 13, letterSpacing: 0.5 },
+  lightingTipContainer: {
+    marginHorizontal: 28,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  lightingTipHeader: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 9,
+    fontWeight: '700',
+    color: tokens.colors.pinkRich,
+    letterSpacing: 2.5,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  lightingTipText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.45)',
+    textAlign: 'center',
+    lineHeight: 16,
+    letterSpacing: 0.1,
+  },
   bottomBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingBottom: 50, gap: 44 },
   circleBtn: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
   circleBtnPressed: { transform: [{ scale: 0.90 }], backgroundColor: 'rgba(255,255,255,0.08)' },
