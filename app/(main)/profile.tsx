@@ -678,13 +678,11 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   clearVaultBtn: {
-    alignSelf: 'center',
     backgroundColor: tokens.colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: tokens.colors.border,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    borderRadius: 18,
+    paddingVertical: 15,
     marginTop: 20,
     marginBottom: 24,
     alignItems: 'center',
@@ -697,8 +695,8 @@ const styles = StyleSheet.create({
   },
   clearVaultText: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
     color: tokens.colors.pinkRich,
     letterSpacing: 0.2,
   },
