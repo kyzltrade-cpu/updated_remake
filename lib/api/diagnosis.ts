@@ -158,7 +158,7 @@ async function analyzeWithNim(request: AnalyzeImageRequest): Promise<DiagnosisRe
       tip: found?.tip ?? FALLBACK_TIPS[name].tip,
       tipShort: found?.tipShort ?? FALLBACK_TIPS[name].tipShort,
       tutorialQuery: buildQuery(name, skill),
-      detected: found?.detected !== false,
+      detected: found ? found.detected !== false : false,
     };
   });
 
