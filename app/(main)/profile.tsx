@@ -632,9 +632,9 @@ export default function ProfileScreen() {
           {history.length > 0 && (
             <Pressable 
               onPress={handleClearVault} 
-              style={({ pressed }) => [styles.clearVaultBtn, pressed && { opacity: 0.6 }]}
+              style={({ pressed }) => [styles.clearVaultBtn, pressed && { opacity: 0.85, backgroundColor: tokens.colors.cream }]}
             >
-              <Text style={styles.clearVaultText}>Wipe Secure Scan Vault</Text>
+              <Text style={styles.clearVaultText}>Clear scan history</Text>
             </Pressable>
           )}
         </Animated.View>
@@ -679,19 +679,28 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   clearVaultBtn: {
     alignSelf: 'center',
-    paddingVertical: 16,
-    marginTop: 14,
-    marginBottom: 10,
-    width: '100%',
+    backgroundColor: tokens.colors.white,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 20,
+    marginBottom: 24,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: tokens.colors.pinkRich,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   clearVaultText: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
     color: tokens.colors.pinkRich,
-    letterSpacing: 2.5,
-    textTransform: 'uppercase',
+    letterSpacing: 0.2,
   },
   container: { flex: 1, backgroundColor: tokens.colors.beige },
   ambientGlow: {
