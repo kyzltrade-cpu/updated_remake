@@ -78,13 +78,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         Purchases.addCustomerInfoUpdateListener((info) => {
           console.log('[SubscriptionContext] Real-time CustomerInfo event from RevenueCat SDK:', info);
           setCustomerInfo(info);
-          const hasPro = info.entitlements.active['pro'] !== undefined || info.entitlements.active['premium'] !== undefined;
-          setIsPro(hasPro);
-          
-          const currentUser = userRef.current;
-          if (currentUser && hasPro) {
-            syncRcSubscriptionToDb(currentUser.id, info);
-          }
+          // NOTE: We do not set isPro or sync to the DB here to prevent auto-upgrading newly created 
+          // free accounts on the same device. DB sync is managed strictly on explicit Purchase or Restore.
         });
       } catch (e) {
         console.error('[SubscriptionContext] Failed to configure Purchases SDK:', e);
@@ -155,16 +150,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         // Keep local database synced with RevenueCat state
         if (user) {
-          if (hasRcPro && !dbHasActivePro) {
-            await syncRcSubscriptionToDb(user.id, info);
-            dbHasActivePro = true; // Set to true since we are syncing
-            setSubscription({
-              user_id: user.id,
-              plan: 'pro',
-              status: 'active',
-              current_period_end: info.entitlements.active['pro']?.expirationDate || info.entitlements.active['premium']?.expirationDate || null,
-            } as any);
-          } else if (!hasRcPro && dbHasActivePro && !__DEV__) {
+          // CRITICAL: We removed the auto-upgrade branch (hasRcPro && !dbHasActivePro).
+          // Accounts are strictly kept on their registered/purchased database plan.
+          // To use an existing App Store subscription on a new/different account, 
+          // the user MUST explicitly tap "Restore Purchases" on the paywall screen.
+          if (!hasRcPro && dbHasActivePro && !__DEV__) {
             await syncRcSubscriptionFreeToDb(user.id);
             dbHasActivePro = false; // Set to false since we are downgrading
             setSubscription({
@@ -180,9 +170,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Computed combined status (dual-redundant safety net!)
-    // Safe, multi-layered union of Pro access sources to prevent accidental lockouts during dev/sandbox testing.
-    setIsPro(rcHasActivePro || dbHasActivePro);
+    // DB subscription status is the absolute source of truth for accounts.
+    // If they have paid, it is tracked in Supabase. Otherwise, they remain Free.
+    setIsPro(dbHasActivePro);
     setIsLoading(false);
   };
 
