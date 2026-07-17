@@ -169,7 +169,20 @@ export default function SignInScreen() {
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Password</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={styles.fieldLabel}>Password</Text>
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push('/(onboarding)/forgot-password');
+                  }}
+                  hitSlop={12}
+                >
+                  <Text style={[styles.fieldLabel, { color: tokens.colors.pinkDeep, textTransform: 'none', fontSize: 11 }]}>
+                    Forgot password?
+                  </Text>
+                </Pressable>
+              </View>
               <TextInput
                 style={[styles.input, passErr ? styles.inputErr : null]}
                 placeholder="Your password"

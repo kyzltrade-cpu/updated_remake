@@ -279,4 +279,33 @@ export async function signInWithApple() {
   }
 }
 
+/**
+ * Sends a password reset email to the user
+ */
+export async function sendResetPasswordEmail(email: string) {
+  const cleanEmail = sanitizeEmail(email);
+  if (!isValidEmail(cleanEmail)) {
+    return { error: { message: 'Please enter a valid email address' } };
+  }
+  const supabase = createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+    redirectTo: 'remake://reset-password',
+  });
+  return { error };
+}
+
+/**
+ * Updates the authenticated user's password
+ */
+export async function updatePassword(password: string) {
+  if (!isValidPassword(password)) {
+    return { error: { message: 'Password must be at least 8 characters with a letter and number' } };
+  }
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.updateUser({
+    password: password,
+  });
+  return { data, error };
+}
+
 export { DEV_BYPASS }
