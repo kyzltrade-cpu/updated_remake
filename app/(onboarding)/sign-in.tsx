@@ -169,20 +169,7 @@ export default function SignInScreen() {
             </View>
 
             <View style={styles.field}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={styles.fieldLabel}>Password</Text>
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push('/(onboarding)/forgot-password');
-                  }}
-                  hitSlop={12}
-                >
-                  <Text style={[styles.fieldLabel, { color: tokens.colors.pinkDeep, textTransform: 'none', fontSize: 11 }]}>
-                    Forgot password?
-                  </Text>
-                </Pressable>
-              </View>
+              <Text style={styles.fieldLabel}>Password</Text>
               <TextInput
                 style={[styles.input, passErr ? styles.inputErr : null]}
                 placeholder="Your password"
@@ -255,6 +242,15 @@ export default function SignInScreen() {
           <Text style={styles.altLink}>
             No account?{' '}
             <Text style={styles.altLinkBold}>Create one free</Text>
+          </Text>
+        </Pressable>
+
+        <Pressable onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          router.push('/(onboarding)/forgot-password');
+        }} hitSlop={8} style={{ marginTop: 2 }}>
+          <Text style={[styles.altLink, { fontSize: 12, opacity: 0.85 }]}>
+            Forgot password?
           </Text>
         </Pressable>
       </Animated.View>
