@@ -180,6 +180,19 @@ export default function SignInScreen() {
                 autoCapitalize="none"
               />
               {passErr ? <Text style={styles.errText}>{passErr}</Text> : null}
+
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/(onboarding)/forgot-password');
+                }}
+                hitSlop={12}
+                style={{ alignSelf: 'flex-end', marginTop: 2 }}
+              >
+                <Text style={{ fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.pinkDeep, fontWeight: '500' }}>
+                  Forgot password?
+                </Text>
+              </Pressable>
             </View>
           </Animated.View>
 
@@ -242,15 +255,6 @@ export default function SignInScreen() {
           <Text style={styles.altLink}>
             No account?{' '}
             <Text style={styles.altLinkBold}>Create one free</Text>
-          </Text>
-        </Pressable>
-
-        <Pressable onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push('/(onboarding)/forgot-password');
-        }} hitSlop={8} style={{ marginTop: 2 }}>
-          <Text style={[styles.altLink, { fontSize: 12, opacity: 0.85 }]}>
-            Forgot password?
           </Text>
         </Pressable>
       </Animated.View>
