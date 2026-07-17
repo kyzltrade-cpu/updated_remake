@@ -170,29 +170,30 @@ export default function SignInScreen() {
 
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Password</Text>
-              <TextInput
-                style={[styles.input, passErr ? styles.inputErr : null]}
-                placeholder="Your password"
-                placeholderTextColor="rgba(61,53,50,0.28)"
-                value={password}
-                onChangeText={t => { setPassword(t); setPassErr(''); }}
-                secureTextEntry
-                autoCapitalize="none"
-              />
+              <View style={[styles.inputContainer, passErr ? styles.inputErr : null]}>
+                <TextInput
+                  style={styles.innerInput}
+                  placeholder="Your password"
+                  placeholderTextColor="rgba(61,53,50,0.28)"
+                  value={password}
+                  onChangeText={t => { setPassword(t); setPassErr(''); }}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push('/(onboarding)/forgot-password');
+                  }}
+                  hitSlop={12}
+                  style={styles.forgotBtnInside}
+                >
+                  <Text style={styles.forgotBtnTextInside}>
+                    Forgot?
+                  </Text>
+                </Pressable>
+              </View>
               {passErr ? <Text style={styles.errText}>{passErr}</Text> : null}
-
-              <Pressable
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/(onboarding)/forgot-password');
-                }}
-                hitSlop={12}
-                style={{ alignSelf: 'flex-end', marginTop: 2 }}
-              >
-                <Text style={{ fontFamily: tokens.fonts.regular, fontSize: 12, color: tokens.colors.pinkDeep, fontWeight: '500' }}>
-                  Forgot password?
-                </Text>
-              </Pressable>
             </View>
           </Animated.View>
 
@@ -318,6 +319,32 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.08)',
   },
   inputErr: { borderColor: tokens.colors.pinkDeep },
+  inputContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.08)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  innerInput: {
+    flex: 1,
+    paddingVertical: 15,
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    color: tokens.colors.text,
+  },
+  forgotBtnInside: {
+    paddingLeft: 10,
+    justifyContent: 'center',
+  },
+  forgotBtnTextInside: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '600',
+    color: tokens.colors.pinkDeep,
+  },
   errText: {
     fontFamily: tokens.fonts.regular,
     fontSize: 11,
