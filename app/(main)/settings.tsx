@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Alert, Image,
+  View, Text, StyleSheet, ScrollView, Pressable, Alert, Image, TextInput,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -147,6 +147,8 @@ export default function SettingsScreen() {
   const { user, logout, isLoggedIn } = useUser();
   const { user: authUser } = useAuth();
   const { subscription, isPro } = useSubscription();
+
+  const [promoCode, setPromoCode] = useState('');
 
   const handleRetake = () => {
     if (settings.hapticsEnabled) Haptics.selectionAsync();
@@ -315,8 +317,32 @@ export default function SettingsScreen() {
           />
         </Section>
 
+        {/* ── Redeem Code ── */}
+        <Section title="Redeem Code" delay={310}>
+          <View style={styles.promoRow}>
+            <TextInput
+              style={styles.promoInput}
+              placeholder="Enter code"
+              placeholderTextColor={tokens.colors.grayLight}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              value={promoCode}
+              onChangeText={setPromoCode}
+            />
+            <Pressable
+              onPress={() => {
+                if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert('Apply Code', `Code "${promoCode}" submitted!`);
+              }}
+              style={styles.promoApplyBtn}
+            >
+              <Text style={styles.promoApplyText}>Apply</Text>
+            </Pressable>
+          </View>
+        </Section>
+
         {/* ── About ── */}
-        <Section title="About" delay={330}>
+        <Section title="About" delay={350}>
           <Row label="Version" right={<Text style={styles.rowValue}>1.0.0</Text>} />
           {isLoggedIn && (
             <>
@@ -329,14 +355,14 @@ export default function SettingsScreen() {
         {/* Sign out & Delete Account */}
         {isLoggedIn && (
           <View style={{ gap: 10, marginBottom: 20 }}>
-            <Animated.View entering={FadeInUp.delay(390).duration(400)}>
+            <Animated.View entering={FadeInUp.delay(410).duration(400)}>
               <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
                 <MaterialIcons name="logout" size={16} color="#B04040" />
                 <Text style={styles.signOutText}>Sign Out</Text>
               </Pressable>
             </Animated.View>
 
-            <Animated.View entering={FadeInUp.delay(420).duration(400)}>
+            <Animated.View entering={FadeInUp.delay(440).duration(400)}>
               <Pressable style={styles.deleteAccountBtn} onPress={handleDeleteAccount}>
                 <MaterialIcons name="delete-forever" size={16} color="rgba(176,64,64,0.6)" />
                 <Text style={styles.deleteAccountText}>Delete Account</Text>
@@ -546,6 +572,41 @@ const styles = StyleSheet.create({
   },
   changePlanText: {
     fontFamily: tokens.fonts.regular, fontSize: 14, fontWeight: '600', color: tokens.colors.pinkDeep,
+  },
+
+  // Redeem Promo Code
+  promoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  promoInput: {
+    flex: 1,
+    fontFamily: tokens.fonts.regular,
+    fontSize: 15,
+    color: tokens.colors.text,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: tokens.colors.cream,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  promoApplyBtn: {
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  promoApplyText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 
   // Sign out
