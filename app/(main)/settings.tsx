@@ -146,9 +146,46 @@ export default function SettingsScreen() {
   const { settings, updateSettings, toggleSetting } = useSettings();
   const { user, logout, isLoggedIn } = useUser();
   const { user: authUser } = useAuth();
-  const { subscription, isPro } = useSubscription();
+  const { subscription, isPro, refreshSubscription } = useSubscription();
 
   const [promoCode, setPromoCode] = useState('');
+  const [isApplyingCode, setIsApplyingCode] = useState(false);
+
+  const handleApplyCode = async () => {
+    if (!promoCode.trim()) {
+      Alert.alert('Error', 'Please enter a code.');
+      return;
+    }
+
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsApplyingCode(true);
+
+    try {
+      const supabase = createClient() as any;
+      const { data, error } = await supabase.rpc('redeem_promo_code', {
+        p_code: promoCode,
+      });
+
+      if (error) {
+        console.error('[Settings] Promo code error:', error);
+        Alert.alert('Error', error.message || 'Failed to redeem code. Please try again.');
+      } else {
+        const response = data as { success: boolean; message: string; current_period_end?: string };
+        if (response.success) {
+          Alert.alert('Success', response.message);
+          setPromoCode('');
+          await refreshSubscription();
+        } else {
+          Alert.alert('Promo Code', response.message);
+        }
+      }
+    } catch (e: any) {
+      console.error('[Settings] Promo code redemption exception:', e);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsApplyingCode(false);
+    }
+  };
 
   const handleRetake = () => {
     if (settings.hapticsEnabled) Haptics.selectionAsync();
@@ -321,22 +358,23 @@ export default function SettingsScreen() {
         <Section title="Redeem Code" delay={310}>
           <View style={styles.promoRow}>
             <TextInput
-              style={styles.promoInput}
-              placeholder="Enter code"
+              style={[styles.promoInput, isApplyingCode && { opacity: 0.6 }]}
+              placeholder={isApplyingCode ? "Applying..." : "Enter code"}
               placeholderTextColor={tokens.colors.grayLight}
               autoCapitalize="characters"
               autoCorrect={false}
+              editable={!isApplyingCode}
               value={promoCode}
               onChangeText={setPromoCode}
             />
             <Pressable
-              onPress={() => {
-                if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                Alert.alert('Apply Code', `Code "${promoCode}" submitted!`);
-              }}
-              style={styles.promoApplyBtn}
+              onPress={handleApplyCode}
+              disabled={isApplyingCode}
+              style={[styles.promoApplyBtn, isApplyingCode && { opacity: 0.6 }]}
             >
-              <Text style={styles.promoApplyText}>Apply</Text>
+              <Text style={styles.promoApplyText}>
+                {isApplyingCode ? '...' : 'Apply'}
+              </Text>
             </Pressable>
           </View>
         </Section>
