@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Alert, Image, TextInput,
+  View, Text, StyleSheet, ScrollView, Pressable, Alert, Image, TextInput, Modal,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -150,6 +150,12 @@ export default function SettingsScreen() {
 
   const [promoCode, setPromoCode] = useState('');
   const [isApplyingCode, setIsApplyingCode] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successInfo, setSuccessInfo] = useState<{
+    code: string;
+    days: number;
+    expiresAt: string;
+  } | null>(null);
 
   const handleApplyCode = async () => {
     if (!promoCode.trim()) {
@@ -172,9 +178,29 @@ export default function SettingsScreen() {
       } else {
         const response = data as { success: boolean; message: string; current_period_end?: string };
         if (response.success) {
-          Alert.alert('Success', response.message);
+          const expiresStr = response.current_period_end ? new Date(response.current_period_end).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+          }) : 'Lifetime';
+          
+          let daysCount = 0;
+          if (response.current_period_end) {
+            const diffTime = new Date(response.current_period_end).getTime() - Date.now();
+            daysCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          }
+
+          setSuccessInfo({
+            code: promoCode.toUpperCase().trim(),
+            days: daysCount,
+            expiresAt: expiresStr,
+          });
+
           setPromoCode('');
           await refreshSubscription();
+
+          if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setShowSuccessModal(true);
         } else {
           Alert.alert('Promo Code', response.message);
         }
@@ -409,6 +435,61 @@ export default function SettingsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* ── Promo Success Modal ── */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeaderDecor}>
+              <Text style={styles.modalSparkle}>✦</Text>
+            </View>
+            
+            <Text style={styles.modalTitle}>Code Applied!</Text>
+            
+            <View style={styles.modalBadge}>
+              <Text style={styles.modalBadgeText}>{successInfo?.code}</Text>
+            </View>
+
+            <Text style={styles.modalText}>
+              Your account has been upgraded to ReMake Pro! Enjoy fully unlimited face analysis, advanced makeup score breakdowns, and personalized coaching suggestions.
+            </Text>
+
+            <View style={styles.modalInfoBox}>
+              <View style={styles.modalInfoRow}>
+                <Text style={styles.modalInfoLabel}>Plan Status</Text>
+                <Text style={styles.modalInfoValue}>Pro Active</Text>
+              </View>
+              <View style={styles.modalInfoDivider} />
+              <View style={styles.modalInfoRow}>
+                <Text style={styles.modalInfoLabel}>Duration</Text>
+                <Text style={styles.modalInfoValue}>
+                  {successInfo?.days && successInfo.days >= 9999 ? 'Lifetime Access' : `${successInfo?.days} Days`}
+                </Text>
+              </View>
+              <View style={styles.modalInfoDivider} />
+              <View style={styles.modalInfoRow}>
+                <Text style={styles.modalInfoLabel}>Expires on</Text>
+                <Text style={styles.modalInfoValue}>{successInfo?.expiresAt}</Text>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={() => {
+                if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowSuccessModal(false);
+              }}
+              style={styles.modalCloseBtn}
+            >
+              <Text style={styles.modalCloseBtnText}>Let's scan</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -667,5 +748,121 @@ const styles = StyleSheet.create({
   },
   deleteAccountText: {
     fontFamily: tokens.fonts.regular, fontSize: 15, fontWeight: '500', color: '#B04040', opacity: 0.7,
+  },
+
+  // Promo Success Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: tokens.colors.pinkLight,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  modalHeaderDecor: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(232,57,154,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  modalSparkle: {
+    fontSize: 28,
+    color: tokens.colors.pinkDeep,
+  },
+  modalTitle: {
+    fontFamily: tokens.fonts.serif,
+    fontSize: 24,
+    fontWeight: '400',
+    color: tokens.colors.text,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  modalBadge: {
+    backgroundColor: tokens.colors.cream,
+    borderWidth: 1.5,
+    borderColor: tokens.colors.pinkLight,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginBottom: 18,
+  },
+  modalBadgeText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    fontWeight: '700',
+    color: tokens.colors.pinkDeep,
+    letterSpacing: 1,
+  },
+  modalText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    fontWeight: '300',
+    color: tokens.colors.gray,
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 20,
+  },
+  modalInfoBox: {
+    width: '100%',
+    backgroundColor: tokens.colors.cream,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalInfoLabel: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 12,
+    fontWeight: '500',
+    color: tokens.colors.gray,
+  },
+  modalInfoValue: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 13,
+    fontWeight: '600',
+    color: tokens.colors.text,
+  },
+  modalInfoDivider: {
+    height: 1,
+    backgroundColor: 'rgba(232,57,154,0.06)',
+    marginVertical: 10,
+  },
+  modalCloseBtn: {
+    width: '100%',
+    backgroundColor: tokens.colors.pinkDeep,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseBtnText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 });
