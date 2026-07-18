@@ -112,6 +112,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     let rcHasActivePro = false;
 
     // 1. Fetch from Supabase Database (our local database redundant check)
+    let localSub: Subscription | null = null;
     if (user) {
       try {
         const supabase = createClient() as any;
@@ -125,8 +126,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           console.warn('[SubscriptionContext] Supabase fetch error:', error.message);
         } else if (data) {
           setSubscription(data as any);
+          localSub = data as any;
+          
           if (data.plan === 'pro' && data.status === 'active') {
-            dbHasActivePro = true;
+            // Secure check: if the local subscription has an expiration date, and it has already passed:
+            if (data.current_period_end && new Date(data.current_period_end) < new Date()) {
+              console.log('[SubscriptionContext] Local active subscription has expired on', data.current_period_end, '. Downgrading to free.');
+              await syncRcSubscriptionFreeToDb(user.id);
+              setSubscription({
+                user_id: user.id,
+                plan: 'free',
+                status: 'active',
+                current_period_end: null,
+              } as any);
+              localSub = {
+                user_id: user.id,
+                plan: 'free',
+                status: 'active',
+                current_period_end: null,
+              } as any;
+            } else {
+              dbHasActivePro = true;
+            }
           }
         }
       } catch (e) {
@@ -150,11 +171,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         // Keep local database synced with RevenueCat state
         if (user) {
+          // If they don't have RevenueCat pro, but they have local pro:
+          // We only downgrade them if they do NOT have a future-valid local period end (which is what promo codes use).
+          const hasFutureLocalPeriod = localSub && localSub.current_period_end && new Date(localSub.current_period_end) > new Date();
+
           // CRITICAL: We removed the auto-upgrade branch (hasRcPro && !dbHasActivePro).
           // Accounts are strictly kept on their registered/purchased database plan.
           // To use an existing App Store subscription on a new/different account, 
           // the user MUST explicitly tap "Restore Purchases" on the paywall screen.
-          if (!hasRcPro && dbHasActivePro && !__DEV__) {
+          if (!hasRcPro && dbHasActivePro && !hasFutureLocalPeriod && !__DEV__) {
             await syncRcSubscriptionFreeToDb(user.id);
             dbHasActivePro = false; // Set to false since we are downgrading
             setSubscription({
