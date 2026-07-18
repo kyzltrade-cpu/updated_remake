@@ -289,7 +289,7 @@ export async function sendResetPasswordEmail(email: string) {
   }
   const supabase = createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-    redirectTo: 'remake://reset-password',
+    redirectTo: 'https://remake.beauty/reset-password',
   });
   return { error };
 }
