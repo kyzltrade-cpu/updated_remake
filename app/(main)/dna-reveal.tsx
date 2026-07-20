@@ -1085,6 +1085,26 @@ function LashTracer({ color }: { color: string }) {
 
 // ── Slide: Canvas ─────────────────────────────────────────────────────────────
 
+// ── Cosmetic shade naming matrix for viral coquette beauty engagement ──────────
+function getCosmeticColorName(hex: string): string {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16) || 200;
+  const g = parseInt(clean.substring(2, 4), 16) || 150;
+  const b = parseInt(clean.substring(4, 6), 16) || 110;
+  
+  // Calculate relative luminance to map to luxury skin-tone names
+  const y = 0.299 * r + 0.587 * g + 0.114 * b;
+  
+  if (y > 220) return 'Vanilla Silk 🌸';
+  if (y > 195) return 'Warm Ivory 🥐';
+  if (y > 170) return 'Sunkissed Latte ☕️';
+  if (y > 140) return 'Chai Sand 🐚';
+  if (y > 115) return 'Glazed Almond 🌰';
+  if (y > 90)  return 'Warm Honey 🍯';
+  if (y > 65)  return 'Toasted Caramel 🍮';
+  return 'Rich Espresso ☕️';
+}
+
 function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
   const glAl = useSharedValue(0.1);
   const shades = isLocked ? null : findShades(dna.skinToneHex);
@@ -1155,8 +1175,9 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     transform: [{ scale: scale.value }],
   }));
 
-  const mainShadeBrand = shades ? (shades.MAC ? 'MAC' : 'Fenty') : 'MAC';
-  const mainShadeValue = shades ? (shades.MAC ?? shades.Fenty ?? 'N/A') : 'NC30';
+  const macShade = shades?.MAC ?? 'N/A';
+  const fentyShade = shades?.Fenty ?? 'N/A';
+  const cosmeticName = getCosmeticColorName(dna.skinToneHex);
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -1297,12 +1318,22 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
               Your Perfect Shade
             </Text>
             <Text style={{
-              fontFamily: 'Inter',
-              fontSize: 34,
-              fontWeight: '900',
+              fontFamily: 'Playfair Display',
+              fontSize: 28,
+              fontWeight: '700',
+              fontStyle: 'italic',
               color: '#FFF9F7',
-              letterSpacing: 1.5,
               textAlign: 'center',
+              marginBottom: 4,
+            }}>
+              {cosmeticName}
+            </Text>
+            <Text style={{
+              fontFamily: 'Inter',
+              fontSize: 11,
+              fontWeight: '500',
+              color: 'rgba(255,255,255,0.45)',
+              letterSpacing: 2,
             }}>
               {dna.skinToneHex.toUpperCase()}
             </Text>
@@ -1313,40 +1344,51 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         <View style={{ alignItems: 'center', gap: 4 }}>
           <Text style={{
             fontFamily: 'Inter',
-            fontSize: 13,
-            fontWeight: '500',
-            color: 'rgba(255,255,255,0.55)',
+            fontSize: 12,
+            fontWeight: '600',
+            color: 'rgba(255,255,255,0.5)',
             letterSpacing: 1.5,
             textTransform: 'uppercase',
           }}>
-            {mainShadeBrand} Best Match
+            Your Foundation matches ✦
           </Text>
           
           {isLocked ? (
             <LockedValue size="lg" color="rgba(255,255,255,0.4)" />
           ) : (
-            <Text style={{
-              fontFamily: 'Playfair Display',
-              fontSize: 68,
-              fontWeight: '800',
-              color: '#FFF9F7',
-              lineHeight: 74,
-            }}>
-              {mainShadeValue}
-            </Text>
+            <View style={{ alignItems: 'center', marginVertical: 4 }}>
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 38,
+                fontWeight: '900',
+                color: '#FFF9F7',
+                letterSpacing: -1,
+              }}>
+                {macShade} · {fentyShade}
+              </Text>
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight: '500',
+                color: 'rgba(255,255,255,0.45)',
+                marginTop: 2,
+              }}>
+                ( MAC Best Match  ·  Fenty Best Match )
+              </Text>
+            </View>
           )}
 
           {shades && (
             <Text style={{
               fontFamily: 'Inter',
               fontSize: 11,
-              color: 'rgba(255,255,255,0.45)',
+              color: 'rgba(255,255,255,0.4)',
               textAlign: 'center',
               marginTop: 6,
               maxWidth: W - 80,
               lineHeight: 16,
             }}>
-              Fenty: {shades.Fenty}  ·  NARS: {shades.NARS}  ·  L'Oréal: {shades["L'Oréal"]}
+              NARS: {shades.NARS}  ·  L'Oréal: {shades["L'Oréal"]}
             </Text>
           )}
         </View>
