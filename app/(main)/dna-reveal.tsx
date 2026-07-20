@@ -1112,40 +1112,71 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   // Staggered animated values
   const introOp = useSharedValue(0);
   const introY = useSharedValue(20);
+  const introScale = useSharedValue(0.93);
 
   const bridgeOp = useSharedValue(0);
   const bridgeY = useSharedValue(20);
+  const bridgeScale = useSharedValue(0.93);
 
   const revealOp = useSharedValue(0);
   const revealY = useSharedValue(30);
 
   const scale = useSharedValue(0.85);
 
+  // Infinite organic floating vectors for silhouettes
+  const floatL = useSharedValue(0);
+  const floatR = useSharedValue(0);
+
   useEffect(() => {
-    // 1. Intro enters at 0ms, fades/slides out slower (completed at 3.6s)
+    // 1. Cinematic slow-fade & slow-glide intro (completed at 3.6s)
     introOp.value = withSequence(
-      withTiming(1, { duration: 1000 }),
-      withDelay(2000, withTiming(0, { duration: 600 }))
+      withTiming(1, { duration: 1800 }), // Buttery slower fade-in
+      withDelay(1000, withTiming(0, { duration: 800 })) // Slower fade-out
     );
     introY.value = withSequence(
-      withTiming(0, { duration: 1200, easing: Easing.bezier(0.16, 1, 0.3, 1) }),
-      withDelay(1800, withTiming(-15, { duration: 600 }))
+      withTiming(0, { duration: 2000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }), // Luxurious slow-rise
+      withDelay(800, withTiming(-20, { duration: 800 })) // Slower exit rise
     );
+    // Continuous subtle zoom to keep the screen alive
+    introScale.value = withTiming(1.04, { duration: 3600, easing: Easing.out(Easing.quad) });
 
-    // 2. Bridge enters at 3800ms, fades/slides out slower (completed at 7.0s)
+    // 2. Cinematic slow-fade & slow-glide bridge (completed at 7.0s)
     bridgeOp.value = withSequence(
-      withDelay(3800, withTiming(1, { duration: 1000 })),
-      withDelay(1600, withTiming(0, { duration: 600 }))
+      withDelay(3800, withTiming(1, { duration: 1600 })), // Buttery slower fade-in
+      withDelay(800, withTiming(0, { duration: 800 })) // Slower fade-out
     );
     bridgeY.value = withSequence(
-      withDelay(3800, withTiming(0, { duration: 1200, easing: Easing.bezier(0.16, 1, 0.3, 1) })),
-      withDelay(1400, withTiming(-15, { duration: 600 }))
+      withDelay(3800, withTiming(0, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) })), // Luxurious slow-rise
+      withDelay(600, withTiming(-20, { duration: 800 })) // Slower exit rise
+    );
+    // Continuous subtle zoom to keep the screen alive
+    bridgeScale.value = withSequence(
+      withDelay(3800, withTiming(0.93, { duration: 0 })),
+      withDelay(3800, withTiming(1.04, { duration: 3200, easing: Easing.out(Easing.quad) }))
     );
 
     // 3. Final Reveal enters at 7200ms with a gorgeous luxurious spring
     revealOp.value = withDelay(7200, withTiming(1, { duration: 1000 }));
     revealY.value = withDelay(7200, withSpring(0, { damping: 12, stiffness: 80 }));
     scale.value = withDelay(7200, withSpring(1, { damping: 12, stiffness: 80 }));
+
+    // Infinitely repeat slow vertical float
+    floatL.value = withRepeat(
+      withSequence(
+        withTiming(-8, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
+        withTiming(8, { duration: 2400, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+    floatR.value = withRepeat(
+      withSequence(
+        withTiming(6, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(-6, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
 
     glAl.value = withRepeat(
       withSequence(withTiming(0.15, { duration: 1200 }), withTiming(0.05, { duration: 1200 })),
@@ -1155,12 +1186,18 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
 
   const introStyle = useAnimatedStyle(() => ({
     opacity: introOp.value,
-    transform: [{ translateY: introY.value }],
+    transform: [
+      { translateY: introY.value },
+      { scale: introScale.value }
+    ],
   }));
 
   const bridgeStyle = useAnimatedStyle(() => ({
     opacity: bridgeOp.value,
-    transform: [{ translateY: bridgeY.value }],
+    transform: [
+      { translateY: bridgeY.value },
+      { scale: bridgeScale.value }
+    ],
   }));
 
   const revealStyle = useAnimatedStyle(() => ({
@@ -1173,6 +1210,14 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+  }));
+
+  const floatLStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatL.value }],
+  }));
+
+  const floatRStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatR.value }],
   }));
 
   const macShade = shades?.MAC ?? 'N/A';
@@ -1225,28 +1270,32 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       <Animated.View style={[revealStyle, { paddingVertical: 80 }]}>
         
         {/* Makeup Silhouettes - Left Dropper Bottle */}
-        <Svg width="80" height="150" viewBox="0 0 80 150" style={{ position: 'absolute', bottom: 60, left: 24, opacity: 0.28 }} pointerEvents="none">
-          {/* Dropper bulb */}
-          <Path d="M 32 15 C 32 8, 48 8, 48 15 L 48 24 L 32 24 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-          {/* Cap collar */}
-          <Rect x="26" y="24" width="28" height="10" rx="2" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-          {/* Bottle shoulders and body */}
-          <Path d="M 22 42 C 22 34, 58 34, 58 42 L 58 135 C 58 140, 22 140, 22 135 Z" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-          {/* Dropper pipette inside */}
-          <Path d="M 38 34 L 38 115" stroke="rgba(255,255,255,0.08)" strokeWidth="1.2" />
-          {/* Fluid level indicator */}
-          <Path d="M 22 90 L 58 90" stroke="rgba(255,255,255,0.05)" strokeWidth="0.8" strokeDasharray="3 3" />
-        </Svg>
+        <Animated.View style={[{ position: 'absolute', bottom: 60, left: 24, opacity: 0.28 }, floatLStyle]} pointerEvents="none">
+          <Svg width="80" height="150" viewBox="0 0 80 150">
+            {/* Dropper bulb */}
+            <Path d="M 32 15 C 32 8, 48 8, 48 15 L 48 24 L 32 24 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            {/* Cap collar */}
+            <Rect x="26" y="24" width="28" height="10" rx="2" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            {/* Bottle shoulders and body */}
+            <Path d="M 22 42 C 22 34, 58 34, 58 42 L 58 135 C 58 140, 22 140, 22 135 Z" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            {/* Dropper pipette inside */}
+            <Path d="M 38 34 L 38 115" stroke="rgba(255,255,255,0.08)" strokeWidth="1.2" />
+            {/* Fluid level indicator */}
+            <Path d="M 22 90 L 58 90" stroke="rgba(255,255,255,0.05)" strokeWidth="0.8" strokeDasharray="3 3" />
+          </Svg>
+        </Animated.View>
 
         {/* Makeup Silhouettes - Right Makeup Brush */}
-        <Svg width="70" height="170" viewBox="0 0 70 170" style={{ position: 'absolute', bottom: 50, right: 24, opacity: 0.28 }} pointerEvents="none">
-          {/* Brush tapered handle */}
-          <Path d="M 32 80 L 38 80 L 36 160 L 34 170 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
-          {/* Ferrule (metal band) */}
-          <Rect x="26" y="52" width="18" height="28" rx="1" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-          {/* Flared brush bristles */}
-          <Path d="M 26 52 C 22 35, 16 15, 35 10 C 54 15, 48 35, 44 52 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
-        </Svg>
+        <Animated.View style={[{ position: 'absolute', bottom: 50, right: 24, opacity: 0.28 }, floatRStyle]} pointerEvents="none">
+          <Svg width="70" height="170" viewBox="0 0 70 170">
+            {/* Brush tapered handle */}
+            <Path d="M 32 80 L 38 80 L 36 160 L 34 170 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+            {/* Ferrule (metal band) */}
+            <Rect x="26" y="52" width="18" height="28" rx="1" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            {/* Flared brush bristles */}
+            <Path d="M 26 52 C 22 35, 16 15, 35 10 C 54 15, 48 35, 44 52 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+          </Svg>
+        </Animated.View>
 
         {/* 3D Tunnel and Swatch at the Top */}
         <Animated.View style={[animatedStyle, { width: W, height: 260, alignItems: 'center', justifyContent: 'center' }]}>
