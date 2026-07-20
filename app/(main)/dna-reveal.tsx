@@ -1529,10 +1529,10 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     // Appear at 3.8s
     spinnerOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
     
-    // Scale sequence: 0.1 -> 2.3 (massive center expand) -> settles down to 1.42 as it moves up
+    // Scale sequence: 0.1 -> 2.3 (massive center expand) -> settles down to 1.65 as it moves up
     spinnerScale.value = withSequence(
       withDelay(3800, withTiming(2.3, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) })),
-      withTiming(1.42, { duration: 2000, easing: Easing.bezier(0.1, 0.7, 0.1, 1) })
+      withTiming(1.65, { duration: 2000, easing: Easing.bezier(0.1, 0.7, 0.1, 1) })
     );
 
     // Rotation sequence: fast spin -> slow deceleration braking
