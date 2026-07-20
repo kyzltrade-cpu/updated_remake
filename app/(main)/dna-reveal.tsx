@@ -1233,7 +1233,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           fontFamily: 'Inter',
           fontSize: 22,
           fontWeight: '600',
-          color: '#FFF9F7',
+          color: colors.text,
           textAlign: 'center',
           lineHeight: 30,
           letterSpacing: -0.5,
@@ -1245,7 +1245,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           fontFamily: 'Playfair Display',
           fontSize: 24,
           fontStyle: 'italic',
-          color: '#F57FBF',
+          color: colors.accent,
           textAlign: 'center',
         }}>
           Don't worry, we gotchu. ✦
@@ -1258,7 +1258,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           fontFamily: 'Playfair Display',
           fontSize: 32,
           fontStyle: 'italic',
-          color: '#FFF9F7',
+          color: colors.text,
           textAlign: 'center',
           letterSpacing: 0.5,
         }}>
@@ -1273,15 +1273,15 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         <Animated.View style={[{ position: 'absolute', bottom: 60, left: 24, opacity: 0.28 }, floatLStyle]} pointerEvents="none">
           <Svg width="80" height="150" viewBox="0 0 80 150">
             {/* Dropper bulb */}
-            <Path d="M 32 15 C 32 8, 48 8, 48 15 L 48 24 L 32 24 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            <Path d="M 32 15 C 32 8, 48 8, 48 15 L 48 24 L 32 24 Z" fill="rgba(46,30,32,0.05)" stroke="rgba(46,30,32,0.08)" strokeWidth="1" />
             {/* Cap collar */}
-            <Rect x="26" y="24" width="28" height="10" rx="2" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            <Rect x="26" y="24" width="28" height="10" rx="2" fill="rgba(46,30,32,0.04)" stroke="rgba(46,30,32,0.08)" strokeWidth="1" />
             {/* Bottle shoulders and body */}
-            <Path d="M 22 42 C 22 34, 58 34, 58 42 L 58 135 C 58 140, 22 140, 22 135 Z" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            <Path d="M 22 42 C 22 34, 58 34, 58 42 L 58 135 C 58 140, 22 140, 22 135 Z" fill="rgba(46,30,32,0.02)" stroke="rgba(46,30,32,0.08)" strokeWidth="1" />
             {/* Dropper pipette inside */}
-            <Path d="M 38 34 L 38 115" stroke="rgba(255,255,255,0.08)" strokeWidth="1.2" />
+            <Path d="M 38 34 L 38 115" stroke="rgba(46,30,32,0.06)" strokeWidth="1.2" />
             {/* Fluid level indicator */}
-            <Path d="M 22 90 L 58 90" stroke="rgba(255,255,255,0.05)" strokeWidth="0.8" strokeDasharray="3 3" />
+            <Path d="M 22 90 L 58 90" stroke="rgba(46,30,32,0.04)" strokeWidth="0.8" strokeDasharray="3 3" />
           </Svg>
         </Animated.View>
 
@@ -1289,51 +1289,51 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         <Animated.View style={[{ position: 'absolute', bottom: 50, right: 24, opacity: 0.28 }, floatRStyle]} pointerEvents="none">
           <Svg width="70" height="170" viewBox="0 0 70 170">
             {/* Brush tapered handle */}
-            <Path d="M 32 80 L 38 80 L 36 160 L 34 170 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+            <Path d="M 32 80 L 38 80 L 36 160 L 34 170 Z" fill="rgba(46,30,32,0.04)" stroke="rgba(46,30,32,0.06)" strokeWidth="1" />
             {/* Ferrule (metal band) */}
-            <Rect x="26" y="52" width="18" height="28" rx="1" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            <Rect x="26" y="52" width="18" height="28" rx="1" fill="rgba(46,30,32,0.05)" stroke="rgba(46,30,32,0.08)" strokeWidth="1" />
             {/* Flared brush bristles */}
-            <Path d="M 26 52 C 22 35, 16 15, 35 10 C 54 15, 48 35, 44 52 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+            <Path d="M 26 52 C 22 35, 16 15, 35 10 C 54 15, 48 35, 44 52 Z" fill="rgba(46,30,32,0.03)" stroke="rgba(46,30,32,0.06)" strokeWidth="1" />
           </Svg>
         </Animated.View>
 
-        {/* 3D Tunnel and Swatch at the Top */}
-        <Animated.View style={[animatedStyle, { width: W, height: 260, alignItems: 'center', justifyContent: 'center' }]}>
-          <View style={{ width: 260, height: 260, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        {/* 3D Tunnel and Swatch (Moved lower, made bigger, main focus) */}
+        <Animated.View style={[animatedStyle, { width: W, height: 320, alignItems: 'center', justifyContent: 'center', marginTop: 30, transform: [{ scale: scale.value }, { translateY: 20 }] }]}>
+          <View style={{ width: 320, height: 320, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             
             {/* Holographic Tunnel Rings (Behind Swatch) */}
             <Svg width="320" height="320" viewBox="0 0 100 100" style={StyleSheet.absoluteFill} pointerEvents="none">
               {/* Upper Tunnel Rings */}
-              <Circle cx="50" cy="50" r="32" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8" fill="none" />
-              <Circle cx="50" cy="42" r="33" stroke="rgba(255,255,255,0.14)" strokeWidth="0.8" fill="none" />
-              <Circle cx="50" cy="34" r="34" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" fill="none" />
-              <Circle cx="50" cy="26" r="35" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" fill="none" />
-              <Circle cx="50" cy="18" r="36" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="50" r="32" stroke="rgba(46,30,32,0.08)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="42" r="33" stroke="rgba(46,30,32,0.06)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="34" r="34" stroke="rgba(46,30,32,0.04)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="26" r="35" stroke="rgba(46,30,32,0.02)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="18" r="36" stroke="rgba(46,30,32,0.01)" strokeWidth="0.8" fill="none" />
               
               {/* Lower Tunnel Rings */}
-              <Circle cx="50" cy="58" r="33" stroke="rgba(255,255,255,0.14)" strokeWidth="0.8" fill="none" />
-              <Circle cx="50" cy="66" r="34" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" fill="none" />
-              <Circle cx="50" cy="74" r="35" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" fill="none" />
-              <Circle cx="50" cy="82" r="36" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="58" r="33" stroke="rgba(46,30,32,0.06)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="66" r="34" stroke="rgba(46,30,32,0.04)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="74" r="35" stroke="rgba(46,30,32,0.02)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="82" r="36" stroke="rgba(46,30,32,0.01)" strokeWidth="0.8" fill="none" />
             </Svg>
 
-            {/* Central Skin Swatch */}
+            {/* Central Skin Swatch (Englarged to 210x210, bold border, main focus) */}
             <View style={[ds.canvasSwatch, { 
-              width: 170, 
-              height: 170, 
-              borderRadius: 85, 
+              width: 210, 
+              height: 210, 
+              borderRadius: 105, 
               backgroundColor: dna.skinToneHex, 
               shadowColor: dna.skinToneHex, 
               shadowOpacity: 0.25, 
-              shadowRadius: 15,
-              borderWidth: 3,
+              shadowRadius: 18,
+              borderWidth: 4, // Bold luxury white border
               borderColor: '#FFFFFF',
               overflow: 'hidden'
             }]}>
               {!isLocked && (
                 <Animated.View style={[StyleSheet.absoluteFill, { width: '200%', pointerEvents: 'none' }]}>
                   <LinearGradient
-                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.22)', 'rgba(255,255,255,0)']}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
@@ -1350,11 +1350,11 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           <View style={{ width: W - 56, alignSelf: 'center' }}>
             <View style={{
               borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.12)',
+              borderColor: 'rgba(46, 30, 32, 0.12)',
               paddingVertical: 18,
               paddingHorizontal: 24,
               alignItems: 'center',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              backgroundColor: 'rgba(255, 255, 255, 0.65)', // Elegant cream filled card
               borderRadius: 4, // Sharp, premium rectangle like reference image
             }}>
               <Text style={{
@@ -1362,7 +1362,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
                 fontSize: 12,
                 fontWeight: '700',
                 letterSpacing: 3,
-                color: 'rgba(255,255,255,0.65)',
+                color: 'rgba(46, 30, 32, 0.55)',
                 textTransform: 'uppercase',
                 marginBottom: 8,
               }}>
@@ -1384,7 +1384,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
                 fontFamily: 'Inter',
                 fontSize: 11,
                 fontWeight: '500',
-                color: 'rgba(255,255,255,0.45)',
+                color: 'rgba(46, 30, 32, 0.45)',
                 letterSpacing: 2,
               }}>
                 {dna.skinToneHex.toUpperCase()}
@@ -1398,7 +1398,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
               fontFamily: 'Inter',
               fontSize: 12,
               fontWeight: '600',
-              color: 'rgba(255,255,255,0.5)',
+              color: colors.muted,
               letterSpacing: 1.5,
               textTransform: 'uppercase',
             }}>
@@ -1406,14 +1406,14 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
             </Text>
             
             {isLocked ? (
-              <LockedValue size="lg" color="rgba(255,255,255,0.4)" />
+              <LockedValue size="lg" color="rgba(46, 30, 32, 0.4)" />
             ) : (
               <View style={{ alignItems: 'center', marginVertical: 4 }}>
                 <Text style={{
                   fontFamily: 'Inter',
                   fontSize: 38,
                   fontWeight: '900',
-                  color: '#FFF9F7',
+                  color: colors.text,
                   letterSpacing: -1,
                 }}>
                   {macShade} · {fentyShade}
@@ -1422,7 +1422,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
                   fontFamily: 'Inter',
                   fontSize: 12,
                   fontWeight: '500',
-                  color: 'rgba(255,255,255,0.45)',
+                  color: colors.muted,
                   marginTop: 2,
                 }}>
                   ( MAC Best Match  ·  Fenty Best Match )
@@ -1434,7 +1434,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
               <Text style={{
                 fontFamily: 'Inter',
                 fontSize: 11,
-                color: 'rgba(255,255,255,0.4)',
+                color: colors.muted,
                 textAlign: 'center',
                 marginTop: 6,
                 maxWidth: W - 80,
