@@ -1295,102 +1295,106 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           </View>
         </Animated.View>
 
-        {/* Outlined Box containing Shade Match Info in the Middle */}
-        <View style={{ width: W - 56, alignSelf: 'center', marginVertical: 12 }}>
-          <View style={{
-            borderWidth: 1.5,
-            borderColor: '#FFF9F7',
-            paddingVertical: 18,
-            paddingHorizontal: 24,
-            alignItems: 'center',
-            backgroundColor: 'rgba(255,255,255,0.02)',
-            borderRadius: 4, // Sharp, premium rectangle like reference image
-          }}>
-            <Text style={{
-              fontFamily: 'Inter',
-              fontSize: 12,
-              fontWeight: '700',
-              letterSpacing: 3,
-              color: 'rgba(255,255,255,0.65)',
-              textTransform: 'uppercase',
-              marginBottom: 8,
+        {/* Info Wrapper to keep Shade Box and Foundation Matches snug together */}
+        <View style={{ width: '100%', alignItems: 'center', gap: 16 }}>
+          {/* Outlined Box containing Shade Match Info in the Middle */}
+          <View style={{ width: W - 56, alignSelf: 'center' }}>
+            <View style={{
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.12)',
+              paddingVertical: 18,
+              paddingHorizontal: 24,
+              alignItems: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              borderRadius: 4, // Sharp, premium rectangle like reference image
             }}>
-              Your Perfect Shade
-            </Text>
-            <Text style={{
-              fontFamily: 'Playfair Display',
-              fontSize: 28,
-              fontWeight: '700',
-              fontStyle: 'italic',
-              color: '#FFF9F7',
-              textAlign: 'center',
-              marginBottom: 4,
-            }}>
-              {cosmeticName}
-            </Text>
-            <Text style={{
-              fontFamily: 'Inter',
-              fontSize: 11,
-              fontWeight: '500',
-              color: 'rgba(255,255,255,0.45)',
-              letterSpacing: 2,
-            }}>
-              {dna.skinToneHex.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-
-        {/* Stats Below the Box at the Bottom */}
-        <View style={{ alignItems: 'center', gap: 4 }}>
-          <Text style={{
-            fontFamily: 'Inter',
-            fontSize: 12,
-            fontWeight: '600',
-            color: 'rgba(255,255,255,0.5)',
-            letterSpacing: 1.5,
-            textTransform: 'uppercase',
-          }}>
-            Your Foundation matches ✦
-          </Text>
-          
-          {isLocked ? (
-            <LockedValue size="lg" color="rgba(255,255,255,0.4)" />
-          ) : (
-            <View style={{ alignItems: 'center', marginVertical: 4 }}>
-              <Text style={{
-                fontFamily: 'Inter',
-                fontSize: 38,
-                fontWeight: '900',
-                color: '#FFF9F7',
-                letterSpacing: -1,
-              }}>
-                {macShade} · {fentyShade}
-              </Text>
               <Text style={{
                 fontFamily: 'Inter',
                 fontSize: 12,
+                fontWeight: '700',
+                letterSpacing: 3,
+                color: 'rgba(255,255,255,0.65)',
+                textTransform: 'uppercase',
+                marginBottom: 8,
+              }}>
+                Your Perfect Shade
+              </Text>
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 22,
+                fontWeight: '800',
+                letterSpacing: 1.5,
+                textTransform: 'uppercase',
+                color: dna.skinToneHex,
+                textAlign: 'center',
+                marginBottom: 4,
+              }}>
+                {cosmeticName}
+              </Text>
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 11,
                 fontWeight: '500',
                 color: 'rgba(255,255,255,0.45)',
-                marginTop: 2,
+                letterSpacing: 2,
               }}>
-                ( MAC Best Match  ·  Fenty Best Match )
+                {dna.skinToneHex.toUpperCase()}
               </Text>
             </View>
-          )}
+          </View>
 
-          {shades && (
+          {/* Stats Below the Box at the Bottom */}
+          <View style={{ alignItems: 'center', gap: 4 }}>
             <Text style={{
               fontFamily: 'Inter',
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.4)',
-              textAlign: 'center',
-              marginTop: 6,
-              maxWidth: W - 80,
-              lineHeight: 16,
+              fontSize: 12,
+              fontWeight: '600',
+              color: 'rgba(255,255,255,0.5)',
+              letterSpacing: 1.5,
+              textTransform: 'uppercase',
             }}>
-              NARS: {shades.NARS}  ·  L'Oréal: {shades["L'Oréal"]}
+              Your Foundation matches ✦
             </Text>
-          )}
+            
+            {isLocked ? (
+              <LockedValue size="lg" color="rgba(255,255,255,0.4)" />
+            ) : (
+              <View style={{ alignItems: 'center', marginVertical: 4 }}>
+                <Text style={{
+                  fontFamily: 'Inter',
+                  fontSize: 38,
+                  fontWeight: '900',
+                  color: '#FFF9F7',
+                  letterSpacing: -1,
+                }}>
+                  {macShade} · {fentyShade}
+                </Text>
+                <Text style={{
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  fontWeight: '500',
+                  color: 'rgba(255,255,255,0.45)',
+                  marginTop: 2,
+                }}>
+                  ( MAC Best Match  ·  Fenty Best Match )
+                </Text>
+              </View>
+            )}
+
+            {shades && (
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                textAlign: 'center',
+                marginTop: 6,
+                maxWidth: W - 80,
+                lineHeight: 16,
+              }}>
+                NARS: {shades.NARS}  ·  L'Oréal: {shades["L'Oréal"]}
+              </Text>
+            )}
+          </View>
         </View>
       </Animated.View>
     </View>
