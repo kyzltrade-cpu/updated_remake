@@ -1518,10 +1518,10 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     // Appear at 3.8s
     spinnerOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
     
-    // Scale sequence: 0.1 -> 2.3 (massive center expand) -> settles down to 1.15 as it moves up
+    // Scale sequence: 0.1 -> 2.3 (massive center expand) -> settles down to 1.42 as it moves up
     spinnerScale.value = withSequence(
       withDelay(3800, withTiming(2.3, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) })),
-      withTiming(1.15, { duration: 2000, easing: Easing.bezier(0.1, 0.7, 0.1, 1) })
+      withTiming(1.42, { duration: 2000, easing: Easing.bezier(0.1, 0.7, 0.1, 1) })
     );
 
     // Rotation sequence: fast spin -> slow deceleration braking
@@ -1700,7 +1700,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       {/* ── PHASE 3: CENTERED PALETTE SWATCHES (7.8s onwards, fills the middle space beautifully) ── */}
       <Animated.View style={[revealStyle, {
         position: 'absolute',
-        top: H * 0.44, // perfectly centers the 4 swatch capsules in the vertical gap
+        top: H * 0.49, // perfectly centers the 4 larger swatch capsules in the vertical gap
         flexDirection: 'row',
         gap: 16,
         justifyContent: 'center',
@@ -1709,7 +1709,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       }]}>
         <Animated.View style={[chipStyle1, { alignItems: 'center' }]}>
           <View style={{
-            width: 58, height: 58, borderRadius: 29,
+            width: 62, height: 62, borderRadius: 31,
             backgroundColor: displayPalette[0],
             borderWidth: 1.5, borderColor: '#8A95A5',
             shadowColor: displayPalette[0], shadowOpacity: 0.35, shadowRadius: 8,
@@ -1722,7 +1722,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
 
         <Animated.View style={[chipStyle2, { alignItems: 'center' }]}>
           <View style={{
-            width: 58, height: 58, borderRadius: 29,
+            width: 62, height: 62, borderRadius: 31,
             backgroundColor: displayPalette[1],
             borderWidth: 1.5, borderColor: '#8A95A5',
             shadowColor: displayPalette[1], shadowOpacity: 0.35, shadowRadius: 8,
@@ -1735,7 +1735,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
 
         <Animated.View style={[chipStyle3, { alignItems: 'center' }]}>
           <View style={{
-            width: 58, height: 58, borderRadius: 29,
+            width: 62, height: 62, borderRadius: 31,
             backgroundColor: displayPalette[2],
             borderWidth: 1.5, borderColor: '#8A95A5',
             shadowColor: displayPalette[2], shadowOpacity: 0.35, shadowRadius: 8,
@@ -1748,7 +1748,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
 
         <Animated.View style={[chipStyle4, { alignItems: 'center' }]}>
           <View style={{
-            width: 58, height: 58, borderRadius: 29,
+            width: 62, height: 62, borderRadius: 31,
             backgroundColor: displayPalette[3],
             borderWidth: 1.5, borderColor: '#8A95A5',
             shadowColor: displayPalette[3], shadowOpacity: 0.35, shadowRadius: 8,
