@@ -1697,67 +1697,120 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         </View>
       </Animated.View>
 
-      {/* ── PHASE 3: CENTERED PALETTE SWATCHES (7.8s onwards, fills the middle space beautifully) ── */}
+      {/* ── PHASE 3: CENTERED 2x2 PALETTE GRID (7.8s onwards, fills the middle space beautifully) ── */}
       <Animated.View style={[revealStyle, {
         position: 'absolute',
-        top: H * 0.49, // perfectly centers the 4 larger swatch capsules in the vertical gap
-        flexDirection: 'row',
-        gap: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
+        top: H * 0.44, // perfectly centers the 2x2 grid block in the vertical gap
         width: W,
+        alignItems: 'center',
+        gap: 12,
       }]}>
-        <Animated.View style={[chipStyle1, { alignItems: 'center' }]}>
-          <View style={{
-            width: 62, height: 62, borderRadius: 31,
-            backgroundColor: displayPalette[0],
-            borderWidth: 1.5, borderColor: '#8A95A5',
-            shadowColor: displayPalette[0], shadowOpacity: 0.35, shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }} />
-          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
-            {displayPalette[0].toUpperCase()}
-          </Text>
-        </Animated.View>
+        
+        {/* Row 1 */}
+        <View style={{ flexDirection: 'row', gap: 14, justifyContent: 'center', width: W }}>
+          <Animated.View style={[chipStyle1, {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.65)',
+            borderWidth: 1,
+            borderColor: 'rgba(138, 149, 165, 0.25)',
+            borderRadius: 24,
+            width: W * 0.42,
+            height: 48,
+            paddingHorizontal: 8,
+            gap: 10,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05, shadowRadius: 3,
+          }]}>
+            <View style={{
+              width: 32, height: 32, borderRadius: 16,
+              backgroundColor: displayPalette[0],
+              borderWidth: 1, borderColor: '#8A95A5',
+              shadowColor: displayPalette[0], shadowOpacity: 0.25, shadowRadius: 4,
+            }} />
+            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
+              {displayPalette[0].toUpperCase()}
+            </Text>
+          </Animated.View>
 
-        <Animated.View style={[chipStyle2, { alignItems: 'center' }]}>
-          <View style={{
-            width: 62, height: 62, borderRadius: 31,
-            backgroundColor: displayPalette[1],
-            borderWidth: 1.5, borderColor: '#8A95A5',
-            shadowColor: displayPalette[1], shadowOpacity: 0.35, shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }} />
-          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
-            {displayPalette[1].toUpperCase()}
-          </Text>
-        </Animated.View>
+          <Animated.View style={[chipStyle2, {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.65)',
+            borderWidth: 1,
+            borderColor: 'rgba(138, 149, 165, 0.25)',
+            borderRadius: 24,
+            width: W * 0.42,
+            height: 48,
+            paddingHorizontal: 8,
+            gap: 10,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05, shadowRadius: 3,
+          }]}>
+            <View style={{
+              width: 32, height: 32, borderRadius: 16,
+              backgroundColor: displayPalette[1],
+              borderWidth: 1, borderColor: '#8A95A5',
+              shadowColor: displayPalette[1], shadowOpacity: 0.25, shadowRadius: 4,
+            }} />
+            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
+              {displayPalette[1].toUpperCase()}
+            </Text>
+          </Animated.View>
+        </View>
 
-        <Animated.View style={[chipStyle3, { alignItems: 'center' }]}>
-          <View style={{
-            width: 62, height: 62, borderRadius: 31,
-            backgroundColor: displayPalette[2],
-            borderWidth: 1.5, borderColor: '#8A95A5',
-            shadowColor: displayPalette[2], shadowOpacity: 0.35, shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }} />
-          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
-            {displayPalette[2].toUpperCase()}
-          </Text>
-        </Animated.View>
+        {/* Row 2 */}
+        <View style={{ flexDirection: 'row', gap: 14, justifyContent: 'center', width: W }}>
+          <Animated.View style={[chipStyle3, {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.65)',
+            borderWidth: 1,
+            borderColor: 'rgba(138, 149, 165, 0.25)',
+            borderRadius: 24,
+            width: W * 0.42,
+            height: 48,
+            paddingHorizontal: 8,
+            gap: 10,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05, shadowRadius: 3,
+          }]}>
+            <View style={{
+              width: 32, height: 32, borderRadius: 16,
+              backgroundColor: displayPalette[2],
+              borderWidth: 1, borderColor: '#8A95A5',
+              shadowColor: displayPalette[2], shadowOpacity: 0.25, shadowRadius: 4,
+            }} />
+            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
+              {displayPalette[2].toUpperCase()}
+            </Text>
+          </Animated.View>
 
-        <Animated.View style={[chipStyle4, { alignItems: 'center' }]}>
-          <View style={{
-            width: 62, height: 62, borderRadius: 31,
-            backgroundColor: displayPalette[3],
-            borderWidth: 1.5, borderColor: '#8A95A5',
-            shadowColor: displayPalette[3], shadowOpacity: 0.35, shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }} />
-          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
-            {displayPalette[3].toUpperCase()}
-          </Text>
-        </Animated.View>
+          <Animated.View style={[chipStyle4, {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.65)',
+            borderWidth: 1,
+            borderColor: 'rgba(138, 149, 165, 0.25)',
+            borderRadius: 24,
+            width: W * 0.42,
+            height: 48,
+            paddingHorizontal: 8,
+            gap: 10,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05, shadowRadius: 3,
+          }]}>
+            <View style={{
+              width: 32, height: 32, borderRadius: 16,
+              backgroundColor: displayPalette[3],
+              borderWidth: 1, borderColor: '#8A95A5',
+              shadowColor: displayPalette[3], shadowOpacity: 0.25, shadowRadius: 4,
+            }} />
+            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
+              {displayPalette[3].toUpperCase()}
+            </Text>
+          </Animated.View>
+        </View>
       </Animated.View>
 
       {/* ── PHASE 3: THE REVEAL CARD (7.8s onwards) ── */}
