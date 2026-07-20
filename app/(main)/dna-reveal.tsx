@@ -139,12 +139,12 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#FFF9F7', muted: 'rgba(255,249,247,0.72)', 
     eyebrow: '#FFD6EF', accent: '#F57FBF' 
   },
-  // 3 — Season: ELECTRIC ROYAL BLUE (glowing neon yellow contrast)
+  // 3 — Season: Deep Graphite & Glowing Lavender-Peach (high-end cosmetic elegance)
   { 
-    gradientTop: '#1A0DAB', gradientBot: '#0A056B', 
-    blobA: '#E8D22C', blobB: '#3E0DAB', 
-    text: '#FFFFFF', muted: 'rgba(255,255,255,0.75)', 
-    eyebrow: '#E8D22C', accent: '#E8D22C' 
+    gradientTop: '#121316', gradientBot: '#0B0C0E', 
+    blobA: '#E8C1F4', blobB: '#FFD6C4', 
+    text: '#FFF9F7', muted: 'rgba(255,249,247,0.72)', 
+    eyebrow: '#E8C1F4', accent: '#D4AF37' 
   },
   // 4 — Face Shape: VIBRANT NEON ORANGE (deep dark purple text contrast)
   { 
@@ -1473,12 +1473,25 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const introY = useSharedValue(20);
   const introScale = useSharedValue(0.93);
 
+  // Spinner position & scale animation
   const spinnerOp = useSharedValue(0);
   const spinnerScale = useSharedValue(0.1);
   const spinnerRotation = useSharedValue(0);
+  const spinnerY = useSharedValue(0); // Starts perfectly centered at 0
 
   const revealOp = useSharedValue(0);
   const revealY = useSharedValue(20);
+
+  // 4 Staggered Color Chip animations
+  const chipOp1 = useSharedValue(0);
+  const chipOp2 = useSharedValue(0);
+  const chipOp3 = useSharedValue(0);
+  const chipOp4 = useSharedValue(0);
+
+  const chipY1 = useSharedValue(15);
+  const chipY2 = useSharedValue(15);
+  const chipY3 = useSharedValue(15);
+  const chipY4 = useSharedValue(15);
 
   // High-frequency color cycling for spinner quadrants while active
   const [spinningColors, setSpinningColors] = useState<string[]>(['#FF6B6B', '#4ECDC4', '#FFE66D', '#FF8E53']);
@@ -1499,9 +1512,9 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     // Appear at 3.8s
     spinnerOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
     
-    // Scale sequence: 0.1 -> 1.6 (fast expand) -> settles at 1.15 (slow contract)
+    // Scale sequence: 0.1 -> 2.3 (massive center expand) -> settles down to 1.15 as it moves up
     spinnerScale.value = withSequence(
-      withDelay(3800, withTiming(1.6, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) })),
+      withDelay(3800, withTiming(2.3, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) })),
       withTiming(1.15, { duration: 2000, easing: Easing.bezier(0.1, 0.7, 0.1, 1) })
     );
 
@@ -1511,9 +1524,28 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       withTiming(1800, { duration: 2000, easing: Easing.out(Easing.quad) })
     );
 
-    // 3. Phase 3: Final Card Reveal at stop (7.8s onwards)
+    // Vertical Position sequence: stays in center (0) -> glides elegantly to top (-H * 0.15) on deceleration
+    spinnerY.value = withSequence(
+      withDelay(3800, withTiming(0, { duration: 1800 })),
+      withTiming(-H * 0.15, { duration: 2000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) })
+    );
+
+    // 3. Phase 3: Final Card & Staggered Swatch Reveal at stop (7.8s onwards)
     revealOp.value = withDelay(7800, withTiming(1, { duration: 1000 }));
     revealY.value = withDelay(7800, withSpring(0, { damping: 13, stiffness: 85 }));
+
+    // Staggered pop-in animations for the 4 swatches below the spinner
+    chipOp1.value = withDelay(7800, withTiming(1, { duration: 600 }));
+    chipY1.value = withDelay(7800, withSpring(0, { damping: 12, stiffness: 90 }));
+
+    chipOp2.value = withDelay(7920, withTiming(1, { duration: 600 }));
+    chipY2.value = withDelay(7920, withSpring(0, { damping: 12, stiffness: 90 }));
+
+    chipOp3.value = withDelay(8040, withTiming(1, { duration: 600 }));
+    chipY3.value = withDelay(8040, withSpring(0, { damping: 12, stiffness: 90 }));
+
+    chipOp4.value = withDelay(8160, withTiming(1, { duration: 600 }));
+    chipY4.value = withDelay(8160, withSpring(0, { damping: 12, stiffness: 90 }));
 
     // High-frequency color cycling timer while spinner is active
     let intervalId: ReturnType<typeof setInterval>;
@@ -1535,9 +1567,31 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       setSpinningColors(displayPalette);
     }, 6200); // stops cycling right as deceleration kicks in
 
+    // Super physical satisfying haptic timeline synced exactly with decelerating slot-ticks
+    const h1 = setTimeout(() => { if (!isLocked) Haptics.selectionAsync(); }, 5600);
+    const h2 = setTimeout(() => { if (!isLocked) Haptics.selectionAsync(); }, 5800);
+    const h3 = setTimeout(() => { if (!isLocked) Haptics.selectionAsync(); }, 6050);
+    const h4 = setTimeout(() => { if (!isLocked) Haptics.selectionAsync(); }, 6350);
+    const h5 = setTimeout(() => { if (!isLocked) Haptics.selectionAsync(); }, 6700);
+    const h6 = setTimeout(() => { if (!isLocked) Haptics.selectionAsync(); }, 7100);
+    
+    // Snaps to a dead stop with a juicy success notification haptic!
+    const h7 = setTimeout(() => { 
+      if (!isLocked) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }, 7600);
+
     return () => {
       clearTimeout(cycleTimer);
       clearTimeout(stopCycleTimer);
+      clearTimeout(h1);
+      clearTimeout(h2);
+      clearTimeout(h3);
+      clearTimeout(h4);
+      clearTimeout(h5);
+      clearTimeout(h6);
+      clearTimeout(h7);
       clearInterval(intervalId);
     };
   }, []);
@@ -1553,6 +1607,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const spinnerStyle = useAnimatedStyle(() => ({
     opacity: spinnerOp.value,
     transform: [
+      { translateY: spinnerY.value },
       { scale: spinnerScale.value },
       { rotate: `${spinnerRotation.value}deg` }
     ],
@@ -1564,6 +1619,11 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     width: '100%',
     alignItems: 'center',
   }));
+
+  const chipStyle1 = useAnimatedStyle(() => ({ opacity: chipOp1.value, transform: [{ translateY: chipY1.value }] }));
+  const chipStyle2 = useAnimatedStyle(() => ({ opacity: chipOp2.value, transform: [{ translateY: chipY2.value }] }));
+  const chipStyle3 = useAnimatedStyle(() => ({ opacity: chipOp3.value, transform: [{ translateY: chipY3.value }] }));
+  const chipStyle4 = useAnimatedStyle(() => ({ opacity: chipOp4.value, transform: [{ translateY: chipY4.value }] }));
 
   const seasonColor = SWATCH_SEASON[dna.colorSeason] ?? '#D4AF37';
 
@@ -1605,7 +1665,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         shadowColor: '#000', shadowOffset: { width: 0, height: 15 },
         shadowOpacity: 0.45, shadowRadius: 20, elevation: 12,
         position: 'absolute',
-        top: H * 0.28, // perfectly vertically centered inside top half
+        top: H * 0.38, // Center vertically inside viewport
       }]} pointerEvents="none">
         
         {/* Quadrant split circular wheel */}
@@ -1631,9 +1691,41 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         </View>
       </Animated.View>
 
-      {/* ── PHASE 3: THE REVEAL CARD (7.8s onwards) ── */}
-      <Animated.View style={[revealStyle, { position: 'absolute', bottom: 80 }]}>
+      {/* ── PHASE 3: THE REVEAL CARD & SWATCHES (7.8s onwards) ── */}
+      <Animated.View style={[revealStyle, { position: 'absolute', bottom: 60 }]}>
         
+        {/* 4 Staggered Circular Color Swatches */}
+        <View style={{ flexDirection: 'row', gap: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
+          <Animated.View style={[chipStyle1, {
+            width: 54, height: 54, borderRadius: 27,
+            backgroundColor: displayPalette[0],
+            borderWidth: 1.5, borderColor: '#D4AF37',
+            shadowColor: displayPalette[0], shadowOpacity: 0.4, shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }]} />
+          <Animated.View style={[chipStyle2, {
+            width: 54, height: 54, borderRadius: 27,
+            backgroundColor: displayPalette[1],
+            borderWidth: 1.5, borderColor: '#D4AF37',
+            shadowColor: displayPalette[1], shadowOpacity: 0.4, shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }]} />
+          <Animated.View style={[chipStyle3, {
+            width: 54, height: 54, borderRadius: 27,
+            backgroundColor: displayPalette[2],
+            borderWidth: 1.5, borderColor: '#D4AF37',
+            shadowColor: displayPalette[2], shadowOpacity: 0.4, shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }]} />
+          <Animated.View style={[chipStyle4, {
+            width: 54, height: 54, borderRadius: 27,
+            backgroundColor: displayPalette[3],
+            borderWidth: 1.5, borderColor: '#D4AF37',
+            shadowColor: displayPalette[3], shadowOpacity: 0.4, shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }]} />
+        </View>
+
         {/* Filled and Frosted Glass Card Wrapper */}
         <View style={{ width: W - 56, alignSelf: 'center' }}>
           <View style={{
