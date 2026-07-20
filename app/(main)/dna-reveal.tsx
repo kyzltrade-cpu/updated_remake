@@ -1453,122 +1453,243 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
 // ── Slide: Season ─────────────────────────────────────────────────────────────
 
 const SWATCH_SEASON: Record<string, string> = {
-  Spring: '#F4A261', Summer: '#A8C4D5', Autumn: '#C8956A', Winter: '#7A8FBF',
+  'Warm Spring': '#E8744A', 'Light Spring': '#F4A090', 'Warm Autumn': '#B84C20', 'Deep Autumn': '#8B2810',
+  'Cool Summer': '#C49098', 'Light Summer': '#E8B0BC', 'Deep Winter': '#8C0028', 'Cool Winter': '#780060',
 };
 
-function CompactPalette({ colors, palette, isLocked }: { colors: SlideColors; palette: string[]; isLocked?: boolean }) {
-  const scale = useSharedValue(0.7);
-  const rotation = useSharedValue(0);
-  useEffect(() => {
-    scale.value = withSpring(1, { damping: 11, stiffness: 90 });
-    rotation.value = withTiming(360, { duration: 32000, easing: Easing.linear });
-  }, []);
+function getSeasonDescription(season: string) {
+  if (season.includes('Autumn')) return 'Rich, warm, and muted. Honey, olive, and gold tones bring out your effortless elegance. 🍁';
+  if (season.includes('Summer')) return 'Muted, cool, and soft. Lavenders, dusty roses, and slate blues make your skin glow. 💎';
+  if (season.includes('Spring')) return 'Bright, fresh, and warm. Peaches, corals, and gold tones match your vibrant radiant energy. 🍊';
+  return 'High-contrast, bold, and icy. Rich black, sapphire, and pure white make your eyes pop. ❄️';
+}
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { rotate: `${rotation.value}deg` }],
-  }));
-
+function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+  const palette = SEASON_PALETTES[dna.colorSeason] ?? [];
   const displayPalette = palette.length >= 4 ? palette.slice(0, 4) : ['#F4A261', '#E76F51', '#2A9D8F', '#E9C46A'];
 
-  return (
-    <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
-      {/* Sparkly stars behind the compact */}
-      <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="none">
-        <Text style={{ color: 'rgba(255,255,255,0.06)', fontSize: 260, position: 'absolute' }}>✦</Text>
-        <Text style={{ color: 'rgba(255,255,255,0.04)', fontSize: 280, position: 'absolute', transform: [{ rotate: '45deg' }] }}>✦</Text>
-      </View>
-      
-      <Animated.View style={[animatedStyle, {
-        width: 190, height: 190, borderRadius: 95,
-        backgroundColor: '#1E151A',
-        borderWidth: 2.5, borderColor: '#D4AF37',
-        justifyContent: 'center', alignItems: 'center',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.35, shadowRadius: 18, elevation: 10,
-      }]}>
-        <View style={{
-          position: 'absolute', width: 176, height: 174, borderRadius: 87,
-          borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)',
-        }} />
+  // Timings and Anim state
+  const introOp = useSharedValue(0);
+  const introY = useSharedValue(20);
+  const introScale = useSharedValue(0.93);
 
-        {/* Quadrant powder pans inside compact */}
-        <View style={{ width: 124, height: 124, flexWrap: 'wrap', flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
-          {displayPalette.map((color, idx) => (
-            <View
-              key={idx}
-              style={{
-                width: 54, height: 54, borderRadius: 27,
-                backgroundColor: isLocked ? '#555' : color,
-                shadowColor: color, shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isLocked ? 0 : 0.25, shadowRadius: 6,
-                borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)',
-                overflow: 'hidden',
-              }}
-            >
-              <View style={{
-                position: 'absolute', top: 4, left: 4, width: 44, height: 44, borderRadius: 22,
-                borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', borderStyle: 'dashed',
-              }} />
-              <View style={{
-                position: 'absolute', top: 10, left: 12, width: 32, height: 32, borderRadius: 16,
-                borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.04)',
-              }} />
-            </View>
-          ))}
+  const spinnerOp = useSharedValue(0);
+  const spinnerScale = useSharedValue(0.1);
+  const spinnerRotation = useSharedValue(0);
+
+  const revealOp = useSharedValue(0);
+  const revealY = useSharedValue(20);
+
+  // High-frequency color cycling for spinner quadrants while active
+  const [spinningColors, setSpinningColors] = useState<string[]>(['#FF6B6B', '#4ECDC4', '#FFE66D', '#FF8E53']);
+
+  useEffect(() => {
+    // 1. Phase 1: Intro Hook Text (0ms - 3.6s)
+    introOp.value = withSequence(
+      withTiming(1, { duration: 1800 }),
+      withDelay(1000, withTiming(0, { duration: 800 }))
+    );
+    introY.value = withSequence(
+      withTiming(0, { duration: 2000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
+      withDelay(800, withTiming(-20, { duration: 800 }))
+    );
+    introScale.value = withTiming(1.04, { duration: 3600, easing: Easing.out(Easing.quad) });
+
+    // 2. Phase 2: Spinner Active Animation (Enlarge & Spin: 3.8s - 7.6s)
+    // Appear at 3.8s
+    spinnerOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
+    
+    // Scale sequence: 0.1 -> 1.6 (fast expand) -> settles at 1.15 (slow contract)
+    spinnerScale.value = withSequence(
+      withDelay(3800, withTiming(1.6, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) })),
+      withTiming(1.15, { duration: 2000, easing: Easing.bezier(0.1, 0.7, 0.1, 1) })
+    );
+
+    // Rotation sequence: fast spin -> slow deceleration braking
+    spinnerRotation.value = withSequence(
+      withDelay(3800, withTiming(1440, { duration: 1800, easing: Easing.linear })),
+      withTiming(1800, { duration: 2000, easing: Easing.out(Easing.quad) })
+    );
+
+    // 3. Phase 3: Final Card Reveal at stop (7.8s onwards)
+    revealOp.value = withDelay(7800, withTiming(1, { duration: 1000 }));
+    revealY.value = withDelay(7800, withSpring(0, { damping: 13, stiffness: 85 }));
+
+    // High-frequency color cycling timer while spinner is active
+    let intervalId: ReturnType<typeof setInterval>;
+    
+    const cycleTimer = setTimeout(() => {
+      intervalId = setInterval(() => {
+        setSpinningColors([
+          `hsl(${Math.random() * 360}, 85%, 65%)`,
+          `hsl(${Math.random() * 360}, 85%, 65%)`,
+          `hsl(${Math.random() * 360}, 85%, 65%)`,
+          `hsl(${Math.random() * 360}, 85%, 65%)`,
+        ]);
+      }, 70); // rapid cycle every 70ms
+    }, 3800);
+
+    const stopCycleTimer = setTimeout(() => {
+      clearInterval(intervalId);
+      // Freeze exactly onto the actual user's palette!
+      setSpinningColors(displayPalette);
+    }, 6200); // stops cycling right as deceleration kicks in
+
+    return () => {
+      clearTimeout(cycleTimer);
+      clearTimeout(stopCycleTimer);
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const introStyle = useAnimatedStyle(() => ({
+    opacity: introOp.value,
+    transform: [
+      { translateY: introY.value },
+      { scale: introScale.value }
+    ],
+  }));
+
+  const spinnerStyle = useAnimatedStyle(() => ({
+    opacity: spinnerOp.value,
+    transform: [
+      { scale: spinnerScale.value },
+      { rotate: `${spinnerRotation.value}deg` }
+    ],
+  }));
+
+  const revealStyle = useAnimatedStyle(() => ({
+    opacity: revealOp.value,
+    transform: [{ translateY: revealY.value }],
+    width: '100%',
+    alignItems: 'center',
+  }));
+
+  const seasonColor = SWATCH_SEASON[dna.colorSeason] ?? '#D4AF37';
+
+  return (
+    <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
+      
+      {/* ── PHASE 1: NARRATIVE HOOK (0s - 3.6s) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: '600',
+          color: '#FFF9F7',
+          textAlign: 'center',
+          lineHeight: 30,
+          letterSpacing: -0.5,
+          marginBottom: 10,
+        }}>
+          Do you not know your color palette?
+        </Text>
+        <Text style={{
+          fontFamily: 'Playfair Display',
+          fontSize: 24,
+          fontStyle: 'italic',
+          color: '#F57FBF',
+          textAlign: 'center',
+        }}>
+          Let's analyze your skin chemistry. ✦
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 2: THE SPINNER (3.8s onwards) ── */}
+      <Animated.View style={[spinnerStyle, {
+        width: 172, height: 172, borderRadius: 86,
+        borderWidth: 3, borderColor: '#D4AF37',
+        backgroundColor: '#100708',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 15 },
+        shadowOpacity: 0.45, shadowRadius: 20, elevation: 12,
+        position: 'absolute',
+        top: H * 0.28, // perfectly vertically centered inside top half
+      }]} pointerEvents="none">
+        
+        {/* Quadrant split circular wheel */}
+        <View style={{ width: 160, height: 160, borderRadius: 80, overflow: 'hidden', flexWrap: 'wrap', flexDirection: 'row' }}>
+          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#555' : spinningColors[0] }} />
+          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#444' : spinningColors[1] }} />
+          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#333' : spinningColors[2] }} />
+          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#666' : spinningColors[3] }} />
         </View>
 
-        {/* Mini Gold Emblem Cover in center */}
+        {/* Delicate gold dividing lines */}
+        <View style={{ position: 'absolute', top: 85.5, left: 0, right: 0, height: 1, backgroundColor: '#D4AF37', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', left: 85.5, top: 0, bottom: 0, width: 1, backgroundColor: '#D4AF37', opacity: 0.4 }} />
+
+        {/* Central emblem */}
         <View style={{
           position: 'absolute', width: 34, height: 34, borderRadius: 17,
-          backgroundColor: '#1E151A', borderWidth: 1, borderColor: '#D4AF37',
+          backgroundColor: '#1C0F11', borderWidth: 1, borderColor: '#D4AF37',
           justifyContent: 'center', alignItems: 'center',
           shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2,
         }}>
           <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 13, color: '#D4AF37', fontWeight: 'bold' }}>R</Text>
         </View>
       </Animated.View>
-    </View>
-  );
-}
 
-function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const palette = SEASON_PALETTES[dna.colorSeason] ?? [];
-  return (
-    <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <View style={ds.bodyWrap}>
-        <RevealItem delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>COLOUR SEASON 🌸</Text>
-        </RevealItem>
+      {/* ── PHASE 3: THE REVEAL CARD (7.8s onwards) ── */}
+      <Animated.View style={[revealStyle, { position: 'absolute', bottom: 80 }]}>
         
-        {/* Kinetic word-by-word headers */}
-        <WordByWordReveal
-          text="Stop wearing colors that fight your face, bestie… 😭"
-          style={[ds.narrativeHook, { color: colors.muted }]}
-          delay={600}
-        />
-        <WordByWordReveal
-          text="it’s time to enter your ultimate color era. ✨"
-          style={[ds.narrativePunch, { color: colors.text }]}
-          delay={1400}
-        />
-        
-        {/* Luxury Compact Makeup Palette with Sweeping Makeup Brush Stroke */}
-        <View style={{ width: 220, height: 220, alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
-          {!isLocked && <BrushStrokeSweep color={colors.accent} delay={2100} />}
-          <CompactPalette colors={colors} palette={palette} isLocked={isLocked} />
+        {/* Filled and Frosted Glass Card Wrapper */}
+        <View style={{ width: W - 56, alignSelf: 'center' }}>
+          <View style={{
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.12)',
+            paddingVertical: 20,
+            paddingHorizontal: 24,
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            borderRadius: 4, // sharp, premium rectangle
+          }}>
+            <Text style={{
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: '700',
+              letterSpacing: 3,
+              color: 'rgba(255,255,255,0.65)',
+              textTransform: 'uppercase',
+              marginBottom: 8,
+            }}>
+              Your Color Season
+            </Text>
+            
+            {isLocked ? (
+              <LockedValue size="md" color="rgba(255,255,255,0.4)" />
+            ) : (
+              <>
+                <Text style={{
+                  fontFamily: 'Inter',
+                  fontSize: 22,
+                  fontWeight: '800',
+                  letterSpacing: 1.5,
+                  textTransform: 'uppercase',
+                  color: seasonColor,
+                  textAlign: 'center',
+                  marginBottom: 6,
+                }}>
+                  {dna.colorSeason}
+                </Text>
+                
+                <Text style={{
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: 'rgba(255,255,255,0.6)',
+                  textAlign: 'center',
+                  lineHeight: 18,
+                  paddingHorizontal: 8,
+                }}>
+                  {getSeasonDescription(dna.colorSeason)}
+                </Text>
+              </>
+            )}
+          </View>
         </View>
+      </Animated.View>
 
-        {isLocked
-          ? <RevealItem delay={2800}><LockedValue size="md" color={colors.muted} /></RevealItem>
-          : <>
-              <RevealItem delay={3000} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>You are officially a</Text>
-              </RevealItem>
-              <RevealPop delay={3200}>
-                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.colorSeason}</Text>
-              </RevealPop>
-            </>}
-      </View>
     </View>
   );
 }
@@ -2933,7 +3054,7 @@ export default function DnaRevealScreen() {
   useEffect(() => {
     cancelAnimation(progress);
     progress.value = 0;
-    const duration = current === 1 ? 14000 : SLIDE_DURATION; // Give Slide 2 (index 1) 14s so Phase 3 is fully readable
+    const duration = current === 1 ? 14000 : current === 2 ? 13000 : SLIDE_DURATION; // Slide 2 (Shade) is 14s, Slide 3 (Season) is 13s
     progress.value = withTiming(1, { duration }, (finished) => {
       if (finished && current < SLIDE_COUNT - 1) runOnJS(advanceCurrent)();
     });
