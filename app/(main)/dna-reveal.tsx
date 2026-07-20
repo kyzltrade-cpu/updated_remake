@@ -1631,7 +1631,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const chipStyle3 = useAnimatedStyle(() => ({ opacity: chipOp3.value, transform: [{ translateY: chipY3.value }] }));
   const chipStyle4 = useAnimatedStyle(() => ({ opacity: chipOp4.value, transform: [{ translateY: chipY4.value }] }));
 
-  const seasonColor = SWATCH_SEASON[dna.colorSeason] ?? '#D4AF37';
+  const seasonColor = SWATCH_SEASON[dna.colorSeason] ?? '#8A95A5';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -1642,7 +1642,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           fontFamily: 'Inter',
           fontSize: 22,
           fontWeight: '600',
-          color: '#FFF9F7',
+          color: colors.text,
           textAlign: 'center',
           lineHeight: 30,
           letterSpacing: -0.5,
@@ -1654,7 +1654,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           fontFamily: 'Playfair Display',
           fontSize: 24,
           fontStyle: 'italic',
-          color: '#F57FBF',
+          color: colors.accent,
           textAlign: 'center',
         }}>
           Let's analyze your skin chemistry. ✦
@@ -1664,7 +1664,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       {/* ── PHASE 2: THE SPINNER (3.8s onwards) ── */}
       <Animated.View style={[spinnerStyle, {
         width: 172, height: 172, borderRadius: 86,
-        borderWidth: 3, borderColor: '#D4AF37',
+        borderWidth: 3, borderColor: '#8A95A5', // Sleek Platinum/Silver instead of clunky gold!
         backgroundColor: '#100708',
         justifyContent: 'center',
         alignItems: 'center',
@@ -1682,65 +1682,95 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
           <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#666' : spinningColors[3] }} />
         </View>
 
-        {/* Delicate gold dividing lines */}
-        <View style={{ position: 'absolute', top: 85.5, left: 0, right: 0, height: 1, backgroundColor: '#D4AF37', opacity: 0.4 }} />
-        <View style={{ position: 'absolute', left: 85.5, top: 0, bottom: 0, width: 1, backgroundColor: '#D4AF37', opacity: 0.4 }} />
+        {/* Delicate platinum dividing lines */}
+        <View style={{ position: 'absolute', top: 85.5, left: 0, right: 0, height: 1, backgroundColor: '#8A95A5', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', left: 85.5, top: 0, bottom: 0, width: 1, backgroundColor: '#8A95A5', opacity: 0.4 }} />
 
         {/* Central emblem */}
         <View style={{
           position: 'absolute', width: 34, height: 34, borderRadius: 17,
-          backgroundColor: '#1C0F11', borderWidth: 1, borderColor: '#D4AF37',
+          backgroundColor: '#1C0F11', borderWidth: 1, borderColor: '#8A95A5',
           justifyContent: 'center', alignItems: 'center',
           shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2,
         }}>
-          <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 13, color: '#D4AF37', fontWeight: 'bold' }}>R</Text>
+          <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 13, color: '#8A95A5', fontWeight: 'bold' }}>R</Text>
         </View>
       </Animated.View>
 
-      {/* ── PHASE 3: THE REVEAL CARD & SWATCHES (7.8s onwards) ── */}
-      <Animated.View style={[revealStyle, { position: 'absolute', bottom: 60 }]}>
-        
-        {/* 4 Staggered Circular Color Swatches */}
-        <View style={{ flexDirection: 'row', gap: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
-          <Animated.View style={[chipStyle1, {
-            width: 54, height: 54, borderRadius: 27,
+      {/* ── PHASE 3: CENTERED PALETTE SWATCHES (7.8s onwards, fills the middle space beautifully) ── */}
+      <Animated.View style={[revealStyle, {
+        position: 'absolute',
+        top: H * 0.44, // perfectly centers the 4 swatch capsules in the vertical gap
+        flexDirection: 'row',
+        gap: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: W,
+      }]}>
+        <Animated.View style={[chipStyle1, { alignItems: 'center' }]}>
+          <View style={{
+            width: 58, height: 58, borderRadius: 29,
             backgroundColor: displayPalette[0],
-            borderWidth: 1.5, borderColor: '#D4AF37',
-            shadowColor: displayPalette[0], shadowOpacity: 0.4, shadowRadius: 8,
+            borderWidth: 1.5, borderColor: '#8A95A5',
+            shadowColor: displayPalette[0], shadowOpacity: 0.35, shadowRadius: 8,
             shadowOffset: { width: 0, height: 4 },
-          }]} />
-          <Animated.View style={[chipStyle2, {
-            width: 54, height: 54, borderRadius: 27,
-            backgroundColor: displayPalette[1],
-            borderWidth: 1.5, borderColor: '#D4AF37',
-            shadowColor: displayPalette[1], shadowOpacity: 0.4, shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }]} />
-          <Animated.View style={[chipStyle3, {
-            width: 54, height: 54, borderRadius: 27,
-            backgroundColor: displayPalette[2],
-            borderWidth: 1.5, borderColor: '#D4AF37',
-            shadowColor: displayPalette[2], shadowOpacity: 0.4, shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }]} />
-          <Animated.View style={[chipStyle4, {
-            width: 54, height: 54, borderRadius: 27,
-            backgroundColor: displayPalette[3],
-            borderWidth: 1.5, borderColor: '#D4AF37',
-            shadowColor: displayPalette[3], shadowOpacity: 0.4, shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }]} />
-        </View>
+          }} />
+          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
+            {displayPalette[0].toUpperCase()}
+          </Text>
+        </Animated.View>
 
-        {/* Filled and Frosted Glass Card Wrapper */}
+        <Animated.View style={[chipStyle2, { alignItems: 'center' }]}>
+          <View style={{
+            width: 58, height: 58, borderRadius: 29,
+            backgroundColor: displayPalette[1],
+            borderWidth: 1.5, borderColor: '#8A95A5',
+            shadowColor: displayPalette[1], shadowOpacity: 0.35, shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }} />
+          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
+            {displayPalette[1].toUpperCase()}
+          </Text>
+        </Animated.View>
+
+        <Animated.View style={[chipStyle3, { alignItems: 'center' }]}>
+          <View style={{
+            width: 58, height: 58, borderRadius: 29,
+            backgroundColor: displayPalette[2],
+            borderWidth: 1.5, borderColor: '#8A95A5',
+            shadowColor: displayPalette[2], shadowOpacity: 0.35, shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }} />
+          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
+            {displayPalette[2].toUpperCase()}
+          </Text>
+        </Animated.View>
+
+        <Animated.View style={[chipStyle4, { alignItems: 'center' }]}>
+          <View style={{
+            width: 58, height: 58, borderRadius: 29,
+            backgroundColor: displayPalette[3],
+            borderWidth: 1.5, borderColor: '#8A95A5',
+            shadowColor: displayPalette[3], shadowOpacity: 0.35, shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }} />
+          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '600', color: colors.muted, marginTop: 6, letterSpacing: 0.5 }}>
+            {displayPalette[3].toUpperCase()}
+          </Text>
+        </Animated.View>
+      </Animated.View>
+
+      {/* ── PHASE 3: THE REVEAL CARD (7.8s onwards) ── */}
+      <Animated.View style={[revealStyle, { position: 'absolute', bottom: 60 }]}>
+        {/* Filled and Frosted Glass Card Wrapper (High Contrast Light mode layout) */}
         <View style={{ width: W - 56, alignSelf: 'center' }}>
           <View style={{
             borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.12)',
+            borderColor: 'rgba(30, 37, 48, 0.12)', // high-contrast dark border
             paddingVertical: 20,
             paddingHorizontal: 24,
             alignItems: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            backgroundColor: 'rgba(255, 255, 255, 0.65)', // light frosted card
             borderRadius: 4, // sharp, premium rectangle
           }}>
             <Text style={{
@@ -1748,7 +1778,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
               fontSize: 12,
               fontWeight: '700',
               letterSpacing: 3,
-              color: 'rgba(255,255,255,0.65)',
+              color: 'rgba(30, 37, 48, 0.55)', // elegant dark slate gray text
               textTransform: 'uppercase',
               marginBottom: 8,
             }}>
@@ -1756,7 +1786,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
             </Text>
             
             {isLocked ? (
-              <LockedValue size="md" color="rgba(255,255,255,0.4)" />
+              <LockedValue size="md" color="rgba(30, 37, 48, 0.4)" />
             ) : (
               <>
                 <Text style={{
@@ -1775,7 +1805,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
                 <Text style={{
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  color: 'rgba(255,255,255,0.6)',
+                  color: 'rgba(30, 37, 48, 0.65)', // high contrast, soft dark slate description
                   textAlign: 'center',
                   lineHeight: 18,
                   paddingHorizontal: 8,
