@@ -1102,19 +1102,25 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const scale = useSharedValue(0.85);
 
   useEffect(() => {
-    // 1. Intro enters at 0ms, fades/slides out at 2600ms
-    introOp.value = withTiming(1, { duration: 600 });
-    introY.value = withTiming(0, { duration: 800, easing: Easing.bezier(0.16, 1, 0.3, 1) });
-
-    introOp.value = withDelay(2500, withTiming(0, { duration: 450 }));
-    introY.value = withDelay(2500, withTiming(-15, { duration: 500 }));
+    // 1. Intro enters at 0ms, fades/slides out at 2600ms (queued via withSequence)
+    introOp.value = withSequence(
+      withTiming(1, { duration: 600 }),
+      withDelay(1900, withTiming(0, { duration: 450 }))
+    );
+    introY.value = withSequence(
+      withTiming(0, { duration: 800, easing: Easing.bezier(0.16, 1, 0.3, 1) }),
+      withDelay(1700, withTiming(-15, { duration: 500 }))
+    );
 
     // 2. Bridge enters at 3050ms, fades/slides out at 5200ms
-    bridgeOp.value = withDelay(3050, withTiming(1, { duration: 500 }));
-    bridgeY.value = withDelay(3050, withTiming(0, { duration: 700, easing: Easing.bezier(0.16, 1, 0.3, 1) }));
-
-    bridgeOp.value = withDelay(5200, withTiming(0, { duration: 450 }));
-    bridgeY.value = withDelay(5200, withTiming(-15, { duration: 500 }));
+    bridgeOp.value = withSequence(
+      withDelay(3050, withTiming(1, { duration: 500 })),
+      withDelay(1650, withTiming(0, { duration: 450 }))
+    );
+    bridgeY.value = withSequence(
+      withDelay(3050, withTiming(0, { duration: 700, easing: Easing.bezier(0.16, 1, 0.3, 1) })),
+      withDelay(1450, withTiming(-15, { duration: 500 }))
+    );
 
     // 3. Final Reveal enters at 5750ms
     revealOp.value = withDelay(5750, withTiming(1, { duration: 750 }));
