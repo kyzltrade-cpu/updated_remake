@@ -1122,30 +1122,30 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const scale = useSharedValue(0.85);
 
   useEffect(() => {
-    // 1. Intro enters at 0ms, fades/slides out at 2600ms (queued via withSequence)
+    // 1. Intro enters at 0ms, fades/slides out slower (completed at 3.6s)
     introOp.value = withSequence(
-      withTiming(1, { duration: 600 }),
-      withDelay(1900, withTiming(0, { duration: 450 }))
+      withTiming(1, { duration: 1000 }),
+      withDelay(2000, withTiming(0, { duration: 600 }))
     );
     introY.value = withSequence(
-      withTiming(0, { duration: 800, easing: Easing.bezier(0.16, 1, 0.3, 1) }),
-      withDelay(1700, withTiming(-15, { duration: 500 }))
+      withTiming(0, { duration: 1200, easing: Easing.bezier(0.16, 1, 0.3, 1) }),
+      withDelay(1800, withTiming(-15, { duration: 600 }))
     );
 
-    // 2. Bridge enters at 3050ms, fades/slides out at 5200ms
+    // 2. Bridge enters at 3800ms, fades/slides out slower (completed at 7.0s)
     bridgeOp.value = withSequence(
-      withDelay(3050, withTiming(1, { duration: 500 })),
-      withDelay(1650, withTiming(0, { duration: 450 }))
+      withDelay(3800, withTiming(1, { duration: 1000 })),
+      withDelay(1600, withTiming(0, { duration: 600 }))
     );
     bridgeY.value = withSequence(
-      withDelay(3050, withTiming(0, { duration: 700, easing: Easing.bezier(0.16, 1, 0.3, 1) })),
-      withDelay(1450, withTiming(-15, { duration: 500 }))
+      withDelay(3800, withTiming(0, { duration: 1200, easing: Easing.bezier(0.16, 1, 0.3, 1) })),
+      withDelay(1400, withTiming(-15, { duration: 600 }))
     );
 
-    // 3. Final Reveal enters at 5750ms
-    revealOp.value = withDelay(5750, withTiming(1, { duration: 750 }));
-    revealY.value = withDelay(5750, withSpring(0, { damping: 11, stiffness: 85 }));
-    scale.value = withDelay(5750, withSpring(1, { damping: 11, stiffness: 85 }));
+    // 3. Final Reveal enters at 7200ms with a gorgeous luxurious spring
+    revealOp.value = withDelay(7200, withTiming(1, { duration: 1000 }));
+    revealY.value = withDelay(7200, withSpring(0, { damping: 12, stiffness: 80 }));
+    scale.value = withDelay(7200, withSpring(1, { damping: 12, stiffness: 80 }));
 
     glAl.value = withRepeat(
       withSequence(withTiming(0.15, { duration: 1200 }), withTiming(0.05, { duration: 1200 })),
