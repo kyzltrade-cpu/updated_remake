@@ -1087,17 +1087,63 @@ function LashTracer({ color }: { color: string }) {
 
 function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
   const glAl = useSharedValue(0.1);
-  const swatchShine = useSharedValue(-200);
   const shades = isLocked ? null : findShades(dna.skinToneHex);
 
-  const scale = useSharedValue(0.8);
+  // Staggered animated values
+  const introOp = useSharedValue(0);
+  const introY = useSharedValue(20);
+
+  const bridgeOp = useSharedValue(0);
+  const bridgeY = useSharedValue(20);
+
+  const revealOp = useSharedValue(0);
+  const revealY = useSharedValue(30);
+
+  const scale = useSharedValue(0.85);
+
   useEffect(() => {
-    scale.value = withSpring(1, { damping: 11, stiffness: 85 });
+    // 1. Intro enters at 0ms, fades/slides out at 2600ms
+    introOp.value = withTiming(1, { duration: 600 });
+    introY.value = withTiming(0, { duration: 800, easing: Easing.bezier(0.16, 1, 0.3, 1) });
+
+    introOp.value = withDelay(2500, withTiming(0, { duration: 450 }));
+    introY.value = withDelay(2500, withTiming(-15, { duration: 500 }));
+
+    // 2. Bridge enters at 3050ms, fades/slides out at 5200ms
+    bridgeOp.value = withDelay(3050, withTiming(1, { duration: 500 }));
+    bridgeY.value = withDelay(3050, withTiming(0, { duration: 700, easing: Easing.bezier(0.16, 1, 0.3, 1) }));
+
+    bridgeOp.value = withDelay(5200, withTiming(0, { duration: 450 }));
+    bridgeY.value = withDelay(5200, withTiming(-15, { duration: 500 }));
+
+    // 3. Final Reveal enters at 5750ms
+    revealOp.value = withDelay(5750, withTiming(1, { duration: 750 }));
+    revealY.value = withDelay(5750, withSpring(0, { damping: 11, stiffness: 85 }));
+    scale.value = withDelay(5750, withSpring(1, { damping: 11, stiffness: 85 }));
+
     glAl.value = withRepeat(
       withSequence(withTiming(0.15, { duration: 1200 }), withTiming(0.05, { duration: 1200 })),
       -1, true
     );
   }, []);
+
+  const introStyle = useAnimatedStyle(() => ({
+    opacity: introOp.value,
+    transform: [{ translateY: introY.value }],
+  }));
+
+  const bridgeStyle = useAnimatedStyle(() => ({
+    opacity: bridgeOp.value,
+    transform: [{ translateY: bridgeY.value }],
+  }));
+
+  const revealStyle = useAnimatedStyle(() => ({
+    opacity: revealOp.value,
+    transform: [{ translateY: revealY.value }],
+    flex: 1,
+    width: '100%',
+    justifyContent: 'space-between',
+  }));
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -1107,129 +1153,198 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const mainShadeValue = shades ? (shades.MAC ?? shades.Fenty ?? 'N/A') : 'NC30';
 
   return (
-    <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'space-between', paddingVertical: 80 }]}>
-      {/* 3D Tunnel and Swatch at the Top */}
-      <Animated.View style={[animatedStyle, { width: W, height: 260, alignItems: 'center', justifyContent: 'center' }]}>
-        <View style={{ width: 260, height: 260, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-          {/* Holographic Tunnel Rings (Behind Swatch) */}
-          <Svg width="320" height="320" viewBox="0 0 100 100" style={StyleSheet.absoluteFill} pointerEvents="none">
-            {/* Upper Tunnel Rings */}
-            <Circle cx="50" cy="50" r="32" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8" fill="none" />
-            <Circle cx="50" cy="42" r="33" stroke="rgba(255,255,255,0.14)" strokeWidth="0.8" fill="none" />
-            <Circle cx="50" cy="34" r="34" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" fill="none" />
-            <Circle cx="50" cy="26" r="35" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" fill="none" />
-            <Circle cx="50" cy="18" r="36" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" fill="none" />
-            
-            {/* Lower Tunnel Rings */}
-            <Circle cx="50" cy="58" r="33" stroke="rgba(255,255,255,0.14)" strokeWidth="0.8" fill="none" />
-            <Circle cx="50" cy="66" r="34" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" fill="none" />
-            <Circle cx="50" cy="74" r="35" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" fill="none" />
-            <Circle cx="50" cy="82" r="36" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" fill="none" />
-          </Svg>
-
-          {/* Central Skin Swatch */}
-          <View style={[ds.canvasSwatch, { 
-            width: 170, 
-            height: 170, 
-            borderRadius: 85, 
-            backgroundColor: dna.skinToneHex, 
-            shadowColor: dna.skinToneHex, 
-            shadowOpacity: 0.25, 
-            shadowRadius: 15,
-            borderWidth: 3,
-            borderColor: '#FFFFFF',
-            overflow: 'hidden'
-          }]}>
-            {!isLocked && (
-              <Animated.View style={[StyleSheet.absoluteFill, { width: '200%', pointerEvents: 'none' }]}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              </Animated.View>
-            )}
-            {isLocked && <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFillObject} />}
-          </View>
-        </View>
-      </Animated.View>
-
-      {/* Outlined Box containing Shade Match Info in the Middle */}
-      <View style={{ width: W - 56, alignSelf: 'center', marginVertical: 12 }}>
-        <View style={{
-          borderWidth: 1.5,
-          borderColor: '#FFF9F7',
-          paddingVertical: 18,
-          paddingHorizontal: 24,
-          alignItems: 'center',
-          backgroundColor: 'rgba(255,255,255,0.02)',
-          borderRadius: 4, // Sharp, premium rectangle like reference image
-        }}>
-          <Text style={{
-            fontFamily: 'Inter',
-            fontSize: 12,
-            fontWeight: '700',
-            letterSpacing: 3,
-            color: 'rgba(255,255,255,0.65)',
-            textTransform: 'uppercase',
-            marginBottom: 8,
-          }}>
-            My Shade Canvas
-          </Text>
-          <Text style={{
-            fontFamily: 'Inter',
-            fontSize: 34,
-            fontWeight: '900',
-            color: '#FFF9F7',
-            letterSpacing: 1.5,
-            textAlign: 'center',
-          }}>
-            {dna.skinToneHex.toUpperCase()}
-          </Text>
-        </View>
-      </View>
-
-      {/* Stats Below the Box at the Bottom */}
-      <View style={{ alignItems: 'center', gap: 4 }}>
+    <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
+      
+      {/* ── PHASE 1: INTRO NARRATIVE (0s - 2.8s) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
         <Text style={{
           fontFamily: 'Inter',
-          fontSize: 13,
-          fontWeight: '500',
-          color: 'rgba(255,255,255,0.55)',
-          letterSpacing: 1.5,
-          textTransform: 'uppercase',
+          fontSize: 22,
+          fontWeight: '600',
+          color: '#FFF9F7',
+          textAlign: 'center',
+          lineHeight: 30,
+          letterSpacing: -0.5,
+          marginBottom: 10,
         }}>
-          {mainShadeBrand} Best Match
+          Struggling to find your perfect shade?
         </Text>
-        
-        {isLocked ? (
-          <LockedValue size="lg" color="rgba(255,255,255,0.4)" />
-        ) : (
-          <Text style={{
-            fontFamily: 'Playfair Display',
-            fontSize: 68,
-            fontWeight: '800',
-            color: '#FFF9F7',
-            lineHeight: 74,
-          }}>
-            {mainShadeValue}
-          </Text>
-        )}
+        <Text style={{
+          fontFamily: 'Playfair Display',
+          fontSize: 24,
+          fontStyle: 'italic',
+          color: '#F57FBF',
+          textAlign: 'center',
+        }}>
+          Don't worry, we gotchu. ✦
+        </Text>
+      </Animated.View>
 
-        {shades && (
+      {/* ── PHASE 2: BRIDGE (3.0s - 5.5s) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center' }, bridgeStyle]} pointerEvents="none">
+        <Text style={{
+          fontFamily: 'Playfair Display',
+          fontSize: 32,
+          fontStyle: 'italic',
+          color: '#FFF9F7',
+          textAlign: 'center',
+          letterSpacing: 0.5,
+        }}>
+          Your perfect shade is...
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 3: THE REVEAL (5.8s onwards) ── */}
+      <Animated.View style={[revealStyle, { paddingVertical: 80 }]}>
+        
+        {/* Makeup Silhouettes - Left Dropper Bottle */}
+        <Svg width="80" height="150" viewBox="0 0 80 150" style={{ position: 'absolute', bottom: 60, left: 24, opacity: 0.28 }} pointerEvents="none">
+          {/* Dropper bulb */}
+          <Path d="M 32 15 C 32 8, 48 8, 48 15 L 48 24 L 32 24 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          {/* Cap collar */}
+          <Rect x="26" y="24" width="28" height="10" rx="2" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          {/* Bottle shoulders and body */}
+          <Path d="M 22 42 C 22 34, 58 34, 58 42 L 58 135 C 58 140, 22 140, 22 135 Z" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          {/* Dropper pipette inside */}
+          <Path d="M 38 34 L 38 115" stroke="rgba(255,255,255,0.08)" strokeWidth="1.2" />
+          {/* Fluid level indicator */}
+          <Path d="M 22 90 L 58 90" stroke="rgba(255,255,255,0.05)" strokeWidth="0.8" strokeDasharray="3 3" />
+        </Svg>
+
+        {/* Makeup Silhouettes - Right Makeup Brush */}
+        <Svg width="70" height="170" viewBox="0 0 70 170" style={{ position: 'absolute', bottom: 50, right: 24, opacity: 0.28 }} pointerEvents="none">
+          {/* Brush tapered handle */}
+          <Path d="M 32 80 L 38 80 L 36 160 L 34 170 Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+          {/* Ferrule (metal band) */}
+          <Rect x="26" y="52" width="18" height="28" rx="1" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          {/* Flared brush bristles */}
+          <Path d="M 26 52 C 22 35, 16 15, 35 10 C 54 15, 48 35, 44 52 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+        </Svg>
+
+        {/* 3D Tunnel and Swatch at the Top */}
+        <Animated.View style={[animatedStyle, { width: W, height: 260, alignItems: 'center', justifyContent: 'center' }]}>
+          <View style={{ width: 260, height: 260, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            
+            {/* Holographic Tunnel Rings (Behind Swatch) */}
+            <Svg width="320" height="320" viewBox="0 0 100 100" style={StyleSheet.absoluteFill} pointerEvents="none">
+              {/* Upper Tunnel Rings */}
+              <Circle cx="50" cy="50" r="32" stroke="rgba(255,255,255,0.18)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="42" r="33" stroke="rgba(255,255,255,0.14)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="34" r="34" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="26" r="35" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="18" r="36" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" fill="none" />
+              
+              {/* Lower Tunnel Rings */}
+              <Circle cx="50" cy="58" r="33" stroke="rgba(255,255,255,0.14)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="66" r="34" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="74" r="35" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" fill="none" />
+              <Circle cx="50" cy="82" r="36" stroke="rgba(255,255,255,0.03)" strokeWidth="0.8" fill="none" />
+            </Svg>
+
+            {/* Central Skin Swatch */}
+            <View style={[ds.canvasSwatch, { 
+              width: 170, 
+              height: 170, 
+              borderRadius: 85, 
+              backgroundColor: dna.skinToneHex, 
+              shadowColor: dna.skinToneHex, 
+              shadowOpacity: 0.25, 
+              shadowRadius: 15,
+              borderWidth: 3,
+              borderColor: '#FFFFFF',
+              overflow: 'hidden'
+            }]}>
+              {!isLocked && (
+                <Animated.View style={[StyleSheet.absoluteFill, { width: '200%', pointerEvents: 'none' }]}>
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                </Animated.View>
+              )}
+              {isLocked && <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFillObject} />}
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Outlined Box containing Shade Match Info in the Middle */}
+        <View style={{ width: W - 56, alignSelf: 'center', marginVertical: 12 }}>
+          <View style={{
+            borderWidth: 1.5,
+            borderColor: '#FFF9F7',
+            paddingVertical: 18,
+            paddingHorizontal: 24,
+            alignItems: 'center',
+            backgroundColor: 'rgba(255,255,255,0.02)',
+            borderRadius: 4, // Sharp, premium rectangle like reference image
+          }}>
+            <Text style={{
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: '700',
+              letterSpacing: 3,
+              color: 'rgba(255,255,255,0.65)',
+              textTransform: 'uppercase',
+              marginBottom: 8,
+            }}>
+              Your Perfect Shade
+            </Text>
+            <Text style={{
+              fontFamily: 'Inter',
+              fontSize: 34,
+              fontWeight: '900',
+              color: '#FFF9F7',
+              letterSpacing: 1.5,
+              textAlign: 'center',
+            }}>
+              {dna.skinToneHex.toUpperCase()}
+            </Text>
+          </View>
+        </View>
+
+        {/* Stats Below the Box at the Bottom */}
+        <View style={{ alignItems: 'center', gap: 4 }}>
           <Text style={{
             fontFamily: 'Inter',
-            fontSize: 11,
-            color: 'rgba(255,255,255,0.45)',
-            textAlign: 'center',
-            marginTop: 6,
-            maxWidth: W - 80,
-            lineHeight: 16,
+            fontSize: 13,
+            fontWeight: '500',
+            color: 'rgba(255,255,255,0.55)',
+            letterSpacing: 1.5,
+            textTransform: 'uppercase',
           }}>
-            Fenty: {shades.Fenty}  ·  NARS: {shades.NARS}  ·  L'Oréal: {shades["L'Oréal"]}
+            {mainShadeBrand} Best Match
           </Text>
-        )}
-      </View>
+          
+          {isLocked ? (
+            <LockedValue size="lg" color="rgba(255,255,255,0.4)" />
+          ) : (
+            <Text style={{
+              fontFamily: 'Playfair Display',
+              fontSize: 68,
+              fontWeight: '800',
+              color: '#FFF9F7',
+              lineHeight: 74,
+            }}>
+              {mainShadeValue}
+            </Text>
+          )}
+
+          {shades && (
+            <Text style={{
+              fontFamily: 'Inter',
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.45)',
+              textAlign: 'center',
+              marginTop: 6,
+              maxWidth: W - 80,
+              lineHeight: 16,
+            }}>
+              Fenty: {shades.Fenty}  ·  NARS: {shades.NARS}  ·  L'Oréal: {shades["L'Oréal"]}
+            </Text>
+          )}
+        </View>
+      </Animated.View>
     </View>
   );
 }
