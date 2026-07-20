@@ -1711,7 +1711,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       {/* ── PHASE 3: CENTERED 2x2 PALETTE GRID (7.8s onwards, fills the middle space beautifully) ── */}
       <Animated.View style={[revealStyle, {
         position: 'absolute',
-        top: H * 0.51, // Shifed down to clear the larger stopped spinner and prevent overlap
+        top: H * 0.45, // perfectly centers the 2x2 grid block in the vertical gap
         width: W,
         alignItems: 'center',
         gap: 12,
@@ -1842,6 +1842,36 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
             </View>
           </Animated.View>
         </View>
+
+        {/* Undertone Temperature Slider Panel (Fills the space beautifully!) */}
+        <Animated.View style={[chipStyle4, { width: W - 56, marginTop: 12, paddingHorizontal: 12 }]}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, color: colors.muted, textTransform: 'uppercase' }}>
+              Undertone Temperature
+            </Text>
+            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '800', color: dna.colorSeason.includes('Warm') || dna.colorSeason.includes('Autumn') || dna.colorSeason.includes('Spring') ? '#C8774A' : '#788FA0', textTransform: 'uppercase', letterSpacing: 1 }}>
+              {dna.colorSeason.includes('Warm') || dna.colorSeason.includes('Autumn') || dna.colorSeason.includes('Spring') ? 'Warm Golden ☀️' : 'Cool Icy ❄️'}
+            </Text>
+          </View>
+          <View style={{ height: 6, borderRadius: 3, backgroundColor: 'rgba(30, 37, 48, 0.08)', position: 'relative', justifyContent: 'center' }}>
+            {/* Color Gradient Track */}
+            <LinearGradient
+              colors={['#A8C4D5', '#EFCFFF', '#FFD6C4', '#F4A261']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            {/* Active Pointer */}
+            <View style={{
+              position: 'absolute',
+              left: dna.colorSeason.includes('Warm') || dna.colorSeason.includes('Autumn') || dna.colorSeason.includes('Spring') ? '82%' : '18%',
+              width: 14, height: 14, borderRadius: 7,
+              backgroundColor: '#FFFFFF',
+              borderWidth: 2.5, borderColor: '#8A95A5',
+              shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.2, shadowRadius: 2,
+            }} />
+          </View>
+        </Animated.View>
       </Animated.View>
 
       {/* ── PHASE 3: THE REVEAL CARD (7.8s onwards) ── */}
