@@ -1463,6 +1463,17 @@ const SWATCH_SEASON: Record<string, string> = {
   'Cool Summer': '#C49098', 'Light Summer': '#E8B0BC', 'Deep Winter': '#8C0028', 'Cool Winter': '#780060',
 };
 
+const PALETTE_COLOR_NAMES: Record<string, string> = {
+  '#E8744A': 'Sunset Coral', '#F0A882': 'Peach Silk', '#F5C86A': 'Honey Glaze', '#C86430': 'Spiced Amber',
+  '#F4A090': 'Pastel Tulip', '#F9C8A8': 'Apricot Cream', '#F4D878': 'Soft Daffodil', '#E8906A': 'Sunkissed Clay',
+  '#B84C20': 'Burnt Terracotta', '#C8774A': 'Warm Sienna', '#8B6914': 'Olive Bronze', '#6B3A1F': 'Chestnut Cocoa',
+  '#8B2810': 'Spiced Cider', '#A84020': 'Maple Crimson', '#5C3418': 'Dark Walnut', '#3A1C0C': 'Espresso Wood',
+  '#C49098': 'Dusty Rose', '#A8B0C8': 'Periwinkle Ice', '#B898C0': 'Orchid Mist', '#786880': 'Plum Velvet',
+  '#E8B0BC': 'Petal Pink', '#C8D4E0': 'Mist Blue', '#D8C0E0': 'Lilac Quartz', '#A09098': 'Heather Gray',
+  '#8C0028': 'Deep Ruby', '#1A2B70': 'Midnight Navy', '#1A5C38': 'Emerald Forest', '#500080': 'Royal Violet',
+  '#780060': 'Wild Magenta', '#2840A0': 'Cobalt Spark', '#007060': 'Teal Crystal', '#483060': 'Amethyst Velvet',
+};
+
 function getSeasonDescription(season: string) {
   if (season.includes('Autumn')) return 'Rich, warm, and muted. Honey, olive, and gold tones bring out your effortless elegance. 🍁';
   if (season.includes('Summer')) return 'Muted, cool, and soft. Lavenders, dusty roses, and slate blues make your skin glow. 💎';
@@ -1715,22 +1726,27 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
             borderWidth: 1,
             borderColor: 'rgba(138, 149, 165, 0.25)',
             borderRadius: 24,
-            width: W * 0.42,
-            height: 48,
+            width: W * 0.44, // Slightly wider to fit texts comfortably
+            height: 52, // Slightly taller to fit two lines beautifully
             paddingHorizontal: 8,
-            gap: 10,
+            gap: 8,
             shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.05, shadowRadius: 3,
           }]}>
             <View style={{
-              width: 32, height: 32, borderRadius: 16,
+              width: 34, height: 34, borderRadius: 17,
               backgroundColor: displayPalette[0],
               borderWidth: 1, borderColor: '#8A95A5',
               shadowColor: displayPalette[0], shadowOpacity: 0.25, shadowRadius: 4,
             }} />
-            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
-              {displayPalette[0].toUpperCase()}
-            </Text>
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              <Text numberOfLines={1} style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '800', color: colors.text, marginBottom: 1 }}>
+                {PALETTE_COLOR_NAMES[displayPalette[0]] ?? 'Warm Glow'}
+              </Text>
+              <Text style={{ fontFamily: 'Inter', fontSize: 8.5, color: colors.muted, letterSpacing: 0.5 }}>
+                {displayPalette[0].toUpperCase()}
+              </Text>
+            </View>
           </Animated.View>
 
           <Animated.View style={[chipStyle2, {
@@ -1740,22 +1756,27 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
             borderWidth: 1,
             borderColor: 'rgba(138, 149, 165, 0.25)',
             borderRadius: 24,
-            width: W * 0.42,
-            height: 48,
+            width: W * 0.44,
+            height: 52,
             paddingHorizontal: 8,
-            gap: 10,
+            gap: 8,
             shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.05, shadowRadius: 3,
           }]}>
             <View style={{
-              width: 32, height: 32, borderRadius: 16,
+              width: 34, height: 34, borderRadius: 17,
               backgroundColor: displayPalette[1],
               borderWidth: 1, borderColor: '#8A95A5',
               shadowColor: displayPalette[1], shadowOpacity: 0.25, shadowRadius: 4,
             }} />
-            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
-              {displayPalette[1].toUpperCase()}
-            </Text>
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              <Text numberOfLines={1} style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '800', color: colors.text, marginBottom: 1 }}>
+                {PALETTE_COLOR_NAMES[displayPalette[1]] ?? 'Soft Dew'}
+              </Text>
+              <Text style={{ fontFamily: 'Inter', fontSize: 8.5, color: colors.muted, letterSpacing: 0.5 }}>
+                {displayPalette[1].toUpperCase()}
+              </Text>
+            </View>
           </Animated.View>
         </View>
 
@@ -1768,22 +1789,27 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
             borderWidth: 1,
             borderColor: 'rgba(138, 149, 165, 0.25)',
             borderRadius: 24,
-            width: W * 0.42,
-            height: 48,
+            width: W * 0.44,
+            height: 52,
             paddingHorizontal: 8,
-            gap: 10,
+            gap: 8,
             shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.05, shadowRadius: 3,
           }]}>
             <View style={{
-              width: 32, height: 32, borderRadius: 16,
+              width: 34, height: 34, borderRadius: 17,
               backgroundColor: displayPalette[2],
               borderWidth: 1, borderColor: '#8A95A5',
               shadowColor: displayPalette[2], shadowOpacity: 0.25, shadowRadius: 4,
             }} />
-            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
-              {displayPalette[2].toUpperCase()}
-            </Text>
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              <Text numberOfLines={1} style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '800', color: colors.text, marginBottom: 1 }}>
+                {PALETTE_COLOR_NAMES[displayPalette[2]] ?? 'Rich Velvet'}
+              </Text>
+              <Text style={{ fontFamily: 'Inter', fontSize: 8.5, color: colors.muted, letterSpacing: 0.5 }}>
+                {displayPalette[2].toUpperCase()}
+              </Text>
+            </View>
           </Animated.View>
 
           <Animated.View style={[chipStyle4, {
@@ -1793,22 +1819,27 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
             borderWidth: 1,
             borderColor: 'rgba(138, 149, 165, 0.25)',
             borderRadius: 24,
-            width: W * 0.42,
-            height: 48,
+            width: W * 0.44,
+            height: 52,
             paddingHorizontal: 8,
-            gap: 10,
+            gap: 8,
             shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.05, shadowRadius: 3,
           }]}>
             <View style={{
-              width: 32, height: 32, borderRadius: 16,
+              width: 34, height: 34, borderRadius: 17,
               backgroundColor: displayPalette[3],
               borderWidth: 1, borderColor: '#8A95A5',
               shadowColor: displayPalette[3], shadowOpacity: 0.25, shadowRadius: 4,
             }} />
-            <Text style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '700', color: colors.text, letterSpacing: 0.5 }}>
-              {displayPalette[3].toUpperCase()}
-            </Text>
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              <Text numberOfLines={1} style={{ fontFamily: 'Inter', fontSize: 11, fontWeight: '800', color: colors.text, marginBottom: 1 }}>
+                {PALETTE_COLOR_NAMES[displayPalette[3]] ?? 'Icy Spark'}
+              </Text>
+              <Text style={{ fontFamily: 'Inter', fontSize: 8.5, color: colors.muted, letterSpacing: 0.5 }}>
+                {displayPalette[3].toUpperCase()}
+              </Text>
+            </View>
           </Animated.View>
         </View>
       </Animated.View>
