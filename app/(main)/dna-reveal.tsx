@@ -132,12 +132,12 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#0F0311', muted: 'rgba(15,3,17,0.75)', 
     eyebrow: '#0F0311', accent: '#0F0311' 
   },
-  // 1 — Canvas: Obsidian black (stark gold & white text contrast)
+  // 1 — Canvas: Deep Velvet Rose-Mocha (luxury warm background with soft coquette glow)
   { 
-    gradientTop: '#08030C', gradientBot: '#0C0514', 
-    blobA: '#D4AF37', blobB: '#1C0626', 
-    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
-    eyebrow: '#D4AF37', accent: '#D4AF37' 
+    gradientTop: '#1C0F11', gradientBot: '#100708', 
+    blobA: '#FFD6EF', blobB: '#4A1C24', 
+    text: '#FFF9F7', muted: 'rgba(255,249,247,0.72)', 
+    eyebrow: '#FFD6EF', accent: '#F57FBF' 
   },
   // 3 — Season: ELECTRIC ROYAL BLUE (glowing neon yellow contrast)
   { 
