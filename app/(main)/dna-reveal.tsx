@@ -132,19 +132,19 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#0F0311', muted: 'rgba(15,3,17,0.75)', 
     eyebrow: '#0F0311', accent: '#0F0311' 
   },
-  // 1 — Canvas: Deep Velvet Rose-Mocha (luxury warm background with soft coquette glow)
+  // 1 — Canvas: Soft Rose-Cream Alabaster (quiet luxury warm pastel theme)
   { 
-    gradientTop: '#1C0F11', gradientBot: '#100708', 
-    blobA: '#FFD6EF', blobB: '#4A1C24', 
-    text: '#FFF9F7', muted: 'rgba(255,249,247,0.72)', 
-    eyebrow: '#FFD6EF', accent: '#F57FBF' 
+    gradientTop: '#FFF8F6', gradientBot: '#FFF0EC', 
+    blobA: '#FFD6EF', blobB: '#FFE6D9', 
+    text: '#2E1E20', muted: 'rgba(46,30,32,0.65)', 
+    eyebrow: '#D98A96', accent: '#F57FBF' 
   },
-  // 3 — Season: Deep Graphite & Glowing Lavender-Peach (high-end cosmetic elegance)
+  // 3 — Season: Bright Silk Lavender & Mint (high-end cosmetic elegance)
   { 
-    gradientTop: '#121316', gradientBot: '#0B0C0E', 
-    blobA: '#E8C1F4', blobB: '#FFD6C4', 
-    text: '#FFF9F7', muted: 'rgba(255,249,247,0.72)', 
-    eyebrow: '#E8C1F4', accent: '#D4AF37' 
+    gradientTop: '#F8F6FC', gradientBot: '#EFF1F8', 
+    blobA: '#EFCFFF', blobB: '#D8F7E5', 
+    text: '#1E2530', muted: 'rgba(30,37,48,0.65)', 
+    eyebrow: '#A092F0', accent: '#D4AF37' 
   },
   // 4 — Face Shape: VIBRANT NEON ORANGE (deep dark purple text contrast)
   { 
@@ -1209,7 +1209,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   }));
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.value }, { translateY: 20 }],
   }));
 
   const floatLStyle = useAnimatedStyle(() => ({
@@ -1298,7 +1298,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         </Animated.View>
 
         {/* 3D Tunnel and Swatch (Moved lower, made bigger, main focus) */}
-        <Animated.View style={[animatedStyle, { width: W, height: 320, alignItems: 'center', justifyContent: 'center', marginTop: 30, transform: [{ scale: scale.value }, { translateY: 20 }] }]}>
+        <Animated.View style={[animatedStyle, { width: W, height: 320, alignItems: 'center', justifyContent: 'center', marginTop: 30 }]}>
           <View style={{ width: 320, height: 320, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             
             {/* Holographic Tunnel Rings (Behind Swatch) */}
