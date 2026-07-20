@@ -368,7 +368,7 @@ export default function ProfileScreen() {
               )}
 
               <Pressable onPress={handleViewDna} style={styles.actionBtn}>
-                <Text style={styles.actionBtnText}>Open Beauty wrapped story ✦</Text>
+                <Text style={styles.actionBtnText}>View Your Beauty DNA ✦</Text>
               </Pressable>
             </View>
           ) : isPro ? (
