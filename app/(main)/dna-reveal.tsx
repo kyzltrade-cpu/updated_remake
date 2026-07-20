@@ -262,23 +262,29 @@ const SLIDE_COLORS: SlideColors[] = [
 
 // ── Grain overlay (iOS renders, Android gracefully skips) ─────────────────────
 
-// Pulsing glow orb — same energy as Beauty Wrapped
-function DnaPulseOrb() {
+// Pulsing glow orb — same energy as Beauty Wrapped, now slide-aware for perfect color harmony
+function DnaPulseOrb({ colors }: { colors: SlideColors }) {
   const sc = useSharedValue(1);
-  const al = useSharedValue(0.10);
+  const al = useSharedValue(0.06);
   useEffect(() => {
-    sc.value = withRepeat(withSequence(withTiming(1.12,{duration:2000}),withTiming(0.9,{duration:1800})),-1,true);
-    al.value = withRepeat(withSequence(withTiming(0.22,{duration:1500}),withTiming(0.07,{duration:1900})),-1,true);
+    sc.value = withRepeat(withSequence(withTiming(1.12, { duration: 2200 }), withTiming(0.9, { duration: 2000 })), -1, true);
+    al.value = withRepeat(withSequence(withTiming(0.12, { duration: 1800 }), withTiming(0.04, { duration: 2200 })), -1, true);
   }, []);
-  const sty = useAnimatedStyle(() => ({ transform:[{scale:sc.value}], opacity:al.value }));
-  return <Animated.View style={[dnaPulseOrbStyle, sty]} pointerEvents="none" />;
+  const sty = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: al.value }));
+  const orbColor = colors.accent || '#E8399A';
+  return (
+    <Animated.View style={[
+      dnaPulseOrbStyle, 
+      { backgroundColor: orbColor, shadowColor: orbColor }, 
+      sty
+    ]} pointerEvents="none" />
+  );
 }
 const dnaPulseOrbStyle = {
-  position:'absolute' as const, width:W*0.85, height:W*0.85, borderRadius:W*0.425,
-  top:H*0.1, left:W*0.075,
-  backgroundColor:'#E8399A',
-  shadowColor:'#E8399A', shadowOffset:{width:0,height:0},
-  shadowOpacity:0.5, shadowRadius:80,
+  position: 'absolute' as const, width: W * 0.85, height: W * 0.85, borderRadius: W * 0.425,
+  top: H * 0.1, left: W * 0.075,
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.4, shadowRadius: 80,
 };
 
 function GrainOverlay() {
@@ -1209,7 +1215,7 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   }));
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: 20 }],
+    transform: [{ scale: scale.value }, { translateY: 55 }],
   }));
 
   const floatLStyle = useAnimatedStyle(() => ({
@@ -1317,11 +1323,11 @@ function SlideCanvas({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
               <Circle cx="50" cy="82" r="36" stroke="rgba(46,30,32,0.01)" strokeWidth="0.8" fill="none" />
             </Svg>
 
-            {/* Central Skin Swatch (Englarged to 210x210, bold border, main focus) */}
+            {/* Central Skin Swatch (Englarged to 230x230, bold border, main focus) */}
             <View style={[ds.canvasSwatch, { 
-              width: 210, 
-              height: 210, 
-              borderRadius: 105, 
+              width: 230, 
+              height: 230, 
+              borderRadius: 115, 
               backgroundColor: dna.skinToneHex, 
               shadowColor: dna.skinToneHex, 
               shadowOpacity: 0.25, 
@@ -3188,7 +3194,7 @@ export default function DnaRevealScreen() {
       <MorphingBackground fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
       <PersistentAmbient fromIdx={bgFrom} toIdx={bgTo} morphProgress={morphProgress} />
       <GrainOverlay />
-      <DnaPulseOrb />
+      <DnaPulseOrb colors={colors} />
 
       {/* Content only — dissolves out then in */}
       {slideState.outgoing && (
