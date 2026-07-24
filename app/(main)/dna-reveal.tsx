@@ -1966,20 +1966,14 @@ const SilhouetteActive = require('../../assets/images/user-silhouette-active.png
 
 function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
   const shape = dna.faceShape || 'Oval';
-  const svgPath = SHAPE_SVGS[shape] || SHAPE_SVGS['Oval'];
-  const pathLength = 1000;
 
   // Timings and Anim state
   const silhouetteOp = useSharedValue(0);
   const silhouetteScale = useSharedValue(0.9);
 
   // Scan Line animation
-  const scanLineY = useSharedValue(-110); // Y-offset from top of silhouette frame
+  const scanLineY = useSharedValue(-130); // Y-offset from top of silhouette frame
   const scanLineOp = useSharedValue(0);
-
-  // Detected shape trace progress
-  const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
-  const traceOp = useSharedValue(0);
 
   const triggerLightHaptic = () => {
     if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -1991,14 +1985,14 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 
   useEffect(() => {
     // 1. Phase 1: Silhouette entrance (0ms to 2.5s)
-    silhouetteOp.value = withTiming(0.65, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
-    silhouetteScale.value = withSpring(1.06, { damping: 14, stiffness: 45 });
+    silhouetteOp.value = withTiming(0.68, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+    silhouetteScale.value = withSpring(1.08, { damping: 14, stiffness: 45 });
 
-    // 2. Phase 2: Sweep Scan animation (2.5s to 5.5s)
+    // 2. Phase 2: Sweep Scan animation (2.5s onwards)
     // Appear scan line at 2.5s
     scanLineOp.value = withDelay(2500, withTiming(1, { duration: 300 }));
-    // Sweep scan line downwards
-    scanLineY.value = withDelay(2500, withTiming(110, {
+    // Sweep scan line downwards cleanly once
+    scanLineY.value = withDelay(2500, withTiming(130, {
       duration: 2500,
       easing: Easing.bezier(0.2, 0.8, 0.2, 1)
     }, (finished) => {
@@ -2008,18 +2002,11 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
       }
     }));
 
-    // Fade in actual detected shape highlighted trace
-    traceOp.value = withDelay(2500, withTiming(1, { duration: 300 }));
-    traceProgress.value = withDelay(2500, withTiming(0, {
-      duration: 2500,
-      easing: Easing.bezier(0.2, 0.8, 0.2, 1)
-    }));
-
     // Trigger synchronized haptic ticks as the scanning sweep descends
     let intervalId: ReturnType<typeof setInterval>;
     const scanTimer = setTimeout(() => {
       intervalId = setInterval(() => {
-        if (scanLineY.value > -100 && scanLineY.value < 105) {
+        if (scanLineY.value > -120 && scanLineY.value < 125) {
           runOnJS(triggerLightHaptic)();
         }
       }, 70);
@@ -2041,59 +2028,31 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
     transform: [{ translateY: scanLineY.value }],
   }));
 
-  const traceStyle = useAnimatedStyle(() => ({
-    opacity: traceOp.value,
-  }));
-
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: traceProgress.value * pathLength,
-  }));
-
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
       
       {/* ── CENTRAL MAIN SUBJECT: CHIC FEMININE FACE SILHOUETTE ── */}
       <View style={{
-        width: 250,
-        height: 250,
+        width: 280,
+        height: 280,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
         top: -H * 0.05, // Snug vertical alignment in upper middle
       }}>
         
-        {/* Animated Faint Feminine Blueprint Base */}
-        <Animated.View style={[{ width: 180, height: 210, position: 'absolute' }, containerStyle]}>
+        {/* Animated Faint Feminine Blueprint Base (Bigger!) */}
+        <Animated.View style={[{ width: 215, height: 250, position: 'absolute' }, containerStyle]}>
           <Image 
             source={SilhouetteFaint} 
-            style={{ width: 180, height: 210, resizeMode: 'contain' }} 
+            style={{ width: 215, height: 250, resizeMode: 'contain' }} 
           />
-        </Animated.View>
-
-        {/* ── THE DETECTED SHAPE ACTIVE OVERLAY ── */}
-        <Animated.View style={[{ width: 180, height: 210, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
-          {/* Subtle rose glow on active silhouette */}
-          <Image 
-            source={SilhouetteActive} 
-            style={{ width: 180, height: 210, resizeMode: 'contain', opacity: 0.15, position: 'absolute' }} 
-          />
-          {/* Glowing laser-etched face shape outline aligned beautifully over her face */}
-          <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 12 }}>
-            <AnimatedPath
-              d={svgPath}
-              fill="none"
-              stroke="#D98A96"
-              strokeWidth="2.2"
-              strokeDasharray={`${pathLength}`}
-              animatedProps={animatedProps}
-            />
-          </Svg>
         </Animated.View>
 
         {/* ── THE NEON LASER SCANNING SWEEP LINE ── */}
         <Animated.View style={[scanStyle, {
           position: 'absolute',
-          width: 232,
+          width: 245,
           height: 3,
           backgroundColor: '#D98A96',
           borderRadius: 2,
@@ -2105,27 +2064,17 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
         }]} />
       </View>
 
-      {/* ── SIMPLE INTERIM DETECTED TEXT (For testing phase only) ── */}
+      {/* ── SIMPLE INTERIM DETECTED TEXT ── */}
       <Text style={{
         fontFamily: 'Inter',
         fontSize: 10,
         fontWeight: '700',
         letterSpacing: 4,
         color: colors.muted,
-        marginTop: 20,
+        marginTop: 15,
         textTransform: 'uppercase',
       }}>
-        ANALYZING FACIAL STRUCTURE...
-      </Text>
-      
-      <Text style={{
-        fontFamily: 'Playfair Display',
-        fontSize: 22,
-        fontStyle: 'italic',
-        color: colors.text,
-        marginTop: 8,
-      }}>
-        {shape}
+        BLUEPRINT SCANNING...
       </Text>
     </View>
   );
