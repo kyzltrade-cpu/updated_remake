@@ -1961,19 +1961,65 @@ const SHAPE_SVGS: Record<string, string> = {
   'Diamond': 'M 50,16 L 85,54 L 50,92 L 15,54 Z', // Geometric diamond
 };
 
+const SHAPE_DETAILS: Record<string, { label: string; desc: string; icon: string }> = {
+  'Oval': {
+    label: 'CLASSIC OVAL ✦',
+    desc: 'The gold standard of balanced symmetry. Your bone structure features beautifully rounded jaw profiles and soft, high cheek verticality that matches classic ideal proportions. Absolutely effortless for any beauty style.',
+    icon: 'face-retouching-natural'
+  },
+  'Round': {
+    label: 'ROUND HARMONY ✦',
+    desc: 'Your facial features possess gorgeous, soft circular geometry and youthful structural fullness. Your balanced cheek planes convey timeless symmetry, capturing a soft-focus radiant beauty that projects timeless youth.',
+    icon: 'face'
+  },
+  'Heart': {
+    label: 'SCULPTED HEART ✦',
+    desc: 'Breathtaking structural elegance. Your face shape tapers dramatically from high, sweeping cheekbones down to a delicate, contoured chin profile. This architectural slenderness provides high-contrast shadow definitions.',
+    icon: 'favorite-border'
+  },
+  'Square': {
+    label: 'STRUCTURAL SQUARE ✦',
+    desc: 'Elite architectural definition. Your structural jaw alignment presents a strong, high-fashion statement with sharp 90-degree chin angles and bold structural presence. It projects extreme luxury, power, and editorial confidence.',
+    icon: 'crop-free'
+  },
+  'Diamond': {
+    label: 'ANGULAR DIAMOND ✦',
+    desc: 'Striking, high-fashion geometric complexity. Your high-contrast cheek zygomatic arches expand beautifully, tapering into a slender forehead and a pristine, sculpted chin. Exudes a highly refined, cinematic presence.',
+    icon: 'diamond'
+  }
+};
+
 const SilhouetteFaint = require('../../assets/images/user-silhouette.png');
 const SilhouetteActive = require('../../assets/images/user-silhouette-active.png');
 
 function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
   const shape = dna.faceShape || 'Oval';
+  const svgPath = SHAPE_SVGS[shape] || SHAPE_SVGS['Oval'];
+  const pathLength = 1000;
 
   // Timings and Anim state
+  const introOp = useSharedValue(0);
+  const introY = useSharedValue(20);
+  const introScale = useSharedValue(0.93);
+
   const silhouetteOp = useSharedValue(0);
   const silhouetteScale = useSharedValue(0.9);
+  const silhouetteY = useSharedValue(0);
 
   // Scan Line animation
   const scanLineY = useSharedValue(-130); // Y-offset from top of silhouette frame
   const scanLineOp = useSharedValue(0);
+
+  // Detected shape trace progress
+  const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
+  const traceOp = useSharedValue(0);
+
+  // Final Reveal Card Animation
+  const cardOp = useSharedValue(0);
+  const cardY = useSharedValue(20);
+
+  const descOp = useSharedValue(0);
+  const descY = useSharedValue(10);
 
   const triggerLightHaptic = () => {
     if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -1984,15 +2030,26 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
   };
 
   useEffect(() => {
-    // 1. Phase 1: Silhouette entrance (0ms to 2.5s)
-    silhouetteOp.value = withTiming(0.68, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
-    silhouetteScale.value = withSpring(1.08, { damping: 14, stiffness: 45 });
+    // 1. Phase 1: Intro Narrative Text (0ms to 3.6s)
+    introOp.value = withSequence(
+      withTiming(1, { duration: 1800 }),
+      withDelay(1000, withTiming(0, { duration: 800 }))
+    );
+    introY.value = withSequence(
+      withTiming(0, { duration: 2000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
+      withDelay(800, withTiming(-20, { duration: 800 }))
+    );
+    introScale.value = withTiming(1.04, { duration: 3600, easing: Easing.out(Easing.quad) });
 
-    // 2. Phase 2: Sweep Scan animation (2.5s onwards)
-    // Appear scan line at 2.5s
-    scanLineOp.value = withDelay(2500, withTiming(1, { duration: 300 }));
+    // 2. Phase 2: Silhouette & Scanning entrance (3.8s to 7.6s)
+    // Silhouette fades in at 3.8s
+    silhouetteOp.value = withDelay(3800, withTiming(0.68, { duration: 500 }));
+    silhouetteScale.value = withDelay(3800, withSpring(1.08, { damping: 14, stiffness: 45 }));
+
+    // Scan Line appears at 3.8s
+    scanLineOp.value = withDelay(3800, withTiming(1, { duration: 300 }));
     // Sweep scan line downwards cleanly once
-    scanLineY.value = withDelay(2500, withTiming(130, {
+    scanLineY.value = withDelay(3800, withTiming(130, {
       duration: 2500,
       easing: Easing.bezier(0.2, 0.8, 0.2, 1)
     }, (finished) => {
@@ -2002,7 +2059,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
       }
     }));
 
-    // Trigger synchronized haptic ticks as the scanning sweep descends
+    // Trigger synchronized haptic ticks as the scanning sweep descends (3.8s to 6.3s)
     let intervalId: ReturnType<typeof setInterval>;
     const scanTimer = setTimeout(() => {
       intervalId = setInterval(() => {
@@ -2010,7 +2067,26 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
           runOnJS(triggerLightHaptic)();
         }
       }, 70);
-    }, 2500);
+    }, 3800);
+
+    // 3. Phase 3: The Reveal Card + Lock-on Trace (7.8s onwards)
+    // Silhouette glides slightly up to make room
+    silhouetteY.value = withDelay(7800, withTiming(-H * 0.15, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }));
+
+    // Fade in active trace and trace the SVG outline over her face
+    traceOp.value = withDelay(7800, withTiming(1, { duration: 500 }));
+    traceProgress.value = withDelay(7800, withTiming(0, {
+      duration: 2000,
+      easing: Easing.bezier(0.2, 0.8, 0.2, 1)
+    }));
+
+    // Results card slides up
+    cardOp.value = withDelay(7800, withTiming(1, { duration: 1000 }));
+    cardY.value = withDelay(7800, withSpring(0, { damping: 13, stiffness: 85 }));
+
+    // Editorial description fades in
+    descOp.value = withDelay(8400, withTiming(1, { duration: 800 }));
+    descY.value = withDelay(8400, withSpring(0, { damping: 15, stiffness: 90 }));
 
     return () => {
       clearTimeout(scanTimer);
@@ -2018,20 +2094,88 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
     };
   }, []);
 
+  const introStyle = useAnimatedStyle(() => ({
+    opacity: introOp.value,
+    transform: [
+      { translateY: introY.value },
+      { scale: introScale.value }
+    ],
+  }));
+
   const containerStyle = useAnimatedStyle(() => ({
     opacity: silhouetteOp.value,
-    transform: [{ scale: silhouetteScale.value }],
+    transform: [
+      { scale: silhouetteScale.value },
+      { translateY: silhouetteY.value }
+    ],
   }));
 
   const scanStyle = useAnimatedStyle(() => ({
     opacity: scanLineOp.value,
-    transform: [{ translateY: scanLineY.value }],
+    transform: [
+      { translateY: scanLineY.value + silhouetteY.value }
+    ],
   }));
+
+  const traceStyle = useAnimatedStyle(() => ({
+    opacity: traceOp.value,
+    transform: [
+      { scale: silhouetteScale.value },
+      { translateY: silhouetteY.value }
+    ],
+  }));
+
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: cardOp.value,
+    transform: [{ translateY: cardY.value }],
+  }));
+
+  const descStyle = useAnimatedStyle(() => ({
+    opacity: descOp.value,
+    transform: [{ translateY: descY.value }],
+  }));
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: traceProgress.value * pathLength,
+  }));
+
+  const details = SHAPE_DETAILS[shape] || SHAPE_DETAILS['Oval'];
+
+  const displaySymmetry = isLocked ? '••%' : `${dna.browSymmetryPct}%`;
+  const displayHarmony = isLocked ? '••••••' : (dna.browSymmetryPct > 90 ? 'Extreme' : 'High');
+  const displayDesc = isLocked 
+    ? "Facial blueprints are unlocked under our premium, high-fidelity structural coaching. Tap to unlock your personalized bone architecture report."
+    : details.desc;
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
       
-      {/* ── CENTRAL MAIN SUBJECT: CHIC FEMININE FACE SILHOUETTE ── */}
+      {/* ── PHASE 1: INTRO NARRATIVE (0s - 3.6s) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: '600',
+          color: colors.text,
+          textAlign: 'center',
+          lineHeight: 30,
+          letterSpacing: -0.5,
+          marginBottom: 10,
+        }}>
+          Every contour, angle, and jawline...
+        </Text>
+        <Text style={{
+          fontFamily: 'Playfair Display',
+          fontSize: 24,
+          fontStyle: 'italic',
+          color: colors.accent,
+          textAlign: 'center',
+        }}>
+          Your facial architecture is a masterpiece. ✦
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 2: CENTRAL MAIN SUBJECT: CHIC FEMININE FACE SILHOUETTE ── */}
       <View style={{
         width: 280,
         height: 280,
@@ -2049,6 +2193,26 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
           />
         </Animated.View>
 
+        {/* ── THE DETECTED SHAPE ACTIVE OVERLAY ── */}
+        <Animated.View style={[{ width: 180, height: 210, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
+          {/* Subtle rose glow on active silhouette */}
+          <Image 
+            source={SilhouetteActive} 
+            style={{ width: 180, height: 210, resizeMode: 'contain', opacity: 0.15, position: 'absolute' }} 
+          />
+          {/* Glowing laser-etched face shape outline aligned beautifully over her face */}
+          <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 12 }}>
+            <AnimatedPath
+              d={svgPath}
+              fill="none"
+              stroke="#D98A96"
+              strokeWidth="2.2"
+              strokeDasharray={`${pathLength}`}
+              animatedProps={animatedProps}
+            />
+          </Svg>
+        </Animated.View>
+
         {/* ── THE NEON LASER SCANNING SWEEP LINE ── */}
         <Animated.View style={[scanStyle, {
           position: 'absolute',
@@ -2064,18 +2228,104 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
         }]} />
       </View>
 
-      {/* ── SIMPLE INTERIM DETECTED TEXT ── */}
-      <Text style={{
-        fontFamily: 'Inter',
-        fontSize: 10,
-        fontWeight: '700',
-        letterSpacing: 4,
-        color: colors.muted,
-        marginTop: 15,
-        textTransform: 'uppercase',
-      }}>
-        BLUEPRINT SCANNING...
-      </Text>
+      {/* ── PHASE 3: THE REVEAL CARD (7.8s onwards) ── */}
+      <Animated.View style={[cardStyle, {
+        position: 'absolute',
+        top: H * 0.44,
+        width: W,
+        alignItems: 'center',
+        paddingHorizontal: 28,
+        gap: 16,
+      }]}>
+        
+        {/* Frosted Capsule */}
+        <View style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.65)',
+          borderWidth: 1,
+          borderColor: 'rgba(138, 149, 165, 0.22)',
+          borderRadius: 28,
+          width: '100%',
+          paddingVertical: 24,
+          paddingHorizontal: 24,
+          alignItems: 'center',
+          shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.04, shadowRadius: 10,
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <MaterialIcons name={details.icon as any} size={15} color={colors.accent} />
+            <Text style={{
+              fontFamily: 'Inter',
+              fontSize: 10,
+              fontWeight: '700',
+              letterSpacing: 3,
+              color: colors.muted,
+              textTransform: 'uppercase',
+            }}>
+              {details.label}
+            </Text>
+          </View>
+
+          <Text style={{
+            fontFamily: 'Playfair Display',
+            fontSize: 28,
+            fontStyle: 'italic',
+            color: colors.text,
+            textAlign: 'center',
+            marginBottom: 12,
+          }}>
+            {shape}
+          </Text>
+
+          {/* Delicate thin divider line */}
+          <View style={{ width: '80%', height: 1, backgroundColor: 'rgba(138, 149, 165, 0.15)', marginBottom: 14 }} />
+
+          {/* Metrics Grid */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingHorizontal: 12 }}>
+            <View style={{ alignItems: 'center', gap: 4, flex: 1 }}>
+              <Text style={{ fontFamily: 'Inter', fontSize: 9, fontWeight: '600', color: colors.muted, letterSpacing: 1 }}>
+                SYMMETRY INDEX
+              </Text>
+              <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 20, color: colors.accent }}>
+                {displaySymmetry}
+              </Text>
+              
+              {/* Premium Rose-Gold Symmetry Bar */}
+              <View style={{ width: '80%', height: 3.5, backgroundColor: 'rgba(138, 149, 165, 0.15)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
+                <View style={{ width: isLocked ? '15%' : `${dna.browSymmetryPct}%`, height: '100%', backgroundColor: '#D98A96', borderRadius: 2 }} />
+              </View>
+            </View>
+
+            {/* Vertical separator */}
+            <View style={{ width: 1, height: '100%', backgroundColor: 'rgba(138, 149, 165, 0.15)' }} />
+
+            <View style={{ alignItems: 'center', gap: 4, flex: 1 }}>
+              <Text style={{ fontFamily: 'Inter', fontSize: 9, fontWeight: '600', color: colors.muted, letterSpacing: 1 }}>
+                FACIAL HARMONY
+              </Text>
+              <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 20, color: colors.accent }}>
+                {displayHarmony}
+              </Text>
+              <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '500', color: '#D98A96', marginTop: 4 }}>
+                ✦ 100% BALANCED
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Dynamic description narrative box */}
+        <Animated.View style={[descStyle, { width: '100%', paddingHorizontal: 10 }]}>
+          <Text style={{
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: colors.text,
+            textAlign: 'center',
+            lineHeight: 18,
+            letterSpacing: -0.2,
+          }}>
+            {displayDesc}
+          </Text>
+        </Animated.View>
+      </Animated.View>
     </View>
   );
 }
