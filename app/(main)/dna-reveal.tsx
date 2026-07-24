@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useReducer } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, Pressable, Dimensions, ScrollView, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions, ScrollView, Linking, Image } from 'react-native';
 import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
@@ -1961,6 +1961,9 @@ const SHAPE_SVGS: Record<string, string> = {
   'Diamond': 'M 50,16 L 85,54 L 50,92 L 15,54 Z', // Geometric diamond
 };
 
+const SilhouetteFaint = require('../../assets/images/user-silhouette.png');
+const SilhouetteActive = require('../../assets/images/user-silhouette-active.png');
+
 function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
   const shape = dna.faceShape || 'Oval';
   const svgPath = SHAPE_SVGS[shape] || SHAPE_SVGS['Oval'];
@@ -1971,7 +1974,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
   const silhouetteScale = useSharedValue(0.9);
 
   // Scan Line animation
-  const scanLineY = useSharedValue(-105); // Y-offset from top of silhouette frame
+  const scanLineY = useSharedValue(-110); // Y-offset from top of silhouette frame
   const scanLineOp = useSharedValue(0);
 
   // Detected shape trace progress
@@ -1988,14 +1991,14 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 
   useEffect(() => {
     // 1. Phase 1: Silhouette entrance (0ms to 2.5s)
-    silhouetteOp.value = withTiming(0.48, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+    silhouetteOp.value = withTiming(0.65, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
     silhouetteScale.value = withSpring(1.06, { damping: 14, stiffness: 45 });
 
     // 2. Phase 2: Sweep Scan animation (2.5s to 5.5s)
     // Appear scan line at 2.5s
     scanLineOp.value = withDelay(2500, withTiming(1, { duration: 300 }));
     // Sweep scan line downwards
-    scanLineY.value = withDelay(2500, withTiming(105, {
+    scanLineY.value = withDelay(2500, withTiming(110, {
       duration: 2500,
       easing: Easing.bezier(0.2, 0.8, 0.2, 1)
     }, (finished) => {
@@ -2016,7 +2019,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
     let intervalId: ReturnType<typeof setInterval>;
     const scanTimer = setTimeout(() => {
       intervalId = setInterval(() => {
-        if (scanLineY.value > -95 && scanLineY.value < 100) {
+        if (scanLineY.value > -100 && scanLineY.value < 105) {
           runOnJS(triggerLightHaptic)();
         }
       }, 70);
@@ -2049,7 +2052,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
       
-      {/* ── CENTRAL MAIN SUBJECT: FEMININE FACE SILHOUETTE ── */}
+      {/* ── CENTRAL MAIN SUBJECT: CHIC FEMININE FACE SILHOUETTE ── */}
       <View style={{
         width: 250,
         height: 250,
@@ -2060,35 +2063,27 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
       }}>
         
         {/* Animated Faint Feminine Blueprint Base */}
-        <Animated.View style={[{ width: 240, height: 240, position: 'absolute' }, containerStyle]}>
-          <Svg width={240} height={240} viewBox="0 0 100 100">
-            {/* Highly luxurious side profile outline of a girl facing left */}
-            <Path 
-              d="M 64,88 C 64,80 61,74 58,68 C 64,65 68,54 68,42 C 68,26 56,15 42,15 C 32,15 26,24 26,38 C 26,41 28,43 28,45 L 20,53 L 29,56 C 27,58 26,59 28,61 C 23,63 24,65 29,66 L 26,68 C 24,70 25,73 29,74 C 26,76 27,80 34,82 Q 48,82 56,73 Q 50,88 45,95" 
-              fill="none" 
-              stroke="rgba(138, 149, 165, 0.35)" 
-              strokeWidth="1.2" 
-            />
-            
-            {/* Trendy messy bun/claw clip outline at the back */}
-            <Path d="M 68,36 C 74,32 80,36 78,44 C 76,52 70,48 68,48" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
-
-            {/* Sweeping aesthetic hair strands */}
-            <Path d="M 34,18 C 39,28 44,38 42,50 M 44,16 C 50,26 56,36 54,46" fill="none" stroke="rgba(138, 149, 165, 0.22)" strokeWidth="0.8" />
-
-            {/* Delicate closed eyelash line sweeping left */}
-            <Path d="M 32,47 Q 29,47 28,49" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="0.8" />
-          </Svg>
+        <Animated.View style={[{ width: 180, height: 210, position: 'absolute' }, containerStyle]}>
+          <Image 
+            source={SilhouetteFaint} 
+            style={{ width: 180, height: 210, resizeMode: 'contain' }} 
+          />
         </Animated.View>
 
         {/* ── THE DETECTED SHAPE ACTIVE OVERLAY ── */}
-        <Animated.View style={[{ width: 240, height: 240, position: 'absolute' }, traceStyle]}>
-          <Svg width={240} height={240} viewBox="0 0 100 100">
+        <Animated.View style={[{ width: 180, height: 210, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
+          {/* Subtle rose glow on active silhouette */}
+          <Image 
+            source={SilhouetteActive} 
+            style={{ width: 180, height: 210, resizeMode: 'contain', opacity: 0.15, position: 'absolute' }} 
+          />
+          {/* Glowing laser-etched face shape outline aligned beautifully over her face */}
+          <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 12 }}>
             <AnimatedPath
               d={svgPath}
               fill="none"
               stroke="#D98A96"
-              strokeWidth="1.8"
+              strokeWidth="2.2"
               strokeDasharray={`${pathLength}`}
               animatedProps={animatedProps}
             />
