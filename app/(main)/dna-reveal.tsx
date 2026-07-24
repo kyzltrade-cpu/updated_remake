@@ -1711,7 +1711,7 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
       {/* ── PHASE 3: CENTERED 2x2 PALETTE GRID (7.8s onwards, fills the middle space beautifully) ── */}
       <Animated.View style={[revealStyle, {
         position: 'absolute',
-        top: H * 0.46, // Perfectly mathematically centered vertically with equal top/bottom padding
+        top: H * 0.53, // Perfectly mathematically centered vertically with equal top/bottom padding
         width: W,
         alignItems: 'center',
         gap: 12,
