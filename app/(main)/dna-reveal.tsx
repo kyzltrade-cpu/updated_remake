@@ -2063,43 +2063,45 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
         <Animated.View style={[{ width: 240, height: 240, position: 'absolute' }, containerStyle]}>
           <Svg width={240} height={240} viewBox="0 0 100 100">
             {/* Elegant neck guidelines */}
-            <Path d="M 34,84 C 34,95 32,98 30,99 M 66,84 C 66,95 68,98 70,99" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            <Path d="M 36,83 C 36,94 33,98 31,99 M 64,83 C 64,94 67,98 69,99" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
             
-            {/* Elegant female hair-bun on top */}
-            <Path d="M 43,15 C 43,5 57,5 57,15 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
+            {/* Trendy messy high-bun / top-knot */}
+            <Path d="M 42,20 C 34,14 45,6 50,11 C 55,6 66,14 58,20 Z" fill="none" stroke="rgba(138, 149, 165, 0.32)" strokeWidth="1" strokeDasharray="1 1" />
 
-            {/* Stylized sweeping hair frame locks */}
-            <Path d="M 18,40 C 18,22 32,15 50,15 C 68,15 82,22 82,40" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
-            <Path d="M 18,40 C 18,52 14,58 12,68 M 82,40 C 82,52 86,58 88,68" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
+            {/* Aesthetic wispy curtain bangs & side locks */}
+            <Path d="M 50,22 C 38,22 26,28 20,44" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            <Path d="M 50,22 C 62,22 74,28 80,44" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            <Path d="M 50,22 C 40,22 30,30 26,42 Q 22,50 18,58" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 50,22 C 60,22 70,30 74,42 Q 78,50 82,58" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
 
-            {/* Stylized face outline tapering to soft chin */}
-            <Path d="M 18,40 C 18,68 36,92 50,92 C 64,92 82,68 82,40 Z" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            {/* Stylized feminine face outline tapering to delicate chin */}
+            <Path d="M 24,44 C 24,68 38,90 50,90 C 62,90 76,68 76,44 Z" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1.2" />
             
             {/* Elegant ear guidelines */}
-            <Path d="M 18,44 Q 14,44 18,54 M 82,44 Q 86,44 82,54" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            <Path d="M 24,48 Q 20,48 24,56 M 76,48 Q 80,48 76,56" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
             
             {/* Center vertical midline */}
-            <Path d="M 50,15 L 50,92" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
+            <Path d="M 50,22 L 50,90" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
             
             {/* Horizontal eye-line grid */}
-            <Path d="M 18,47 L 82,47" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
+            <Path d="M 24,46 L 76,46" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
             
             {/* Feminine arched eyebrows */}
-            <Path d="M 28,38 Q 36,31 43,35 M 72,38 Q 64,31 57,35" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 32,40 Q 38,34 44,38 M 68,40 Q 62,34 56,38" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
             
             {/* Closed female eyes with delicate winged lashes */}
-            <Path d="M 29,44 Q 36,41 42,44" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
-            <Path d="M 30,43 L 27,41 M 34,42 L 32,39 M 39,43 L 39,40" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="0.8" />
+            <Path d="M 33,46 Q 38,43 43,46" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 43,46 L 45,43" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="0.8" />
             
-            <Path d="M 71,44 Q 64,41 58,44" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
-            <Path d="M 70,43 L 73,41 M 66,42 L 68,39 M 61,43 L 61,40" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="0.8" />
+            <Path d="M 67,46 Q 62,43 57,46" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 57,46 L 55,43" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="0.8" />
             
             {/* Sleek dainty nose */}
-            <Path d="M 50,38 L 50,62 L 54,64" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
+            <Path d="M 50,42 L 50,62 L 53,64" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
             
             {/* Soft full pillowy lips */}
-            <Path d="M 40,71 Q 45,67 50,69 Q 55,67 60,71 Q 50,73 40,71 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
-            <Path d="M 40,71 Q 50,78 60,71 Q 50,73 40,71 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 42,72 Q 46,68 50,70 Q 54,68 58,72 Q 50,74 42,72 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 42,72 Q 50,78 58,72 Q 50,74 42,72 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
           </Svg>
         </Animated.View>
 
