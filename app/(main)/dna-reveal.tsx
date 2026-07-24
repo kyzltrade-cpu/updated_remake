@@ -146,12 +146,12 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#1E2530', muted: 'rgba(30,37,48,0.65)', 
     eyebrow: '#A092F0', accent: '#D4AF37' 
   },
-  // 4 — Face Shape: VIBRANT NEON ORANGE (deep dark purple text contrast)
+  // 3 — Face Shape: Cashmere Cream-Blush (high-end warm editorial neutral theme)
   { 
-    gradientTop: '#FF5722', gradientBot: '#E64A19', 
-    blobA: '#3F51B5', blobB: '#FF8A50', 
-    text: '#1E0500', muted: 'rgba(30,5,0,0.78)', 
-    eyebrow: '#1E0500', accent: '#1E0500' 
+    gradientTop: '#FAF6F0', gradientBot: '#F3EFE9', 
+    blobA: '#FFDCE2', blobB: '#F5E6DC', 
+    text: '#221518', muted: 'rgba(34,21,24,0.68)', 
+    eyebrow: '#D98A96', accent: '#D98A96' 
   },
   // 5 — Brows: ULTRA RICH FOREST EMERALD (stark white & gold text contrast)
   { 
@@ -1954,11 +1954,11 @@ const GLYPHS: Record<string, string> = {
 // ── Slide: Face Shape ─────────────────────────────────────────────────────────
 
 const SHAPE_SVGS: Record<string, string> = {
-  'Oval': 'M 50,12 C 68,12 80,27 80,50 C 80,73 68,88 50,88 C 32,88 20,73 20,50 C 20,27 32,12 50,12 Z', // Smooth egg oval
-  'Round': 'M 50,14 A 36,36 0 1,1 49.9,14 Z', // Circular orbital
-  'Heart': 'M 50,22 Q 68,6 82,23 C 92,34 84,56 50,84 C 16,56 8,34 18,23 Q 32,6 50,22 Z', // Heart outline
-  'Square': 'M 24,18 L 76,18 C 82,18 82,18 82,24 L 82,76 C 82,82 76,82 70,82 L 30,82 C 24,82 18,82 18,76 L 18,24 C 18,18 18,18 24,18 Z', // Rounded jaw frame
-  'Diamond': 'M 50,14 L 84,50 L 50,86 L 16,50 Z', // Geometric diamond
+  'Oval': 'M 50,16 C 68,16 82,32 82,54 C 82,76 68,92 50,92 C 32,92 18,76 18,54 C 18,32 32,16 50,16 Z', // Smooth egg oval
+  'Round': 'M 50,18 A 37,37 0 1,1 49.9,18 Z', // Circular orbital aligned
+  'Heart': 'M 50,26 Q 68,10 82,27 C 92,38 84,62 50,92 C 16,62 8,38 18,27 Q 32,10 50,26 Z', // Heart outline
+  'Square': 'M 20,20 L 80,20 C 85,20 85,20 85,25 L 85,85 C 85,90 80,92 75,92 L 25,92 C 20,92 15,90 15,85 L 15,25 C 15,20 15,20 20,20 Z', // Rounded jaw frame
+  'Diamond': 'M 50,16 L 85,54 L 50,92 L 15,54 Z', // Geometric diamond
 };
 
 function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
@@ -1971,7 +1971,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
   const silhouetteScale = useSharedValue(0.9);
 
   // Scan Line animation
-  const scanLineY = useSharedValue(-90); // Y-offset from top of silhouette frame
+  const scanLineY = useSharedValue(-105); // Y-offset from top of silhouette frame
   const scanLineOp = useSharedValue(0);
 
   // Detected shape trace progress
@@ -1988,14 +1988,14 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 
   useEffect(() => {
     // 1. Phase 1: Silhouette entrance (0ms to 2.5s)
-    silhouetteOp.value = withTiming(0.45, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
-    silhouetteScale.value = withSpring(1.04, { damping: 14, stiffness: 45 });
+    silhouetteOp.value = withTiming(0.48, { duration: 1800, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+    silhouetteScale.value = withSpring(1.06, { damping: 14, stiffness: 45 });
 
     // 2. Phase 2: Sweep Scan animation (2.5s to 5.5s)
     // Appear scan line at 2.5s
     scanLineOp.value = withDelay(2500, withTiming(1, { duration: 300 }));
     // Sweep scan line downwards
-    scanLineY.value = withDelay(2500, withTiming(90, {
+    scanLineY.value = withDelay(2500, withTiming(105, {
       duration: 2500,
       easing: Easing.bezier(0.2, 0.8, 0.2, 1)
     }, (finished) => {
@@ -2016,7 +2016,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
     let intervalId: ReturnType<typeof setInterval>;
     const scanTimer = setTimeout(() => {
       intervalId = setInterval(() => {
-        if (scanLineY.value > -80 && scanLineY.value < 85) {
+        if (scanLineY.value > -95 && scanLineY.value < 100) {
           runOnJS(triggerLightHaptic)();
         }
       }, 70);
@@ -2049,51 +2049,63 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
       
-      {/* ── CENTRAL MAIN SUBJECT: FACE SILHOUETTE ── */}
+      {/* ── CENTRAL MAIN SUBJECT: FEMININE FACE SILHOUETTE ── */}
       <View style={{
-        width: 220,
-        height: 220,
+        width: 250,
+        height: 250,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
         top: -H * 0.05, // Snug vertical alignment in upper middle
       }}>
         
-        {/* Animated Faint Blueprint Base */}
-        <Animated.View style={[{ width: 180, height: 180, position: 'absolute' }, containerStyle]}>
-          <Svg width={180} height={180} viewBox="0 0 100 100">
+        {/* Animated Faint Feminine Blueprint Base */}
+        <Animated.View style={[{ width: 240, height: 240, position: 'absolute' }, containerStyle]}>
+          <Svg width={240} height={240} viewBox="0 0 100 100">
             {/* Elegant neck guidelines */}
-            <Path d="M 35,84 L 35,94 M 65,84 L 65,94" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            <Path d="M 34,84 C 34,95 32,98 30,99 M 66,84 C 66,95 68,98 70,99" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
             
-            {/* Stylized face outline guideline */}
-            <Path d="M 50,15 C 28,15 20,38 20,55 C 20,74 38,88 50,88 C 62,88 80,74 80,55 C 80,38 72,15 50,15 Z" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            {/* Elegant female hair-bun on top */}
+            <Path d="M 43,15 C 43,5 57,5 57,15 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
+
+            {/* Stylized sweeping hair frame locks */}
+            <Path d="M 18,40 C 18,22 32,15 50,15 C 68,15 82,22 82,40" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            <Path d="M 18,40 C 18,52 14,58 12,68 M 82,40 C 82,52 86,58 88,68" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
+
+            {/* Stylized face outline tapering to soft chin */}
+            <Path d="M 18,40 C 18,68 36,92 50,92 C 64,92 82,68 82,40 Z" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
             
             {/* Elegant ear guidelines */}
-            <Path d="M 20,46 C 16,46 16,56 20,56 M 80,46 C 84,46 84,56 80,56" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
+            <Path d="M 18,44 Q 14,44 18,54 M 82,44 Q 86,44 82,54" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="1" />
             
             {/* Center vertical midline */}
-            <Path d="M 50,15 L 50,88" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
+            <Path d="M 50,15 L 50,92" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
             
             {/* Horizontal eye-line grid */}
-            <Path d="M 20,47 L 80,47" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
+            <Path d="M 18,47 L 82,47" fill="none" stroke="rgba(138, 149, 165, 0.12)" strokeWidth="0.8" strokeDasharray="3 3" />
             
-            {/* Eyebrow grids */}
-            <Path d="M 30,42 Q 38,38 45,42 M 70,42 Q 62,38 55,42" fill="none" stroke="rgba(138, 149, 165, 0.25)" strokeWidth="0.8" />
+            {/* Feminine arched eyebrows */}
+            <Path d="M 28,38 Q 36,31 43,35 M 72,38 Q 64,31 57,35" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
             
-            {/* Delicate eye guidelines */}
-            <Path d="M 32,47 Q 38,45 43,47 M 68,47 Q 62,45 57,47" fill="none" stroke="rgba(138, 149, 165, 0.25)" strokeWidth="0.8" />
+            {/* Closed female eyes with delicate winged lashes */}
+            <Path d="M 29,44 Q 36,41 42,44" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 30,43 L 27,41 M 34,42 L 32,39 M 39,43 L 39,40" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="0.8" />
             
-            {/* Nose contour line */}
-            <Path d="M 50,44 L 50,64 L 54,66" fill="none" stroke="rgba(138, 149, 165, 0.25)" strokeWidth="1" />
+            <Path d="M 71,44 Q 64,41 58,44" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 70,43 L 73,41 M 66,42 L 68,39 M 61,43 L 61,40" fill="none" stroke="rgba(138, 149, 165, 0.35)" strokeWidth="0.8" />
             
-            {/* Lip contours */}
-            <Path d="M 40,73 Q 50,71 60,73 Q 50,77 40,73" fill="none" stroke="rgba(138, 149, 165, 0.25)" strokeWidth="0.8" />
+            {/* Sleek dainty nose */}
+            <Path d="M 50,38 L 50,62 L 54,64" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="1" />
+            
+            {/* Soft full pillowy lips */}
+            <Path d="M 40,71 Q 45,67 50,69 Q 55,67 60,71 Q 50,73 40,71 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
+            <Path d="M 40,71 Q 50,78 60,71 Q 50,73 40,71 Z" fill="none" stroke="rgba(138, 149, 165, 0.3)" strokeWidth="0.8" />
           </Svg>
         </Animated.View>
 
         {/* ── THE DETECTED SHAPE ACTIVE OVERLAY ── */}
-        <Animated.View style={[{ width: 180, height: 180, position: 'absolute' }, traceStyle]}>
-          <Svg width={180} height={180} viewBox="0 0 100 100">
+        <Animated.View style={[{ width: 240, height: 240, position: 'absolute' }, traceStyle]}>
+          <Svg width={240} height={240} viewBox="0 0 100 100">
             <AnimatedPath
               d={svgPath}
               fill="none"
@@ -2108,7 +2120,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
         {/* ── THE NEON LASER SCANNING SWEEP LINE ── */}
         <Animated.View style={[scanStyle, {
           position: 'absolute',
-          width: 172,
+          width: 232,
           height: 3,
           backgroundColor: '#D98A96',
           borderRadius: 2,
