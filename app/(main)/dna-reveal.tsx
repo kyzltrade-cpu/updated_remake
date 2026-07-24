@@ -1511,7 +1511,10 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const chipY4 = useSharedValue(15);
 
   // High-frequency color cycling for spinner quadrants while active
-  const [spinningColors, setSpinningColors] = useState<string[]>(['#FF6B6B', '#4ECDC4', '#FFE66D', '#FF8E53']);
+  const color1 = useSharedValue('#FF6B6B');
+  const color2 = useSharedValue('#4ECDC4');
+  const color3 = useSharedValue('#FFE66D');
+  const color4 = useSharedValue('#FF8E53');
 
   useEffect(() => {
     // 1. Phase 1: Intro Hook Text (0ms - 3.6s)
@@ -1569,20 +1572,21 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
     
     const cycleTimer = setTimeout(() => {
       intervalId = setInterval(() => {
-        setSpinningColors([
-          `hsl(${Math.random() * 360}, 85%, 65%)`,
-          `hsl(${Math.random() * 360}, 85%, 65%)`,
-          `hsl(${Math.random() * 360}, 85%, 65%)`,
-          `hsl(${Math.random() * 360}, 85%, 65%)`,
-        ]);
+        color1.value = `hsl(${Math.random() * 360}, 85%, 65%)`;
+        color2.value = `hsl(${Math.random() * 360}, 85%, 65%)`;
+        color3.value = `hsl(${Math.random() * 360}, 85%, 65%)`;
+        color4.value = `hsl(${Math.random() * 360}, 85%, 65%)`;
       }, 70); // rapid cycle every 70ms
     }, 3800);
 
     const stopCycleTimer = setTimeout(() => {
       clearInterval(intervalId);
-      // Freeze exactly onto the actual user's palette!
-      setSpinningColors(displayPalette);
-    }, 6200); // stops cycling right as deceleration kicks in
+      // Smoothly transition from the last random cycle color to the actual user's palette colors over 1.4s!
+      color1.value = withTiming(displayPalette[0], { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+      color2.value = withTiming(displayPalette[1], { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+      color3.value = withTiming(displayPalette[2], { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+      color4.value = withTiming(displayPalette[3], { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+    }, 6200); // starts transitioning right as deceleration kicks in
 
     // Super physical satisfying haptic timeline synced exactly with decelerating slot-ticks
     const h1 = setTimeout(() => { if (!isLocked) Haptics.selectionAsync(); }, 5600);
@@ -1642,6 +1646,11 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
   const chipStyle3 = useAnimatedStyle(() => ({ opacity: chipOp3.value, transform: [{ translateY: chipY3.value }] }));
   const chipStyle4 = useAnimatedStyle(() => ({ opacity: chipOp4.value, transform: [{ translateY: chipY4.value }] }));
 
+  const qStyle1 = useAnimatedStyle(() => ({ backgroundColor: isLocked ? '#555' : color1.value }));
+  const qStyle2 = useAnimatedStyle(() => ({ backgroundColor: isLocked ? '#444' : color2.value }));
+  const qStyle3 = useAnimatedStyle(() => ({ backgroundColor: isLocked ? '#333' : color3.value }));
+  const qStyle4 = useAnimatedStyle(() => ({ backgroundColor: isLocked ? '#666' : color4.value }));
+
   const seasonColor = SWATCH_SEASON[dna.colorSeason] ?? '#8A95A5';
 
   return (
@@ -1687,10 +1696,10 @@ function SlideSeason({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boo
         
         {/* Quadrant split circular wheel */}
         <View style={{ width: 160, height: 160, borderRadius: 80, overflow: 'hidden', flexWrap: 'wrap', flexDirection: 'row' }}>
-          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#555' : spinningColors[0] }} />
-          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#444' : spinningColors[1] }} />
-          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#333' : spinningColors[2] }} />
-          <View style={{ width: 80, height: 80, backgroundColor: isLocked ? '#666' : spinningColors[3] }} />
+          <Animated.View style={[{ width: 80, height: 80 }, qStyle1]} />
+          <Animated.View style={[{ width: 80, height: 80 }, qStyle2]} />
+          <Animated.View style={[{ width: 80, height: 80 }, qStyle3]} />
+          <Animated.View style={[{ width: 80, height: 80 }, qStyle4]} />
         </View>
 
         {/* Delicate platinum dividing lines */}
