@@ -2394,8 +2394,9 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
 
   // Brow drawing trace progress
   const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
+  const fillOpacity = useSharedValue(0); // 0 = transparent, 1 = fully filled
   const traceOp = useSharedValue(0);
-  const pathLength = 100;
+  const pathLength = 150;
 
   const triggerLightHaptic = () => {
     if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -2424,13 +2425,15 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
 
     // Eyebrows trace overlay fades in at 3.8s
     traceOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
-    // Trace/draw the eyebrows dynamically over 2.4 seconds
+    // Trace/draw the eyebrows dynamically over 3.2 seconds
     traceProgress.value = withDelay(4000, withTiming(0, {
-      duration: 2400,
-      easing: Easing.bezier(0.2, 0.8, 0.2, 1)
+      duration: 3200,
+      easing: Easing.bezier(0.25, 1, 0.5, 1)
     }, (finished) => {
       if (finished) {
         runOnJS(triggerSuccessHaptic)();
+        // Fade in the soft brow powder fill
+        fillOpacity.value = withTiming(0.85, { duration: 800 });
       }
     }));
 
@@ -2441,7 +2444,7 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         if (traceProgress.value > 0.05 && traceProgress.value < 0.95) {
           runOnJS(triggerLightHaptic)();
         }
-      }, 70);
+      }, 75);
     }, 4000);
 
     return () => {
@@ -2469,11 +2472,12 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: traceProgress.value * pathLength,
+    fillOpacity: fillOpacity.value,
   }));
 
-  // Define brow coordinates that match her front-facing portrait exactly
-  const leftBrow = 'M 30,40 Q 37,33 44,38';
-  const rightBrow = 'M 70,40 Q 63,33 56,38';
+  // Premium, high-fashion arched eyebrows (closed shapes for beautiful outlines + soft fill)
+  const leftBrow = 'M 29,40.5 C 33,34 37,32 45,37 L 45,39.5 C 37,35 33,36.5 29,40.5 Z';
+  const rightBrow = 'M 71,40.5 C 67,34 63,32 55,37 L 55,39.5 C 63,35 67,36.5 71,40.5 Z';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -2525,26 +2529,26 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         <Animated.View style={[{ width: 180, height: 210, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
           {/* Glowing laser-sketched eyebrows aligned beautifully over her face */}
           <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 22, transform: [{ translateX: 4.5 }] }}>
-            {/* Left Brow Base & Sketch */}
-            <Path d={leftBrow} stroke="rgba(255, 255, 255, 0.06)" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+            {/* Left Brow - Drawn slowly with no pre-existing background paths */}
             <AnimatedPath
               d={leftBrow}
               stroke="#D98A96"
-              strokeWidth={3}
-              fill="none"
+              strokeWidth={1.5}
+              fill="#D98A96"
               strokeLinecap="round"
+              strokeLinejoin="round"
               strokeDasharray={pathLength}
               animatedProps={animatedProps}
             />
 
-            {/* Right Brow Base & Sketch */}
-            <Path d={rightBrow} stroke="rgba(255, 255, 255, 0.06)" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+            {/* Right Brow - Drawn slowly with no pre-existing background paths */}
             <AnimatedPath
               d={rightBrow}
               stroke="#D98A96"
-              strokeWidth={3}
-              fill="none"
+              strokeWidth={1.5}
+              fill="#D98A96"
               strokeLinecap="round"
+              strokeLinejoin="round"
               strokeDasharray={pathLength}
               animatedProps={animatedProps}
             />
