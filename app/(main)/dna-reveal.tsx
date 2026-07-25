@@ -2528,13 +2528,13 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY (Proportionally Scaled) ── */}
         <Animated.View style={[{ width: 216, height: 252, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
           {/* Glowing laser-sketched eyebrows aligned beautifully over her face */}
-          <Svg width={170} height={170} viewBox="0 0 100 100" style={{ position: 'absolute', top: 26.4, transform: [{ translateX: 5.4 }] }}>
+          <Svg width={170} height={170} viewBox="0 0 100 100" style={{ position: 'absolute', top: 22.0, transform: [{ translateX: 5.4 }] }}>
             {/* Left Brow - Drawn slowly with no pre-existing background paths */}
             <AnimatedPath
               d={leftBrow}
-              stroke="#D98A96"
+              stroke="#4E4E52"
               strokeWidth={1.5}
-              fill="#D98A96"
+              fill="#4E4E52"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
@@ -2544,9 +2544,9 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
             {/* Right Brow - Drawn slowly with no pre-existing background paths */}
             <AnimatedPath
               d={rightBrow}
-              stroke="#D98A96"
+              stroke="#4E4E52"
               strokeWidth={1.5}
-              fill="#D98A96"
+              fill="#4E4E52"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
