@@ -2327,7 +2327,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingHorizontal: 12 }}>
             <View style={{ alignItems: 'center', gap: 4, flex: 1 }}>
               <Text style={{ fontFamily: 'Inter', fontSize: 9, fontWeight: '600', color: colors.muted, letterSpacing: 1 }}>
-                SYMMETRY INDEX
+                SYMMETRY
               </Text>
               <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 20, color: colors.accent }}>
                 {displaySymmetry}
