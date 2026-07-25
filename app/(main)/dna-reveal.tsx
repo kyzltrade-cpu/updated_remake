@@ -2233,7 +2233,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
             style={{ width: 180, height: 210, resizeMode: 'contain', opacity: 0.15, position: 'absolute' }} 
           />
           {/* Glowing laser-etched face shape outline aligned beautifully over her face */}
-          <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 12 }}>
+          <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 22, transform: [{ translateX: 4.5 }] }}>
             <AnimatedPath
               d={svgPath}
               fill="none"
