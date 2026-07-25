@@ -3639,7 +3639,7 @@ export default function DnaRevealScreen() {
   useEffect(() => {
     cancelAnimation(progress);
     progress.value = 0;
-    const duration = current === 1 ? 14000 : current === 2 ? 13000 : SLIDE_DURATION; // Slide 2 (Shade) is 14s, Slide 3 (Season) is 13s
+    const duration = current === 1 ? 14000 : current === 2 ? 13000 : current === 3 ? 15500 : SLIDE_DURATION; // Slide 2 (Shade) is 14s, Slide 3 (Season) is 13s, Slide 4 (Face Shape) is 15.5s
     progress.value = withTiming(1, { duration }, (finished) => {
       if (finished && current < SLIDE_COUNT - 1) runOnJS(advanceCurrent)();
     });
