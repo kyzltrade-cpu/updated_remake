@@ -1989,6 +1989,14 @@ const SHAPE_DETAILS: Record<string, { label: string; desc: string; icon: string 
   }
 };
 
+const SHAPE_METRICS: Record<string, { angularity: string; strategy: string }> = {
+  'Oval': { angularity: 'Balanced / Soft', strategy: 'Classic Glow' },
+  'Round': { angularity: 'Soft & Fluid', strategy: 'Temples Blend' },
+  'Heart': { angularity: 'High / Sculpted', strategy: 'Cheek Sweep' },
+  'Square': { angularity: 'Bold / Defined', strategy: 'Soft Jawline' },
+  'Diamond': { angularity: 'Sharp / High', strategy: 'High Cheek' },
+};
+
 const SilhouetteFaint = require('../../assets/images/user-silhouette.png');
 const SilhouetteActive = require('../../assets/images/user-silhouette-active.png');
 
@@ -2157,8 +2165,9 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 
   const details = SHAPE_DETAILS[shape] || SHAPE_DETAILS['Oval'];
 
-  const displaySymmetry = isLocked ? '••%' : `${dna.browSymmetryPct}%`;
-  const displayHarmony = isLocked ? '••••••' : (dna.browSymmetryPct > 90 ? 'Extreme' : 'High');
+  const metrics = SHAPE_METRICS[shape] || SHAPE_METRICS['Oval'];
+  const displayAngularity = isLocked ? '••••••••' : metrics.angularity;
+  const displayStrategy = isLocked ? '••••••••' : metrics.strategy;
   const displayDesc = isLocked 
     ? "Facial blueprints are unlocked under our premium, high-fidelity structural coaching. Tap to unlock your personalized bone architecture report."
     : details.desc;
@@ -2327,16 +2336,14 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingHorizontal: 12 }}>
             <View style={{ alignItems: 'center', gap: 4, flex: 1 }}>
               <Text style={{ fontFamily: 'Inter', fontSize: 9, fontWeight: '600', color: colors.muted, letterSpacing: 1 }}>
-                SYMMETRY
+                ANGULARITY
               </Text>
-              <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 20, color: colors.accent }}>
-                {displaySymmetry}
+              <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 18, color: colors.accent, textAlign: 'center' }}>
+                {displayAngularity}
               </Text>
-              
-              {/* Premium Rose-Gold Symmetry Bar */}
-              <View style={{ width: '80%', height: 3.5, backgroundColor: 'rgba(138, 149, 165, 0.15)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
-                <View style={{ width: isLocked ? '15%' : `${dna.browSymmetryPct}%`, height: '100%', backgroundColor: '#D98A96', borderRadius: 2 }} />
-              </View>
+              <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '500', color: '#D98A96', marginTop: 4 }}>
+                ✦ CHIC PLANES
+              </Text>
             </View>
 
             {/* Vertical separator */}
@@ -2344,13 +2351,13 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 
             <View style={{ alignItems: 'center', gap: 4, flex: 1 }}>
               <Text style={{ fontFamily: 'Inter', fontSize: 9, fontWeight: '600', color: colors.muted, letterSpacing: 1 }}>
-                FACIAL HARMONY
+                CONTOUR ZONE
               </Text>
-              <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 20, color: colors.accent }}>
-                {displayHarmony}
+              <Text style={{ fontFamily: 'Playfair Display', fontStyle: 'italic', fontSize: 18, color: colors.accent, textAlign: 'center' }}>
+                {displayStrategy}
               </Text>
               <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '500', color: '#D98A96', marginTop: 4 }}>
-                ✦ {isLocked ? '••%' : `${dna.browSymmetryPct}%`} BALANCED
+                ✦ PRO STRATEGY
               </Text>
             </View>
           </View>
