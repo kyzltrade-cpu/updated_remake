@@ -2350,7 +2350,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
                 {displayHarmony}
               </Text>
               <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '500', color: '#D98A96', marginTop: 4 }}>
-                ✦ 100% BALANCED
+                ✦ {isLocked ? '••%' : `${dna.browSymmetryPct}%`} BALANCED
               </Text>
             </View>
           </View>
