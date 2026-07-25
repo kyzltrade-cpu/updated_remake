@@ -2385,60 +2385,126 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 
 function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
   const [displayPct, setDisplayPct] = useState(0);
+
+  // Timings and Anim state
+  const introOp = useSharedValue(0);
+  const introY = useSharedValue(20);
+  const introScale = useSharedValue(0.93);
+
+  const ringOp = useSharedValue(0);
+  const ringScale = useSharedValue(0.15);
+
   useEffect(() => {
-    if (isLocked) return;
-    const target = dna.browSymmetryPct;
-    let frame = 0;
-    // Ease-out counter — fast start, slows into final number
-    const totalFrames = 36;
-    const id = setInterval(() => {
-      frame++;
-      const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
-      setDisplayPct(Math.round(eased * target));
-      if (frame >= totalFrames) clearInterval(id);
-    }, 48);
-    return () => clearInterval(id);
-  }, [isLocked]);
+    // 1. Phase 1: Intro Narrative Text (0ms to 3.6s)
+    introOp.value = withSequence(
+      withTiming(1, { duration: 1800 }),
+      withDelay(1000, withTiming(0, { duration: 800 }))
+    );
+    introY.value = withSequence(
+      withTiming(0, { duration: 2000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
+      withDelay(800, withTiming(-20, { duration: 800 }))
+    );
+    introScale.value = withTiming(1.04, { duration: 3600, easing: Easing.out(Easing.quad) });
+
+    // 2. Phase 2: Ring & Counter entrance (3.8s onwards)
+    ringOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
+    ringScale.value = withDelay(3800, withSpring(1.0, { damping: 13, stiffness: 85 }));
+
+    // Count down animation at 4.2s (after ring springs open)
+    let intervalId: ReturnType<typeof setInterval>;
+    let delayTimer: ReturnType<typeof setTimeout>;
+
+    if (!isLocked) {
+      const target = dna.browSymmetryPct;
+      let frame = 0;
+      const totalFrames = 34;
+
+      delayTimer = setTimeout(() => {
+        intervalId = setInterval(() => {
+          frame++;
+          const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
+          setDisplayPct(Math.round(eased * target));
+          
+          Haptics.selectionAsync();
+
+          if (frame >= totalFrames) {
+            clearInterval(intervalId);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+        }, 55);
+      }, 4200);
+    }
+
+    return () => {
+      clearTimeout(delayTimer);
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const introStyle = useAnimatedStyle(() => ({
+    opacity: introOp.value,
+    transform: [
+      { translateY: introY.value },
+      { scale: introScale.value }
+    ],
+  }));
+
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: ringOp.value,
+    transform: [{ scale: ringScale.value }],
+  }));
 
   return (
-    <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <View style={ds.bodyWrap}>
-        <DropIn delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>BROW BLUEPRINT 👁️</Text>
-        </DropIn>
-        <RevealItem delay={600}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'Nothing literally rewrites your face faster… 💫'}</Text>
-        </RevealItem>
-        <RevealItem delay={1400}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'it’s giving perfect arches\nand ultimate symmetry. 💖'}</Text>
-        </RevealItem>
-        {/* Ring bounces in with overshoot, counter eases out to final number */}
-        <PopIn delay={2100}>
-          <View style={[ds.browRing, { borderColor: `${colors.text}30`, shadowColor: colors.text }]}>
-            <View style={[ds.browRingInner, { borderColor: colors.text, shadowColor: colors.text }]}>
-              {isLocked
-                ? <MaterialIcons name="lock" size={32} color={colors.muted} />
-                : <>
-                    <Text style={[ds.revealLabel, { color: colors.muted, marginBottom: 4 }]}>Your symmetrical brow era:</Text>
-                    <Text style={[ds.browPct, { color: colors.text }]}>{displayPct}%</Text>
-                    <Text style={[ds.browLabel, { color: colors.muted }]}>symmetry</Text>
-                  </>}
-            </View>
+    <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
+      
+      {/* ── PHASE 1: INTRO NARRATIVE (0s - 3.6s) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: '600',
+          color: colors.text,
+          textAlign: 'center',
+          lineHeight: 30,
+          letterSpacing: -0.5,
+          marginBottom: 10,
+        }}>
+          Your brows do all the heavy lifting... 🎀
+        </Text>
+        <Text style={{
+          fontFamily: 'Playfair Display',
+          fontSize: 24,
+          fontStyle: 'italic',
+          color: colors.accent,
+          textAlign: 'center',
+        }}>
+          They literally frame your entire face. ✨
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 2: CALIBRATION RING ── */}
+      <Animated.View style={[ringStyle, { justifyContent: 'center', alignItems: 'center', gap: 15 }]}>
+        <View style={[ds.browRing, { borderColor: `${colors.text}25`, shadowColor: colors.text }]}>
+          <View style={[ds.browRingInner, { borderColor: colors.text, shadowColor: colors.text }]}>
+            {isLocked ? (
+              <MaterialIcons name="lock" size={32} color={colors.muted} />
+            ) : (
+              <>
+                <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, color: colors.muted, textTransform: 'uppercase', marginBottom: 4 }}>
+                  BROW SYMMETRY
+                </Text>
+                <Text style={[ds.browPct, { color: colors.text, fontSize: 44, fontWeight: '800' }]}>{displayPct}%</Text>
+                <Text style={{ fontFamily: 'Inter', fontSize: 9, fontWeight: '600', color: colors.muted, letterSpacing: 2, textTransform: 'uppercase', marginTop: 4 }}>
+                  ✦ CALIBRATED
+                </Text>
+              </>
+            )}
           </View>
-        </PopIn>
+        </View>
+
         {/* Symmetrical Brow Arch Tracer */}
         <BrowTracer color={colors.accent} />
-        {isLocked
-          ? <RevealItem delay={2900}><LockedValue size="lg" color={colors.muted} /></RevealItem>
-          : <>
-              <RevealItem delay={2900} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your brow shape is</Text>
-              </RevealItem>
-              <RevealPop delay={3100}>
-                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.browShape}</Text>
-              </RevealPop>
-            </>}
-      </View>
+      </Animated.View>
     </View>
   );
 }
