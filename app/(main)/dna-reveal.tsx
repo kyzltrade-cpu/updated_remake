@@ -2419,8 +2419,8 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     introScale.value = withTiming(1.04, { duration: 3600, easing: Easing.out(Easing.quad) });
 
     // 2. Phase 2: Silhouette & Eyebrow drawing entrance (3.8s onwards)
-    // Silhouette fades in at 3.8s
-    silhouetteOp.value = withDelay(3800, withTiming(0.68, { duration: 500 }));
+    // Silhouette fades in at 3.8s (Darker!)
+    silhouetteOp.value = withDelay(3800, withTiming(0.95, { duration: 500 }));
     silhouetteScale.value = withDelay(3800, withSpring(1.08, { damping: 14, stiffness: 45 }));
 
     // Eyebrows trace overlay fades in at 3.8s
@@ -2528,13 +2528,13 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY (Proportionally Scaled) ── */}
         <Animated.View style={[{ width: 216, height: 252, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
           {/* Glowing laser-sketched eyebrows aligned beautifully over her face */}
-          <Svg width={170} height={170} viewBox="0 0 100 100" style={{ position: 'absolute', top: 22.0, transform: [{ translateX: 5.4 }] }}>
+          <Svg width={170} height={170} viewBox="0 0 100 100" style={{ position: 'absolute', top: 15.0, transform: [{ translateX: 5.4 }] }}>
             {/* Left Brow - Drawn slowly with no pre-existing background paths */}
             <AnimatedPath
               d={leftBrow}
-              stroke="#4E4E52"
+              stroke="#E5D3D6"
               strokeWidth={1.5}
-              fill="#4E4E52"
+              fill="#E5D3D6"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
@@ -2544,9 +2544,9 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
             {/* Right Brow - Drawn slowly with no pre-existing background paths */}
             <AnimatedPath
               d={rightBrow}
-              stroke="#4E4E52"
+              stroke="#E5D3D6"
               strokeWidth={1.5}
-              fill="#4E4E52"
+              fill="#E5D3D6"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
