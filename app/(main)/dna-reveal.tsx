@@ -2135,6 +2135,22 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
     transform: [{ translateY: descY.value }],
   }));
 
+  const viewfinderStyle = useAnimatedStyle(() => ({
+    opacity: scanLineOp.value,
+    transform: [
+      { scale: silhouetteScale.value },
+      { translateY: silhouetteY.value }
+    ],
+  }));
+
+  const scanIndicatorStyle = useAnimatedStyle(() => ({
+    opacity: scanLineOp.value,
+    position: 'absolute',
+    bottom: H * 0.14,
+    alignItems: 'center',
+    gap: 6,
+  }));
+
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: traceProgress.value * pathLength,
   }));
@@ -2193,6 +2209,22 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
           />
         </Animated.View>
 
+        {/* Aesthetic Viewfinder Brackets around her head */}
+        <Animated.View style={[{
+          position: 'absolute',
+          width: 228,
+          height: 258,
+        }, viewfinderStyle]} pointerEvents="none">
+          {/* Top-Left Bracket */}
+          <View style={{ position: 'absolute', left: 0, top: 0, width: 22, height: 22, borderLeftWidth: 1.5, borderTopWidth: 1.5, borderColor: '#D98A96', opacity: 0.65 }} />
+          {/* Top-Right Bracket */}
+          <View style={{ position: 'absolute', right: 0, top: 0, width: 22, height: 22, borderRightWidth: 1.5, borderTopWidth: 1.5, borderColor: '#D98A96', opacity: 0.65 }} />
+          {/* Bottom-Left Bracket */}
+          <View style={{ position: 'absolute', left: 0, bottom: 0, width: 22, height: 22, borderLeftWidth: 1.5, borderBottomWidth: 1.5, borderColor: '#D98A96', opacity: 0.65 }} />
+          {/* Bottom-Right Bracket */}
+          <View style={{ position: 'absolute', right: 0, bottom: 0, width: 22, height: 22, borderRightWidth: 1.5, borderBottomWidth: 1.5, borderColor: '#D98A96', opacity: 0.65 }} />
+        </Animated.View>
+
         {/* ── THE DETECTED SHAPE ACTIVE OVERLAY ── */}
         <Animated.View style={[{ width: 180, height: 210, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
           {/* Subtle rose glow on active silhouette */}
@@ -2227,6 +2259,18 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
           elevation: 5,
         }]} />
       </View>
+
+      {/* ── PHASE 2 SCANNING INDICATOR (Visible only while laser scan sweeps!) ── */}
+      <Animated.View style={scanIndicatorStyle} pointerEvents="none">
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 4, color: '#D98A96' }}>
+            ● SCANNING FACIAL MATRIX...
+          </Text>
+        </View>
+        <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '500', color: colors.muted, letterSpacing: 1 }}>
+          [ ESTABLISHING BONE CONTOUR AXES ]
+        </Text>
+      </Animated.View>
 
       {/* ── PHASE 3: THE REVEAL CARD (7.8s onwards) ── */}
       <Animated.View style={[cardStyle, {
