@@ -2509,26 +2509,26 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
 
       {/* ── PHASE 2: SILHOUETTE & BROW DRAWING OVERLAY ── */}
       <View style={{
-        width: 280,
-        height: 280,
+        width: 320,
+        height: 320,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
         top: -H * 0.05, // Snug vertical alignment in upper middle
       }}>
         
-        {/* Animated Faint Feminine Silhouette Base (Large!) */}
-        <Animated.View style={[{ width: 215, height: 250, position: 'absolute' }, containerStyle]}>
+        {/* Animated Faint Feminine Silhouette Base (Enlarged!) */}
+        <Animated.View style={[{ width: 258, height: 300, position: 'absolute' }, containerStyle]}>
           <Image 
             source={SilhouetteFaint} 
-            style={{ width: 215, height: 250, resizeMode: 'contain' }} 
+            style={{ width: 258, height: 300, resizeMode: 'contain' }} 
           />
         </Animated.View>
 
-        {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY ── */}
-        <Animated.View style={[{ width: 180, height: 210, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
+        {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY (Proportionally Scaled) ── */}
+        <Animated.View style={[{ width: 216, height: 252, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
           {/* Glowing laser-sketched eyebrows aligned beautifully over her face */}
-          <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 22, transform: [{ translateX: 4.5 }] }}>
+          <Svg width={170} height={170} viewBox="0 0 100 100" style={{ position: 'absolute', top: 26.4, transform: [{ translateX: 5.4 }] }}>
             {/* Left Brow - Drawn slowly with no pre-existing background paths */}
             <AnimatedPath
               d={leftBrow}
