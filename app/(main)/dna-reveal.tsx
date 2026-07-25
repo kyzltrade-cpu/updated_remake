@@ -2384,15 +2384,26 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 // ── Slide: Brows ──────────────────────────────────────────────────────────────
 
 function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  const [displayPct, setDisplayPct] = useState(0);
-
   // Timings and Anim state
   const introOp = useSharedValue(0);
   const introY = useSharedValue(20);
   const introScale = useSharedValue(0.93);
 
-  const ringOp = useSharedValue(0);
-  const ringScale = useSharedValue(0.15);
+  const silhouetteOp = useSharedValue(0);
+  const silhouetteScale = useSharedValue(0.9);
+
+  // Brow drawing trace progress
+  const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
+  const traceOp = useSharedValue(0);
+  const pathLength = 100;
+
+  const triggerLightHaptic = () => {
+    if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const triggerSuccessHaptic = () => {
+    if (!isLocked) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
 
   useEffect(() => {
     // 1. Phase 1: Intro Narrative Text (0ms to 3.6s)
@@ -2406,37 +2417,35 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     );
     introScale.value = withTiming(1.04, { duration: 3600, easing: Easing.out(Easing.quad) });
 
-    // 2. Phase 2: Ring & Counter entrance (3.8s onwards)
-    ringOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
-    ringScale.value = withDelay(3800, withSpring(1.0, { damping: 13, stiffness: 85 }));
+    // 2. Phase 2: Silhouette & Eyebrow drawing entrance (3.8s onwards)
+    // Silhouette fades in at 3.8s
+    silhouetteOp.value = withDelay(3800, withTiming(0.68, { duration: 500 }));
+    silhouetteScale.value = withDelay(3800, withSpring(1.08, { damping: 14, stiffness: 45 }));
 
-    // Count down animation at 4.2s (after ring springs open)
+    // Eyebrows trace overlay fades in at 3.8s
+    traceOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
+    // Trace/draw the eyebrows dynamically over 2.4 seconds
+    traceProgress.value = withDelay(4000, withTiming(0, {
+      duration: 2400,
+      easing: Easing.bezier(0.2, 0.8, 0.2, 1)
+    }, (finished) => {
+      if (finished) {
+        runOnJS(triggerSuccessHaptic)();
+      }
+    }));
+
+    // Trigger synchronized haptic ticks as the eyebrows are being sketched
     let intervalId: ReturnType<typeof setInterval>;
-    let delayTimer: ReturnType<typeof setTimeout>;
-
-    if (!isLocked) {
-      const target = dna.browSymmetryPct;
-      let frame = 0;
-      const totalFrames = 34;
-
-      delayTimer = setTimeout(() => {
-        intervalId = setInterval(() => {
-          frame++;
-          const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
-          setDisplayPct(Math.round(eased * target));
-          
-          Haptics.selectionAsync();
-
-          if (frame >= totalFrames) {
-            clearInterval(intervalId);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }
-        }, 55);
-      }, 4200);
-    }
+    const scanTimer = setTimeout(() => {
+      intervalId = setInterval(() => {
+        if (traceProgress.value > 0.05 && traceProgress.value < 0.95) {
+          runOnJS(triggerLightHaptic)();
+        }
+      }, 70);
+    }, 4000);
 
     return () => {
-      clearTimeout(delayTimer);
+      clearTimeout(scanTimer);
       clearInterval(intervalId);
     };
   }, []);
@@ -2449,10 +2458,22 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     ],
   }));
 
-  const ringStyle = useAnimatedStyle(() => ({
-    opacity: ringOp.value,
-    transform: [{ scale: ringScale.value }],
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: silhouetteOp.value,
+    transform: [{ scale: silhouetteScale.value }],
   }));
+
+  const traceStyle = useAnimatedStyle(() => ({
+    opacity: traceOp.value,
+  }));
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: traceProgress.value * pathLength,
+  }));
+
+  // Define brow coordinates that match her front-facing portrait exactly
+  const leftBrow = 'M 30,40 Q 37,33 44,38';
+  const rightBrow = 'M 70,40 Q 63,33 56,38';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -2482,29 +2503,54 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         </Text>
       </Animated.View>
 
-      {/* ── PHASE 2: CALIBRATION RING ── */}
-      <Animated.View style={[ringStyle, { justifyContent: 'center', alignItems: 'center', gap: 15 }]}>
-        <View style={[ds.browRing, { borderColor: `${colors.text}25`, shadowColor: colors.text }]}>
-          <View style={[ds.browRingInner, { borderColor: colors.text, shadowColor: colors.text }]}>
-            {isLocked ? (
-              <MaterialIcons name="lock" size={32} color={colors.muted} />
-            ) : (
-              <>
-                <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, color: colors.muted, textTransform: 'uppercase', marginBottom: 4 }}>
-                  BROW SYMMETRY
-                </Text>
-                <Text style={[ds.browPct, { color: colors.text, fontSize: 44, fontWeight: '800' }]}>{displayPct}%</Text>
-                <Text style={{ fontFamily: 'Inter', fontSize: 9, fontWeight: '600', color: colors.muted, letterSpacing: 2, textTransform: 'uppercase', marginTop: 4 }}>
-                  ✦ CALIBRATED
-                </Text>
-              </>
-            )}
-          </View>
-        </View>
+      {/* ── PHASE 2: SILHOUETTE & BROW DRAWING OVERLAY ── */}
+      <View style={{
+        width: 280,
+        height: 280,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+        top: -H * 0.05, // Snug vertical alignment in upper middle
+      }}>
+        
+        {/* Animated Faint Feminine Silhouette Base (Large!) */}
+        <Animated.View style={[{ width: 215, height: 250, position: 'absolute' }, containerStyle]}>
+          <Image 
+            source={SilhouetteFaint} 
+            style={{ width: 215, height: 250, resizeMode: 'contain' }} 
+          />
+        </Animated.View>
 
-        {/* Symmetrical Brow Arch Tracer */}
-        <BrowTracer color={colors.accent} />
-      </Animated.View>
+        {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY ── */}
+        <Animated.View style={[{ width: 180, height: 210, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
+          {/* Glowing laser-sketched eyebrows aligned beautifully over her face */}
+          <Svg width={142} height={142} viewBox="0 0 100 100" style={{ position: 'absolute', top: 22, transform: [{ translateX: 4.5 }] }}>
+            {/* Left Brow Base & Sketch */}
+            <Path d={leftBrow} stroke="rgba(255, 255, 255, 0.06)" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+            <AnimatedPath
+              d={leftBrow}
+              stroke="#D98A96"
+              strokeWidth={3}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={pathLength}
+              animatedProps={animatedProps}
+            />
+
+            {/* Right Brow Base & Sketch */}
+            <Path d={rightBrow} stroke="rgba(255, 255, 255, 0.06)" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+            <AnimatedPath
+              d={rightBrow}
+              stroke="#D98A96"
+              strokeWidth={3}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={pathLength}
+              animatedProps={animatedProps}
+            />
+          </Svg>
+        </Animated.View>
+      </View>
     </View>
   );
 }
