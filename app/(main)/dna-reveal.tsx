@@ -2268,7 +2268,7 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
           </Text>
         </View>
         <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '500', color: colors.muted, letterSpacing: 1 }}>
-          [ ESTABLISHING BONE CONTOUR AXES ]
+          [ MAPPING YOUR BEAUTY BLUEPRINT ]
         </Text>
       </Animated.View>
 
