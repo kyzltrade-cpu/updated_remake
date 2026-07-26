@@ -2507,46 +2507,38 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         </Text>
       </Animated.View>
 
-      {/* ── PHASE 2: SILHOUETTE & BROW DRAWING OVERLAY ── */}
+      {/* ── PHASE 2: STANDALONE BROW DRAWING OVERLAY ── */}
       <View style={{
         width: 320,
-        height: 320,
+        height: 160,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
         top: -H * 0.05, // Snug vertical alignment in upper middle
       }}>
         
-        {/* Animated Faint Feminine Silhouette Base (Enlarged!) */}
-        <Animated.View style={[{ width: 258, height: 300, position: 'absolute' }, containerStyle]}>
-          <Image 
-            source={SilhouetteFaint} 
-            style={{ width: 258, height: 300, resizeMode: 'contain' }} 
-          />
-        </Animated.View>
-
-        {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY (Proportionally Scaled) ── */}
-        <Animated.View style={[{ width: 216, height: 252, position: 'absolute', justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
-          {/* Glowing laser-sketched eyebrows aligned beautifully over her face */}
-          <Svg width={170} height={170} viewBox="0 0 100 100" style={{ position: 'absolute', top: 15.0, transform: [{ translateX: 5.4 }] }}>
-            {/* Left Brow - Drawn slowly with no pre-existing background paths */}
+        {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY (Standalone, Centered, and Enlarged) ── */}
+        <Animated.View style={[{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
+          {/* Gorgeous charcoal/espresso sketched eyebrows that fill the frame */}
+          <Svg width={300} height={100} viewBox="25 28 50 16" style={{ alignSelf: 'center' }}>
+            {/* Left Brow - Centered and drawn elegantly */}
             <AnimatedPath
               d={leftBrow}
-              stroke="#E5D3D6"
-              strokeWidth={1.5}
-              fill="#E5D3D6"
+              stroke="#2C2C2E"
+              strokeWidth={0.5}
+              fill="#2C2C2E"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
               animatedProps={animatedProps}
             />
 
-            {/* Right Brow - Drawn slowly with no pre-existing background paths */}
+            {/* Right Brow - Centered and drawn elegantly */}
             <AnimatedPath
               d={rightBrow}
-              stroke="#E5D3D6"
-              strokeWidth={1.5}
-              fill="#E5D3D6"
+              stroke="#2C2C2E"
+              strokeWidth={0.5}
+              fill="#2C2C2E"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
