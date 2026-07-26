@@ -2384,15 +2384,24 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
 // ── Slide: Brows ──────────────────────────────────────────────────────────────
 
 function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+  // Local state for counts and reveal transitions
+  const [symmetryPct, setSymmetryPct] = useState(0);
+  const [revealPhase, setRevealPhase] = useState(false);
+
   // Timings and Anim state
   const introOp = useSharedValue(0);
   const introY = useSharedValue(20);
   const introScale = useSharedValue(0.93);
 
-  const silhouetteOp = useSharedValue(0);
-  const silhouetteScale = useSharedValue(0.9);
+  // Eyebrows shared values
+  const mainShiftY = useSharedValue(0);
+  const mainScale = useSharedValue(1);
+  const floatY = useSharedValue(0);
 
-  // Brow drawing trace progress
+  // Calibration card animations
+  const revealOp = useSharedValue(0);
+  const revealY = useSharedValue(30);
+
   const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
   const traceOp = useSharedValue(0);
   const pathLength = 50;
@@ -2417,12 +2426,7 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     );
     introScale.value = withTiming(1.04, { duration: 2500, easing: Easing.out(Easing.quad) });
 
-    // 2. Phase 2: Silhouette & Eyebrow drawing entrance (2.5s onwards - Snappy & Responsive!)
-    // Silhouette fades in at 2.5s
-    silhouetteOp.value = withDelay(2500, withTiming(0.95, { duration: 500 }));
-    silhouetteScale.value = withDelay(2500, withSpring(1.08, { damping: 14, stiffness: 45 }));
-
-    // Eyebrows trace overlay fades in at 2.5s
+    // 2. Phase 2: Standalone eyebrow drawing entrance (2.5s onwards)
     traceOp.value = withDelay(2500, withTiming(1, { duration: 400 }));
     // Trace/draw the eyebrows dynamically over 1.8 seconds (faster, sleek sketch!)
     traceProgress.value = withDelay(2700, withTiming(0, {
@@ -2431,6 +2435,8 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     }, (finished) => {
       if (finished) {
         runOnJS(triggerSuccessHaptic)();
+        // Trigger Phase 3: the layout shift and circular count-up reveal
+        runOnJS(setRevealPhase)(true);
       }
     }));
 
@@ -2450,6 +2456,50 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     };
   }, []);
 
+  // Watch reveal phase to animate layout shift and card slide-up
+  useEffect(() => {
+    if (revealPhase) {
+      // 1. Slide brows slightly up and scale down slightly for a perfect dual dashboard layout
+      mainShiftY.value = withTiming(-60, { duration: 1000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+      mainScale.value = withTiming(0.82, { duration: 1000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+
+      // 2. Continuous breathing float for eyebrows to make them look "alive"
+      floatY.value = withRepeat(
+        withSequence(
+          withTiming(-4, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
+          withTiming(4, { duration: 2400, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+
+      // 3. Slide up and fade in the frosted glass symmetry progress ring card
+      revealOp.value = withDelay(200, withTiming(1, { duration: 800 }));
+      revealY.value = withDelay(200, withTiming(0, { duration: 1000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }));
+    }
+  }, [revealPhase]);
+
+  // Handle local state-based countdown with accelerating haptics
+  useEffect(() => {
+    if (!revealPhase || isLocked) return;
+    const target = dna.browSymmetryPct || 84;
+    let frame = 0;
+    const totalFrames = 34;
+    const intervalId = setInterval(() => {
+      frame++;
+      const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
+      setSymmetryPct(Math.round(eased * target));
+      if (frame % 3 === 0) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      if (frame >= totalFrames) {
+        clearInterval(intervalId);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }, 45);
+    return () => clearInterval(intervalId);
+  }, [revealPhase, isLocked]);
+
   const introStyle = useAnimatedStyle(() => ({
     opacity: introOp.value,
     transform: [
@@ -2458,13 +2508,17 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     ],
   }));
 
-  const containerStyle = useAnimatedStyle(() => ({
-    opacity: silhouetteOp.value,
-    transform: [{ scale: silhouetteScale.value }],
+  const eyebrowAnimStyle = useAnimatedStyle(() => ({
+    opacity: traceOp.value,
+    transform: [
+      { translateY: mainShiftY.value + floatY.value },
+      { scale: mainScale.value }
+    ],
   }));
 
-  const traceStyle = useAnimatedStyle(() => ({
-    opacity: traceOp.value,
+  const revealStyle = useAnimatedStyle(() => ({
+    opacity: revealOp.value,
+    transform: [{ translateY: revealY.value }],
   }));
 
   const animatedProps = useAnimatedProps(() => ({
@@ -2503,16 +2557,16 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         </Text>
       </Animated.View>
 
-      {/* ── PHASE 2: STANDALONE BROW DRAWING OVERLAY ── */}
-      <View style={{
+      {/* ── PHASE 2: STANDALONE BROW DRAWING OVERLAY (Animated Float + Upward Shift) ── */}
+      <Animated.View style={[{
         width: 320,
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         top: -H * 0.05, // Snug vertical alignment in upper middle
-      }}>
+      }, eyebrowAnimStyle]}>
         {/* Above-brow elegant micro-header */}
-        <Animated.Text style={[{
+        <Text style={{
           fontFamily: 'Inter',
           fontSize: 11,
           fontWeight: '700',
@@ -2521,13 +2575,12 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
           textAlign: 'center',
           opacity: 0.8,
           marginBottom: 25,
-        }, traceStyle]}>
+        }}>
           ✦ THE ARCH PROFILE ✦
-        </Animated.Text>
+        </Text>
         
-        {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY (Standalone, Centered, and Enlarged) ── */}
-        <Animated.View style={[{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
-          {/* Gorgeous charcoal/espresso sketched eyebrows that fill the frame */}
+        {/* Svg frame holding centered continuous-line sketches */}
+        <View style={{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center' }}>
           <Svg width={300} height={100} viewBox="25 28 50 16" style={{ alignSelf: 'center' }}>
             {/* Left Brow - Centered and drawn elegantly */}
             <AnimatedPath
@@ -2553,10 +2606,10 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
               animatedProps={animatedProps}
             />
           </Svg>
-        </Animated.View>
+        </View>
 
         {/* Below-brow high-tech elegant mapping label */}
-        <Animated.Text style={[{
+        <Text style={{
           fontFamily: 'Inter',
           fontSize: 10,
           fontWeight: '600',
@@ -2565,10 +2618,71 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
           textAlign: 'center',
           opacity: 0.5,
           marginTop: 25,
-        }, traceStyle]}>
+        }}>
           [ CALCULATING ARCH BALANCE & SYMMETRY ]
-        </Animated.Text>
-      </View>
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 3: THE SYMMETRY REVEAL CARD (Frosted Glass with Live Svg Calibration Ring) ── */}
+      {revealPhase && (
+        <Animated.View style={[{
+          width: W - 32,
+          backgroundColor: 'rgba(255, 255, 255, 0.45)', // Premium soft milky glass
+          borderRadius: 24,
+          padding: 18,
+          borderWidth: 1.5,
+          borderColor: 'rgba(255, 255, 255, 0.55)', // Crisp crystal border
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 16,
+          position: 'absolute',
+          bottom: H * 0.12, // Anchors beautifully in the lower-middle viewport
+        }, revealStyle]}>
+          
+          {/* Circular Svg Progress Calibration Ring */}
+          <View style={{ position: 'relative', width: 110, height: 110, justifyContent: 'center', alignItems: 'center' }}>
+            <Svg width={110} height={110} viewBox="0 0 100 100">
+              {/* Background ring */}
+              <Circle cx="50" cy="50" r="42" stroke="rgba(44, 44, 46, 0.08)" strokeWidth="3" fill="none" />
+              {/* Active progress ring calibrated to the current count-up */}
+              <Circle
+                cx="50"
+                cy="50"
+                r="42"
+                stroke="#D98A96"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray="263.8"
+                strokeDashoffset={263.8 - (263.8 * symmetryPct) / 100}
+              />
+            </Svg>
+            <View style={{ position: 'absolute', justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ fontFamily: 'Playfair Display', fontSize: 26, fontStyle: 'italic', fontWeight: 'bold', color: '#1E2530' }}>
+                {symmetryPct}%
+              </Text>
+              <Text style={{ fontFamily: 'Inter', fontSize: 8, fontWeight: '700', letterSpacing: 1, color: '#8A95A5', textTransform: 'uppercase', marginTop: 1 }}>
+                BALANCE
+              </Text>
+            </View>
+          </View>
+
+          {/* Right Column details */}
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 2, color: '#8A95A5', textTransform: 'uppercase', marginBottom: 4 }}>
+              Symmetry Status
+            </Text>
+            <Text style={{ fontFamily: 'Inter', fontSize: 17, fontWeight: '700', color: '#1E2530', marginBottom: 6 }}>
+              {isLocked ? 'Locked Profile ✧' : symmetryPct >= 90 ? 'Elite Alignment ✦' : symmetryPct >= 80 ? 'High Symmetry ✧' : 'Natural Balance ✦'}
+            </Text>
+            
+            {/* Dynamic customized non-clinical narrative */}
+            <Text style={{ fontFamily: 'Inter', fontSize: 11.5, color: '#4E5A6A', lineHeight: 16, fontWeight: '500' }}>
+              Your <Text style={{ fontWeight: '700', color: '#1E2530' }}>{dna.browShape || 'Soft Arch'}</Text> arches show remarkable lateral alignment. They frame your facial frame beautifully, naturally lifting your eyes and cheek structures.
+            </Text>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -3776,7 +3890,7 @@ export default function DnaRevealScreen() {
   useEffect(() => {
     cancelAnimation(progress);
     progress.value = 0;
-    const duration = current === 1 ? 14000 : current === 2 ? 13000 : current === 3 ? 15500 : SLIDE_DURATION; // Slide 2 (Shade) is 14s, Slide 3 (Season) is 13s, Slide 4 (Face Shape) is 15.5s
+    const duration = current === 1 ? 14000 : current === 2 ? 13000 : current === 3 ? 15500 : current === 4 ? 15000 : SLIDE_DURATION; // Slide 2 (Shade) is 14s, Slide 3 (Season) is 13s, Slide 4 (Face Shape) is 15.5s, Slide 5 (Brows) is 15s
     progress.value = withTiming(1, { duration }, (finished) => {
       if (finished && current < SLIDE_COUNT - 1) runOnJS(advanceCurrent)();
     });
