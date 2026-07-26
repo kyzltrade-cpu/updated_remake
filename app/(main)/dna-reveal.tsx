@@ -2407,33 +2407,33 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
   };
 
   useEffect(() => {
-    // 1. Phase 1: Intro Narrative Text (0ms to 3.6s)
+    // 1. Phase 1: Intro Narrative Text (0ms to 2.5s)
     introOp.value = withSequence(
-      withTiming(1, { duration: 1800 }),
-      withDelay(1000, withTiming(0, { duration: 800 }))
+      withTiming(1, { duration: 1200 }),
+      withDelay(700, withTiming(0, { duration: 600 }))
     );
     introY.value = withSequence(
-      withTiming(0, { duration: 2000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
-      withDelay(800, withTiming(-20, { duration: 800 }))
+      withTiming(0, { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
+      withDelay(500, withTiming(-20, { duration: 600 }))
     );
-    introScale.value = withTiming(1.04, { duration: 3600, easing: Easing.out(Easing.quad) });
+    introScale.value = withTiming(1.04, { duration: 2500, easing: Easing.out(Easing.quad) });
 
-    // 2. Phase 2: Silhouette & Eyebrow drawing entrance (3.8s onwards)
-    // Silhouette fades in at 3.8s (Darker!)
-    silhouetteOp.value = withDelay(3800, withTiming(0.95, { duration: 500 }));
-    silhouetteScale.value = withDelay(3800, withSpring(1.08, { damping: 14, stiffness: 45 }));
+    // 2. Phase 2: Silhouette & Eyebrow drawing entrance (2.5s onwards - Snappy & Responsive!)
+    // Silhouette fades in at 2.5s
+    silhouetteOp.value = withDelay(2500, withTiming(0.95, { duration: 500 }));
+    silhouetteScale.value = withDelay(2500, withSpring(1.08, { damping: 14, stiffness: 45 }));
 
-    // Eyebrows trace overlay fades in at 3.8s
-    traceOp.value = withDelay(3800, withTiming(1, { duration: 400 }));
-    // Trace/draw the eyebrows dynamically over 3.2 seconds
-    traceProgress.value = withDelay(4000, withTiming(0, {
-      duration: 3200,
+    // Eyebrows trace overlay fades in at 2.5s
+    traceOp.value = withDelay(2500, withTiming(1, { duration: 400 }));
+    // Trace/draw the eyebrows dynamically over 1.8 seconds (faster, sleek sketch!)
+    traceProgress.value = withDelay(2700, withTiming(0, {
+      duration: 1800,
       easing: Easing.bezier(0.25, 1, 0.5, 1)
     }, (finished) => {
       if (finished) {
         runOnJS(triggerSuccessHaptic)();
-        // Fade in the soft brow powder fill
-        fillOpacity.value = withTiming(0.85, { duration: 800 });
+        // Fade in the soft brow powder fill instantly and beautifully
+        fillOpacity.value = withTiming(0.85, { duration: 500 });
       }
     }));
 
@@ -2444,8 +2444,8 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
         if (traceProgress.value > 0.05 && traceProgress.value < 0.95) {
           runOnJS(triggerLightHaptic)();
         }
-      }, 75);
-    }, 4000);
+      }, 60);
+    }, 2700);
 
     return () => {
       clearTimeout(scanTimer);
@@ -2475,14 +2475,14 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     fillOpacity: fillOpacity.value,
   }));
 
-  // Premium, high-fashion arched eyebrows (closed shapes for beautiful outlines + soft fill)
-  const leftBrow = 'M 29,40.5 C 33,34 37,32 45,37 L 45,39.5 C 37,35 33,36.5 29,40.5 Z';
-  const rightBrow = 'M 71,40.5 C 67,34 63,32 55,37 L 55,39.5 C 63,35 67,36.5 71,40.5 Z';
+  // Ultra-feminine, slender, elegantly curved arched eyebrows (slender high-fashion coordinates)
+  const leftBrow = 'M 28.5,39.5 C 33,34 37,31.5 45,37.5 L 45,39 C 37,34 33,36 28.5,39.5 Z';
+  const rightBrow = 'M 71.5,39.5 C 67,34 63,31.5 55,37.5 L 55,39 C 63,34 67,36 71.5,39.5 Z';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
       
-      {/* ── PHASE 1: INTRO NARRATIVE (0s - 3.6s) ── */}
+      {/* ── PHASE 1: INTRO NARRATIVE (0s - 2.5s) ── */}
       <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
         <Text style={{
           fontFamily: 'Inter',
@@ -2510,12 +2510,24 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
       {/* ── PHASE 2: STANDALONE BROW DRAWING OVERLAY ── */}
       <View style={{
         width: 320,
-        height: 160,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         position: 'relative',
         top: -H * 0.05, // Snug vertical alignment in upper middle
       }}>
+        {/* Above-brow elegant micro-header */}
+        <Animated.Text style={[{
+          fontFamily: 'Inter',
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 4,
+          color: colors.text,
+          textAlign: 'center',
+          opacity: 0.8,
+          marginBottom: 25,
+        }, traceStyle]}>
+          ✦ THE ARCH PROFILE ✦
+        </Animated.Text>
         
         {/* ── HIGH-FASHION BROW ARCH DRAWING OVERLAY (Standalone, Centered, and Enlarged) ── */}
         <Animated.View style={[{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center' }, traceStyle]}>
@@ -2546,6 +2558,20 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
             />
           </Svg>
         </Animated.View>
+
+        {/* Below-brow high-tech elegant mapping label */}
+        <Animated.Text style={[{
+          fontFamily: 'Inter',
+          fontSize: 10,
+          fontWeight: '600',
+          letterSpacing: 1.5,
+          color: colors.muted,
+          textAlign: 'center',
+          opacity: 0.5,
+          marginTop: 25,
+        }, traceStyle]}>
+          [ CALCULATING ARCH BALANCE & SYMMETRY ]
+        </Animated.Text>
       </View>
     </View>
   );
