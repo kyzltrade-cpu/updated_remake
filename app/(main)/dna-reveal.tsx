@@ -2394,9 +2394,8 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
 
   // Brow drawing trace progress
   const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
-  const fillOpacity = useSharedValue(0); // 0 = transparent, 1 = fully filled
   const traceOp = useSharedValue(0);
-  const pathLength = 150;
+  const pathLength = 50;
 
   const triggerLightHaptic = () => {
     if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -2432,8 +2431,6 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
     }, (finished) => {
       if (finished) {
         runOnJS(triggerSuccessHaptic)();
-        // Fade in the soft brow powder fill instantly and beautifully
-        fillOpacity.value = withTiming(0.85, { duration: 500 });
       }
     }));
 
@@ -2472,12 +2469,11 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: traceProgress.value * pathLength,
-    fillOpacity: fillOpacity.value,
   }));
 
-  // Ultra-feminine, slender, elegantly curved arched eyebrows (slender high-fashion coordinates)
-  const leftBrow = 'M 28.5,39.5 C 33,34 37,31.5 45,37.5 L 45,39 C 37,34 33,36 28.5,39.5 Z';
-  const rightBrow = 'M 71.5,39.5 C 67,34 63,31.5 55,37.5 L 55,39 C 63,34 67,36 71.5,39.5 Z';
+  // Ultra-feminine, slender, elegantly curved arched eyebrows (slender continuous-line coordinates)
+  const leftBrow = 'M 29,39.5 C 33,34 37.5,32.5 45,37';
+  const rightBrow = 'M 71,39.5 C 67,34 62.5,32.5 55,37';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -2537,8 +2533,8 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
             <AnimatedPath
               d={leftBrow}
               stroke="#2C2C2E"
-              strokeWidth={0.5}
-              fill="#2C2C2E"
+              strokeWidth={2.2}
+              fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
@@ -2549,8 +2545,8 @@ function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: bool
             <AnimatedPath
               d={rightBrow}
               stroke="#2C2C2E"
-              strokeWidth={0.5}
-              fill="#2C2C2E"
+              strokeWidth={2.2}
+              fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
