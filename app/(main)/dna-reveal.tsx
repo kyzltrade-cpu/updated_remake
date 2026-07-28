@@ -153,12 +153,12 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#221518', muted: 'rgba(34,21,24,0.68)', 
     eyebrow: '#D98A96', accent: '#D98A96' 
   },
-  // 5 — Brows: ULTRA RICH FOREST EMERALD (stark white & gold text contrast)
+  // 5 — Brows: Quiet Luxury Soft Matcha-Sage & Linen Cream Blossom (high-end warm/cool aesthetic contrast)
   { 
-    gradientTop: '#004D40', gradientBot: '#00251A', 
-    blobA: '#D4AF37', blobB: '#00796B', 
-    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
-    eyebrow: '#D4AF37', accent: '#D4AF37' 
+    gradientTop: '#F4F6F2', gradientBot: '#EBEFE7', 
+    blobA: '#E2EDDE', blobB: '#FFE5E7', 
+    text: '#1E2520', muted: 'rgba(30,37,32,0.65)', 
+    eyebrow: '#D98A96', accent: '#8AA586' 
   },
   // 6 — Lashes: STARK DEEP INDIGO (glowing neon green contrast)
   { 
@@ -2376,316 +2376,330 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
             {displayDesc}
           </Text>
         </Animated.View>
-      </Animated.View>
-    </View>
-  );
-}
+      // ── Slide: Brows ──────────────────────────────────────────────────────────────
+  
+      function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+        // Local state for counts and reveal transitions
+        const [symmetryPct, setSymmetryPct] = useState(0);
+        const [revealPhase, setRevealPhase] = useState(false);
 
-// ── Slide: Brows ──────────────────────────────────────────────────────────────
+        // Timings and Anim state
+        const introOp = useSharedValue(0);
+        const introY = useSharedValue(20);
+        const introScale = useSharedValue(0.93);
 
-function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
-  // Local state for counts and reveal transitions
-  const [symmetryPct, setSymmetryPct] = useState(0);
-  const [revealPhase, setRevealPhase] = useState(false);
+        // Eyebrows shared values
+        const mainShiftY = useSharedValue(0);
+        const mainScale = useSharedValue(1);
+        const floatY = useSharedValue(0);
 
-  // Timings and Anim state
-  const introOp = useSharedValue(0);
-  const introY = useSharedValue(20);
-  const introScale = useSharedValue(0.93);
+        // Calibration card animations
+        const revealOp = useSharedValue(0);
+        const revealY = useSharedValue(30);
 
-  // Eyebrows shared values
-  const mainShiftY = useSharedValue(0);
-  const mainScale = useSharedValue(1);
-  const floatY = useSharedValue(0);
+        const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
+        const traceOp = useSharedValue(0);
+        const pathLength = 50;
 
-  // Calibration card animations
-  const revealOp = useSharedValue(0);
-  const revealY = useSharedValue(30);
+        const triggerLightHaptic = () => {
+          if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        };
 
-  const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
-  const traceOp = useSharedValue(0);
-  const pathLength = 50;
+        const triggerSuccessHaptic = () => {
+          if (!isLocked) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        };
 
-  const triggerLightHaptic = () => {
-    if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
+        useEffect(() => {
+          // 1. Phase 1: Intro Narrative Text (0ms to 2.5s)
+          introOp.value = withSequence(
+            withTiming(1, { duration: 1200 }),
+            withDelay(700, withTiming(0, { duration: 600 }))
+          );
+          introY.value = withSequence(
+            withTiming(0, { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
+            withDelay(500, withTiming(-20, { duration: 600 }))
+          );
+          introScale.value = withTiming(1.04, { duration: 2500, easing: Easing.out(Easing.quad) });
 
-  const triggerSuccessHaptic = () => {
-    if (!isLocked) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  };
+          // 2. Phase 2: Standalone eyebrow drawing entrance (2.5s onwards - Slower & Luxurious!)
+          traceOp.value = withDelay(2500, withTiming(1, { duration: 500 }));
+          // Trace/draw the eyebrows dynamically over 2.6 seconds (buttery smooth slow-draw)
+          traceProgress.value = withDelay(2700, withTiming(0, {
+            duration: 2600,
+            easing: Easing.bezier(0.2, 0.85, 0.3, 1)
+          }, (finished) => {
+            if (finished) {
+              runOnJS(triggerSuccessHaptic)();
+              // Trigger Phase 3: the layout shift and circular count-up reveal
+              runOnJS(setRevealPhase)(true);
+            }
+          }));
 
-  useEffect(() => {
-    // 1. Phase 1: Intro Narrative Text (0ms to 2.5s)
-    introOp.value = withSequence(
-      withTiming(1, { duration: 1200 }),
-      withDelay(700, withTiming(0, { duration: 600 }))
-    );
-    introY.value = withSequence(
-      withTiming(0, { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
-      withDelay(500, withTiming(-20, { duration: 600 }))
-    );
-    introScale.value = withTiming(1.04, { duration: 2500, easing: Easing.out(Easing.quad) });
+          // Trigger synchronized haptic ticks as the eyebrows are being sketched
+          let intervalId: ReturnType<typeof setInterval>;
+          const scanTimer = setTimeout(() => {
+            intervalId = setInterval(() => {
+              if (traceProgress.value > 0.05 && traceProgress.value < 0.95) {
+                runOnJS(triggerLightHaptic)();
+              }
+            }, 80); // Slower, more deliberate haptic rhythmic pacing
+          }, 2700);
 
-    // 2. Phase 2: Standalone eyebrow drawing entrance (2.5s onwards)
-    traceOp.value = withDelay(2500, withTiming(1, { duration: 400 }));
-    // Trace/draw the eyebrows dynamically over 1.8 seconds (faster, sleek sketch!)
-    traceProgress.value = withDelay(2700, withTiming(0, {
-      duration: 1800,
-      easing: Easing.bezier(0.25, 1, 0.5, 1)
-    }, (finished) => {
-      if (finished) {
-        runOnJS(triggerSuccessHaptic)();
-        // Trigger Phase 3: the layout shift and circular count-up reveal
-        runOnJS(setRevealPhase)(true);
-      }
-    }));
+          return () => {
+            clearTimeout(scanTimer);
+            clearInterval(intervalId);
+          };
+        }, []);
 
-    // Trigger synchronized haptic ticks as the eyebrows are being sketched
-    let intervalId: ReturnType<typeof setInterval>;
-    const scanTimer = setTimeout(() => {
-      intervalId = setInterval(() => {
-        if (traceProgress.value > 0.05 && traceProgress.value < 0.95) {
-          runOnJS(triggerLightHaptic)();
-        }
-      }, 60);
-    }, 2700);
+        // Watch reveal phase to animate layout shift and card slide-up
+        useEffect(() => {
+          if (revealPhase) {
+            // 1. Slide brows slightly up and scale down slightly for a perfect dual dashboard layout (Slower)
+            mainShiftY.value = withTiming(-60, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
+            mainScale.value = withTiming(0.82, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
 
-    return () => {
-      clearTimeout(scanTimer);
-      clearInterval(intervalId);
-    };
-  }, []);
+            // 2. Continuous breathing float for eyebrows to make them look "alive"
+            floatY.value = withRepeat(
+              withSequence(
+                withTiming(-4, { duration: 2600, easing: Easing.inOut(Easing.ease) }),
+                withTiming(4, { duration: 2600, easing: Easing.inOut(Easing.ease) })
+              ),
+              -1,
+              true
+            );
 
-  // Watch reveal phase to animate layout shift and card slide-up
-  useEffect(() => {
-    if (revealPhase) {
-      // 1. Slide brows slightly up and scale down slightly for a perfect dual dashboard layout
-      mainShiftY.value = withTiming(-60, { duration: 1000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
-      mainScale.value = withTiming(0.82, { duration: 1000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) });
+            // 3. Slide up and fade in the frosted glass symmetry progress ring card (Slower & Cinematic)
+            revealOp.value = withDelay(400, withTiming(1, { duration: 1000 }));
+            revealY.value = withDelay(400, withTiming(0, { duration: 1600, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }));
+          }
+        }, [revealPhase]);
 
-      // 2. Continuous breathing float for eyebrows to make them look "alive"
-      floatY.value = withRepeat(
-        withSequence(
-          withTiming(-4, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
-          withTiming(4, { duration: 2400, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
+        // Handle local state-based countdown with slower, dramatic accelerating haptics
+        useEffect(() => {
+          if (!revealPhase || isLocked) return;
+          const target = dna.browSymmetryPct || 84;
+          let frame = 0;
+          const totalFrames = 48; // More frames for a longer, dramatic counting spin
+          const intervalId = setInterval(() => {
+            frame++;
+            const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
+            setSymmetryPct(Math.round(eased * target));
+            if (frame % 4 === 0) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }
+            if (frame >= totalFrames) {
+              clearInterval(intervalId);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          }, 55); // Slower, heavier tick intervals
+          return () => clearInterval(intervalId);
+        }, [revealPhase, isLocked]);
 
-      // 3. Slide up and fade in the frosted glass symmetry progress ring card
-      revealOp.value = withDelay(200, withTiming(1, { duration: 800 }));
-      revealY.value = withDelay(200, withTiming(0, { duration: 1000, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }));
-    }
-  }, [revealPhase]);
+        const introStyle = useAnimatedStyle(() => ({
+          opacity: introOp.value,
+          transform: [
+            { translateY: introY.value },
+            { scale: introScale.value }
+          ],
+        }));
 
-  // Handle local state-based countdown with accelerating haptics
-  useEffect(() => {
-    if (!revealPhase || isLocked) return;
-    const target = dna.browSymmetryPct || 84;
-    let frame = 0;
-    const totalFrames = 34;
-    const intervalId = setInterval(() => {
-      frame++;
-      const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
-      setSymmetryPct(Math.round(eased * target));
-      if (frame % 3 === 0) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      if (frame >= totalFrames) {
-        clearInterval(intervalId);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    }, 45);
-    return () => clearInterval(intervalId);
-  }, [revealPhase, isLocked]);
+        const eyebrowAnimStyle = useAnimatedStyle(() => ({
+          opacity: traceOp.value,
+          transform: [
+            { translateY: mainShiftY.value + floatY.value },
+            { scale: mainScale.value }
+          ],
+        }));
 
-  const introStyle = useAnimatedStyle(() => ({
-    opacity: introOp.value,
-    transform: [
-      { translateY: introY.value },
-      { scale: introScale.value }
-    ],
-  }));
+        const revealStyle = useAnimatedStyle(() => ({
+          opacity: revealOp.value,
+          transform: [{ translateY: revealY.value }],
+        }));
 
-  const eyebrowAnimStyle = useAnimatedStyle(() => ({
-    opacity: traceOp.value,
-    transform: [
-      { translateY: mainShiftY.value + floatY.value },
-      { scale: mainScale.value }
-    ],
-  }));
+        const animatedProps = useAnimatedProps(() => ({
+          strokeDashoffset: traceProgress.value * pathLength,
+        }));
 
-  const revealStyle = useAnimatedStyle(() => ({
-    opacity: revealOp.value,
-    transform: [{ translateY: revealY.value }],
-  }));
+        // Ultra-feminine, slender, elegantly curved arched eyebrows (slender continuous-line coordinates)
+        const leftBrow = 'M 29,39.5 C 33,34 37.5,32.5 45,37';
+        const rightBrow = 'M 71,39.5 C 67,34 62.5,32.5 55,37';
 
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: traceProgress.value * pathLength,
-  }));
-
-  // Ultra-feminine, slender, elegantly curved arched eyebrows (slender continuous-line coordinates)
-  const leftBrow = 'M 29,39.5 C 33,34 37.5,32.5 45,37';
-  const rightBrow = 'M 71,39.5 C 67,34 62.5,32.5 55,37';
-
-  return (
-    <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
+        return (
+          <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
       
-      {/* ── PHASE 1: INTRO NARRATIVE (0s - 2.5s) ── */}
-      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
-        <Text style={{
-          fontFamily: 'Inter',
-          fontSize: 22,
-          fontWeight: '600',
-          color: colors.text,
-          textAlign: 'center',
-          lineHeight: 30,
-          letterSpacing: -0.5,
-          marginBottom: 10,
-        }}>
-          Your brows do all the heavy lifting... 🎀
-        </Text>
-        <Text style={{
-          fontFamily: 'Playfair Display',
-          fontSize: 24,
-          fontStyle: 'italic',
-          color: colors.accent,
-          textAlign: 'center',
-        }}>
-          They literally frame your entire face. ✨
-        </Text>
-      </Animated.View>
+            {/* ── BACKGROUND BLUEPRINT ALIGNMENT GRID (Fills empty space beautifully) ── */}
+            <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', opacity: traceOp.value }]} pointerEvents="none">
+              <View style={{ width: '100%', height: '100%', position: 'absolute', opacity: 0.045 }}>
+                {/* Horizontal Grid lines matching typography blocks */}
+                <View style={{ position: 'absolute', top: H * 0.22, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
+                <View style={{ position: 'absolute', top: H * 0.32, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
+                <View style={{ position: 'absolute', top: H * 0.42, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
+                <View style={{ position: 'absolute', top: H * 0.52, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
+                {/* Vertical axis line down the center line (nose center) */}
+                <View style={{ position: 'absolute', left: W * 0.5, top: H * 0.16, bottom: H * 0.45, width: 1, backgroundColor: colors.text }} />
+              </View>
+            </Animated.View>
 
-      {/* ── PHASE 2: STANDALONE BROW DRAWING OVERLAY (Animated Float + Upward Shift) ── */}
-      <Animated.View style={[{
-        width: 320,
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        top: -H * 0.05, // Snug vertical alignment in upper middle
-      }, eyebrowAnimStyle]}>
-        {/* Above-brow elegant micro-header */}
-        <Text style={{
-          fontFamily: 'Inter',
-          fontSize: 11,
-          fontWeight: '700',
-          letterSpacing: 4,
-          color: colors.text,
-          textAlign: 'center',
-          opacity: 0.8,
-          marginBottom: 25,
-        }}>
-          ✦ THE ARCH PROFILE ✦
-        </Text>
+            {/* ── PHASE 1: INTRO NARRATIVE (0s - 2.5s) ── */}
+            <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 22,
+                fontWeight: '600',
+                color: colors.text,
+                textAlign: 'center',
+                lineHeight: 30,
+                letterSpacing: -0.5,
+                marginBottom: 10,
+              }}>
+                Your brows do all the heavy lifting... 🎀
+              </Text>
+              <Text style={{
+                fontFamily: 'Playfair Display',
+                fontSize: 24,
+                fontStyle: 'italic',
+                color: colors.accent,
+                textAlign: 'center',
+              }}>
+                They literally frame your entire face. ✨
+              </Text>
+            </Animated.View>
+
+            {/* ── PHASE 2: STANDALONE BROW DRAWING OVERLAY (Animated Float + Upward Shift) ── */}
+            <Animated.View style={[{
+              width: 320,
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              top: -H * 0.05, // Snug vertical alignment in upper middle
+            }, eyebrowAnimStyle]}>
+              {/* Above-brow elegant micro-header */}
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontWeight: '700',
+                letterSpacing: 4,
+                color: colors.text,
+                textAlign: 'center',
+                opacity: 0.8,
+                marginBottom: 25,
+              }}>
+                ✦ THE ARCH PROFILE ✦
+              </Text>
         
-        {/* Svg frame holding centered continuous-line sketches */}
-        <View style={{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center' }}>
-          <Svg width={300} height={100} viewBox="25 28 50 16" style={{ alignSelf: 'center' }}>
-            {/* Left Brow - Centered and drawn elegantly */}
-            <AnimatedPath
-              d={leftBrow}
-              stroke="#2C2C2E"
-              strokeWidth={2.2}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={pathLength}
-              animatedProps={animatedProps}
-            />
+              {/* Svg frame holding centered continuous-line sketches with elegant corner brackets */}
+              <View style={{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                {/* Faint elegant corner framing brackets (Fills local empty space) */}
+                <View style={{ position: 'absolute', top: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
+                <View style={{ position: 'absolute', top: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
+                <View style={{ position: 'absolute', bottom: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
+                <View style={{ position: 'absolute', bottom: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
 
-            {/* Right Brow - Centered and drawn elegantly */}
-            <AnimatedPath
-              d={rightBrow}
-              stroke="#2C2C2E"
-              strokeWidth={2.2}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={pathLength}
-              animatedProps={animatedProps}
-            />
-          </Svg>
-        </View>
+                <Svg width={300} height={100} viewBox="25 28 50 16" style={{ alignSelf: 'center' }}>
+                  {/* Left Brow - Centered and drawn elegantly */}
+                  <AnimatedPath
+                    d={leftBrow}
+                    stroke="#2C2C2E"
+                    strokeWidth={2.2}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray={pathLength}
+                    animatedProps={animatedProps}
+                  />
 
-        {/* Below-brow high-tech elegant mapping label */}
-        <Text style={{
-          fontFamily: 'Inter',
-          fontSize: 10,
-          fontWeight: '600',
-          letterSpacing: 1.5,
-          color: colors.muted,
-          textAlign: 'center',
-          opacity: 0.5,
-          marginTop: 25,
-        }}>
-          [ CALCULATING ARCH BALANCE & SYMMETRY ]
-        </Text>
-      </Animated.View>
+                  {/* Right Brow - Centered and drawn elegantly */}
+                  <AnimatedPath
+                    d={rightBrow}
+                    stroke="#2C2C2E"
+                    strokeWidth={2.2}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray={pathLength}
+                    animatedProps={animatedProps}
+                  />
+                </Svg>
+              </View>
 
-      {/* ── PHASE 3: THE SYMMETRY REVEAL CARD (Frosted Glass with Live Svg Calibration Ring) ── */}
-      {revealPhase && (
-        <Animated.View style={[{
-          width: W - 32,
-          backgroundColor: 'rgba(255, 255, 255, 0.45)', // Premium soft milky glass
-          borderRadius: 24,
-          padding: 18,
-          borderWidth: 1.5,
-          borderColor: 'rgba(255, 255, 255, 0.55)', // Crisp crystal border
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 16,
-          position: 'absolute',
-          bottom: H * 0.12, // Anchors beautifully in the lower-middle viewport
-        }, revealStyle]}>
+              {/* Below-brow high-tech elegant mapping label */}
+              <Text style={{
+                fontFamily: 'Inter',
+                fontSize: 10,
+                fontWeight: '600',
+                letterSpacing: 1.5,
+                color: colors.muted,
+                textAlign: 'center',
+                opacity: 0.5,
+                marginTop: 25,
+              }}>
+                [ CALCULATING ARCH BALANCE & SYMMETRY ]
+              </Text>
+            </Animated.View>
+
+            {/* ── PHASE 3: THE SYMMETRY REVEAL CARD (Frosted Glass with Live Svg Calibration Ring) ── */}
+            {revealPhase && (
+              <Animated.View style={[{
+                width: W - 32,
+                backgroundColor: 'rgba(255, 255, 255, 0.52)', // Richer, silkier milky frosted glass
+                borderRadius: 24,
+                padding: 18,
+                borderWidth: 1.5,
+                borderColor: 'rgba(255, 255, 255, 0.65)', // Super crisp crystal border
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 16,
+                position: 'absolute',
+                bottom: H * 0.12, // Anchors beautifully in the lower-middle viewport
+              }, revealStyle]}>
           
-          {/* Circular Svg Progress Calibration Ring */}
-          <View style={{ position: 'relative', width: 110, height: 110, justifyContent: 'center', alignItems: 'center' }}>
-            <Svg width={110} height={110} viewBox="0 0 100 100">
-              {/* Background ring */}
-              <Circle cx="50" cy="50" r="42" stroke="rgba(44, 44, 46, 0.08)" strokeWidth="3" fill="none" />
-              {/* Active progress ring calibrated to the current count-up */}
-              <Circle
-                cx="50"
-                cy="50"
-                r="42"
-                stroke="#D98A96"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                fill="none"
-                strokeDasharray="263.8"
-                strokeDashoffset={263.8 - (263.8 * symmetryPct) / 100}
-              />
-            </Svg>
-            <View style={{ position: 'absolute', justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ fontFamily: 'Playfair Display', fontSize: 26, fontStyle: 'italic', fontWeight: 'bold', color: '#1E2530' }}>
-                {symmetryPct}%
-              </Text>
-              <Text style={{ fontFamily: 'Inter', fontSize: 8, fontWeight: '700', letterSpacing: 1, color: '#8A95A5', textTransform: 'uppercase', marginTop: 1 }}>
-                BALANCE
-              </Text>
-            </View>
-          </View>
+                {/* Circular Svg Progress Calibration Ring */}
+                <View style={{ position: 'relative', width: 110, height: 110, justifyContent: 'center', alignItems: 'center' }}>
+                  <Svg width={110} height={110} viewBox="0 0 100 100">
+                    {/* Background ring */}
+                    <Circle cx="50" cy="50" r="42" stroke="rgba(44, 44, 46, 0.08)" strokeWidth="3" fill="none" />
+                    {/* Active progress ring calibrated to the current count-up */}
+                    <Circle
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      stroke="#D98A96"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      fill="none"
+                      strokeDasharray="263.8"
+                      strokeDashoffset={263.8 - (263.8 * symmetryPct) / 100}
+                    />
+                  </Svg>
+                  <View style={{ position: 'absolute', justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontFamily: 'Playfair Display', fontSize: 26, fontStyle: 'italic', fontWeight: 'bold', color: '#1E2530' }}>
+                      {symmetryPct}%
+                    </Text>
+                    <Text style={{ fontFamily: 'Inter', fontSize: 8, fontWeight: '700', letterSpacing: 1, color: '#8A95A5', textTransform: 'uppercase', marginTop: 1 }}>
+                      BALANCE
+                    </Text>
+                  </View>
+                </View>
 
-          {/* Right Column details */}
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 2, color: '#8A95A5', textTransform: 'uppercase', marginBottom: 4 }}>
-              Symmetry Status
-            </Text>
-            <Text style={{ fontFamily: 'Inter', fontSize: 17, fontWeight: '700', color: '#1E2530', marginBottom: 6 }}>
-              {isLocked ? 'Locked Profile ✧' : symmetryPct >= 90 ? 'Elite Alignment ✦' : symmetryPct >= 80 ? 'High Symmetry ✧' : 'Natural Balance ✦'}
-            </Text>
+                {/* Right Column details */}
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 2, color: '#8A95A5', textTransform: 'uppercase', marginBottom: 4 }}>
+                    Symmetry Status
+                  </Text>
+                  <Text style={{ fontFamily: 'Inter', fontSize: 17, fontWeight: '700', color: '#1E2530', marginBottom: 6 }}>
+                    {isLocked ? 'Locked Profile ✧' : symmetryPct >= 90 ? 'Elite Alignment ✦' : symmetryPct >= 80 ? 'High Symmetry ✧' : 'Natural Balance ✦'}
+                  </Text>
             
-            {/* Dynamic customized non-clinical narrative */}
-            <Text style={{ fontFamily: 'Inter', fontSize: 11.5, color: '#4E5A6A', lineHeight: 16, fontWeight: '500' }}>
-              Your <Text style={{ fontWeight: '700', color: '#1E2530' }}>{dna.browShape || 'Soft Arch'}</Text> arches show remarkable lateral alignment. They frame your facial frame beautifully, naturally lifting your eyes and cheek structures.
-            </Text>
+                  {/* Dynamic customized non-clinical narrative */}
+                  <Text style={{ fontFamily: 'Inter', fontSize: 11.5, color: '#4E5A6A', lineHeight: 16, fontWeight: '500' }}>
+                    Your <Text style={{ fontWeight: '700', color: '#1E2530' }}>{dna.browShape || 'Soft Arch'}</Text> arches show remarkable lateral alignment. They frame your facial frame beautifully, naturally lifting your eyes and cheek structures.
+                  </Text>
+                </View>
+              </Animated.View>
+            )}
           </View>
-        </Animated.View>
-      )}
-    </View>
-  );
-}
+        );
+      }
 
 // ── Slide: Lashes ─────────────────────────────────────────────────────────────
 
