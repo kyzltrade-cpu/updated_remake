@@ -160,12 +160,12 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#1E2520', muted: 'rgba(30,37,32,0.65)', 
     eyebrow: '#D98A96', accent: '#8AA586' 
   },
-  // 6 — Lashes: STARK DEEP INDIGO (glowing neon green contrast)
+  // 6 — Lashes: Elegant Cashmere Champagne & Lilac Dust (premium soft warm/cool editorial neutral)
   { 
-    gradientTop: '#1E1B4B', gradientBot: '#0F0E36', 
-    blobA: '#00FF87', blobB: '#4F46E5', 
-    text: '#FFFFFF', muted: 'rgba(255,255,255,0.7)', 
-    eyebrow: '#00FF87', accent: '#00FF87' 
+    gradientTop: '#FAF5F6', gradientBot: '#F2EAEF', 
+    blobA: '#F3D9FA', blobB: '#FFEATE5', 
+    text: '#2D1C24', muted: 'rgba(45,28,36,0.65)', 
+    eyebrow: '#A888B5', accent: '#D98A96' 
   },
   // 7 — Eye Shape: DEEP CHERRY RED (stark white & cyan contrast)
   { 
@@ -2701,32 +2701,304 @@ function SlideBrows({ dna, isLocked, colors }: SlideBrowsProps) {
 
 // ── Slide: Lashes ─────────────────────────────────────────────────────────────
 
-function SlideLashes({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+// ── Slide: Lashes ─────────────────────────────────────────────────────────────
+
+interface SlideLashesProps {
+  dna: DnaResult;
+  isLocked?: boolean;
+  colors: SlideColors;
+}
+
+function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
+  // Local state for counts and reveal transitions
+  const [liftPct, setLiftPct] = useState(0);
+  const [revealPhase, setRevealPhase] = useState(false);
+
+  // Timings and Anim state
+  const introOp = useSharedValue(0);
+  const introY = useSharedValue(20);
+  const introScale = useSharedValue(0.93);
+
+  // Lashes shared values
+  const mainShiftY = useSharedValue(0);
+  const mainScale = useSharedValue(1);
+  const floatY = useSharedValue(0);
+
+  // Calibration card animations
+  const revealOp = useSharedValue(0);
+  const revealY = useSharedValue(30);
+
+  const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
+  const traceOp = useSharedValue(0);
+  const pathLength = 150;
+
+  const triggerLightHaptic = () => {
+    if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const triggerSuccessHaptic = () => {
+    if (!isLocked) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  useEffect(() => {
+    // 1. Phase 1: Intro Narrative Text (0ms to 2.5s)
+    introOp.value = withSequence(
+      withTiming(1, { duration: 1200 }),
+      withDelay(700, withTiming(0, { duration: 600 }))
+    );
+    introY.value = withSequence(
+      withTiming(0, { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
+      withDelay(500, withTiming(-20, { duration: 600 }))
+    );
+    introScale.value = withTiming(1.04, { duration: 2500, easing: Easing.out(Easing.quad) });
+
+    // 2. Phase 2: Standalone lashes drawing entrance (2.5s onwards - Slower & Luxurious!)
+    traceOp.value = withDelay(2500, withTiming(1, { duration: 500 }));
+    // Trace/draw the eyelashes dynamically over 2.6 seconds (buttery smooth slow-draw)
+    traceProgress.value = withDelay(2700, withTiming(0, {
+      duration: 2600,
+      easing: Easing.bezier(0.2, 0.85, 0.3, 1)
+    }, (finished) => {
+      if (finished) {
+        runOnJS(triggerSuccessHaptic)();
+        // Trigger Phase 3: the layout shift and vertical count-up reveal
+        runOnJS(setRevealPhase)(true);
+      }
+    }));
+
+    // Trigger synchronized haptic ticks as the eyelashes are being sketched
+    let intervalId: ReturnType<typeof setInterval>;
+    const scanTimer = setTimeout(() => {
+      intervalId = setInterval(() => {
+        if (traceProgress.value > 0.05 && traceProgress.value < 0.95) {
+          runOnJS(triggerLightHaptic)();
+        }
+      }, 80);
+    }, 2700);
+
+    return () => {
+      clearTimeout(scanTimer);
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  // Watch reveal phase to animate layout shift and card slide-up
+  useEffect(() => {
+    if (revealPhase) {
+      // 1. Slide lashes slightly up and scale down slightly for a perfect dual dashboard layout (Slower)
+      mainShiftY.value = withTiming(-60, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
+      mainScale.value = withTiming(0.94, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
+
+      // 2. Continuous breathing float for eyelashes to make them look "alive"
+      floatY.value = withRepeat(
+        withSequence(
+          withTiming(-4, { duration: 2600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(4, { duration: 2600, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+
+      // 3. Slide up and fade in the frosted glass lash card (Slower & Cinematic)
+      revealOp.value = withDelay(400, withTiming(1, { duration: 1000 }));
+      revealY.value = withDelay(400, withTiming(0, { duration: 1600, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }));
+    }
+  }, [revealPhase]);
+
+  // Handle local state-based countdown with slower, dramatic accelerating haptics
+  useEffect(() => {
+    if (!revealPhase || isLocked) return;
+    const target = dna.lashProfile.includes('Full') ? 96 : dna.lashProfile.includes('Lift') ? 98 : 92;
+    let frame = 0;
+    const totalFrames = 48; // Slower, dramatic spin
+    const intervalId = setInterval(() => {
+      frame++;
+      const eased = 1 - Math.pow(1 - frame / totalFrames, 3);
+      setLiftPct(Math.round(eased * target));
+      if (frame % 4 === 0) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      if (frame >= totalFrames) {
+        clearInterval(intervalId);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }, 55);
+    return () => clearInterval(intervalId);
+  }, [revealPhase, isLocked]);
+
+  const introStyle = useAnimatedStyle(() => ({
+    opacity: introOp.value,
+    transform: [
+      { translateY: introY.value },
+      { scale: introScale.value }
+    ],
+  }));
+
+  const lashesAnimStyle = useAnimatedStyle(() => ({
+    opacity: traceOp.value,
+    transform: [
+      { translateY: mainShiftY.value + floatY.value },
+      { scale: mainScale.value }
+    ],
+  }));
+
+  const revealStyle = useAnimatedStyle(() => ({
+    opacity: revealOp.value,
+    transform: [{ translateY: revealY.value }],
+  }));
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: traceProgress.value * pathLength,
+  }));
+
+  // Premium fanned closed-eye lash sweep coordinates (traces eyelid then curves lashes down & out)
+  const lashesPath = 'M 25,35 Q 50,22 75,35 M 32,31 Q 28,38 23,41 M 41,29 Q 36,39 30,44 M 50,28 Q 46,41 38,47 M 59,29 Q 55,41 47,47 M 68,31 Q 65,40 57,45';
+
   return (
-    <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <View style={ds.bodyWrap}>
-        <DropIn delay={0}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>LASH PROFILE ✨</Text>
-        </DropIn>
-        <RevealItem delay={350}>
-          <Text style={[ds.narrativeHook, { color: colors.muted }]}>{'The perfect lash lift, formula, and length… 💅'}</Text>
-        </RevealItem>
-        <RevealItem delay={850}>
-          <Text style={[ds.narrativePunch, { color: colors.text }]}>{'literally turns your natural lashes\ninto your signature slay. 💖'}</Text>
-        </RevealItem>
-        {/* Symmetrical fanned lash sweep vector */}
-        <LashTracer color={colors.accent} />
-        {isLocked
-          ? <RevealItem delay={2050}><LockedValue size="lg" color={colors.muted} /></RevealItem>
-          : <>
-              <RevealItem delay={2050} fast>
-                <Text style={[ds.revealLabel, { color: colors.muted }]}>Your lash coquette profile is</Text>
-              </RevealItem>
-              <RevealPop delay={2270}>
-                <Text style={[ds.bigVal, { color: colors.accent }]}>{dna.lashProfile}</Text>
-              </RevealPop>
-            </>}
-      </View>
+    <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
+      
+      {/* ── PHASE 1: INTRO NARRATIVE (0s - 2.5s) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: '600',
+          color: colors.text,
+          textAlign: 'center',
+          lineHeight: 30,
+          letterSpacing: -0.5,
+          marginBottom: 10,
+        }}>
+          The perfect lash lift, formula, and length… 💅
+        </Text>
+        <Text style={{
+          fontFamily: 'Playfair Display',
+          fontSize: 24,
+          fontStyle: 'italic',
+          color: colors.accent,
+          textAlign: 'center',
+        }}>
+          literally turns your natural lashes into your signature slay. 💖
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 2: STANDALONE LASH DRAWING OVERLAY (Animated Float + Upward Shift) ── */}
+      <Animated.View style={[{
+        width: 320,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        top: -H * 0.05, // Snug vertical alignment in upper middle
+      }, lashesAnimStyle]}>
+        {/* Above-lash elegant micro-header */}
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 4,
+          color: colors.text,
+          textAlign: 'center',
+          opacity: 0.8,
+          marginBottom: 25,
+        }}>
+          ✦ THE LASH PROFILE ✦
+        </Text>
+        
+        {/* Svg frame holding centered continuous-line sketches with elegant corner brackets */}
+        <View style={{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+          {/* Faint elegant corner framing brackets (Fills local empty space) */}
+          <View style={{ position: 'absolute', top: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
+          <View style={{ position: 'absolute', top: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
+          <View style={{ position: 'absolute', bottom: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
+          <View style={{ position: 'absolute', bottom: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
+
+          <Svg width={300} height={100} viewBox="15 15 70 30" style={{ alignSelf: 'center', overflow: 'visible' }}>
+            <AnimatedPath
+              d={lashesPath}
+              stroke="#2D1C24"
+              strokeWidth={1.8}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray={pathLength}
+              animatedProps={animatedProps}
+            />
+          </Svg>
+        </View>
+
+        {/* Below-lash high-tech elegant mapping label */}
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 10,
+          fontWeight: '600',
+          letterSpacing: 1.5,
+          color: colors.muted,
+          textAlign: 'center',
+          opacity: 0.5,
+          marginTop: 25,
+        }}>
+          [ CALCULATING COQUETTE LIFT & SEPARATION ]
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 3: THE LASH REVEAL CARD (Frosted Glass with Live Vertical Lift Meter) ── */}
+      {revealPhase && (
+        <Animated.View style={[{
+          width: W - 32,
+          backgroundColor: 'rgba(255, 255, 255, 0.52)', // Milky frosted glass
+          borderRadius: 24,
+          padding: 18,
+          borderWidth: 1.5,
+          borderColor: 'rgba(255, 255, 255, 0.65)', // Super crisp crystal border
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 20,
+          position: 'absolute',
+          bottom: H * 0.12, // Anchors beautifully in the lower-middle viewport
+        }, revealStyle]}>
+          
+          {/* Vertical Lift-Act Meter Column */}
+          <View style={{ width: 44, height: 110, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{
+              width: 14,
+              height: 100,
+              backgroundColor: 'rgba(45, 28, 36, 0.08)',
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: 'rgba(45, 28, 36, 0.12)',
+              overflow: 'hidden',
+              position: 'relative',
+              justifyContent: 'flex-end',
+            }}>
+              {/* Active fill up bar matching count-up state */}
+              <View style={{
+                width: '100%',
+                height: `${liftPct}%`,
+                backgroundColor: '#D98A96',
+                borderRadius: 7,
+              }} />
+            </View>
+            <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '700', letterSpacing: 0.5, color: '#8A95A5', marginTop: 6 }}>
+              {liftPct}% LIFT
+            </Text>
+          </View>
+
+          {/* Right Column details */}
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 2, color: '#A888B5', textTransform: 'uppercase', marginBottom: 4 }}>
+              LASH BLUEPRINT
+            </Text>
+            <Text style={{ fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#2D1C24', marginBottom: 6 }}>
+              {isLocked ? 'Locked Profile ✧' : dna.lashProfile}
+            </Text>
+            
+            {/* Dynamic customized non-clinical narrative */}
+            <Text style={{ fontFamily: 'Inter', fontSize: 11.5, color: '#4E5A6A', lineHeight: 16, fontWeight: '500' }}>
+              Your eyelashes feature exceptional structural <Text style={{ fontWeight: '700', color: '#2D1C24' }}>verticality and volume</Text>. To optimize this natural coquette frame, use a curling tubing mascara to secure definition and lift all day.
+            </Text>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -3902,7 +4174,7 @@ export default function DnaRevealScreen() {
   useEffect(() => {
     cancelAnimation(progress);
     progress.value = 0;
-    const duration = current === 1 ? 14000 : current === 2 ? 13000 : current === 3 ? 15500 : current === 4 ? 15000 : SLIDE_DURATION; // Slide 2 (Shade) is 14s, Slide 3 (Season) is 13s, Slide 4 (Face Shape) is 15.5s, Slide 5 (Brows) is 15s
+    const duration = current === 1 ? 14000 : current === 2 ? 13000 : current === 3 ? 15500 : current === 4 ? 15000 : current === 5 ? 15000 : SLIDE_DURATION; // Slide 2 is 14s, Slide 3 is 13s, Slide 4 is 15.5s, Slide 5 is 15s, Slide 6 (Lashes) is 15s
     progress.value = withTiming(1, { duration }, (finished) => {
       if (finished && current < SLIDE_COUNT - 1) runOnJS(advanceCurrent)();
     });
