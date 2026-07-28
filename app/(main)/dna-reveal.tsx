@@ -2376,9 +2376,20 @@ function SlideFaceShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: 
             {displayDesc}
           </Text>
         </Animated.View>
-      // ── Slide: Brows ──────────────────────────────────────────────────────────────
+      </Animated.View>
+    </View>
+  );
+}
+
+// ── Slide: Brows ──────────────────────────────────────────────────────────────
+
+interface SlideBrowsProps {
+  dna: DnaResult;
+  isLocked?: boolean;
+  colors: SlideColors;
+}
   
-      function SlideBrows({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+function SlideBrows({ dna, isLocked, colors }: SlideBrowsProps) {
         // Local state for counts and reveal transitions
         const [symmetryPct, setSymmetryPct] = useState(0);
         const [revealPhase, setRevealPhase] = useState(false);
