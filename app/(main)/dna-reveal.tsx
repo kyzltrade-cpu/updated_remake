@@ -2467,7 +2467,7 @@ function SlideBrows({ dna, isLocked, colors }: SlideBrowsProps) {
           if (revealPhase) {
             // 1. Slide brows slightly up and scale down slightly for a perfect dual dashboard layout (Slower)
             mainShiftY.value = withTiming(-60, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
-            mainScale.value = withTiming(0.82, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
+            mainScale.value = withTiming(0.94, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
 
             // 2. Continuous breathing float for eyebrows to make them look "alive"
             floatY.value = withRepeat(
@@ -2538,19 +2538,6 @@ function SlideBrows({ dna, isLocked, colors }: SlideBrowsProps) {
         return (
           <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
       
-            {/* ── BACKGROUND BLUEPRINT ALIGNMENT GRID (Fills empty space beautifully) ── */}
-            <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', opacity: traceOp.value }]} pointerEvents="none">
-              <View style={{ width: '100%', height: '100%', position: 'absolute', opacity: 0.045 }}>
-                {/* Horizontal Grid lines matching typography blocks */}
-                <View style={{ position: 'absolute', top: H * 0.22, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
-                <View style={{ position: 'absolute', top: H * 0.32, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
-                <View style={{ position: 'absolute', top: H * 0.42, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
-                <View style={{ position: 'absolute', top: H * 0.52, left: 24, right: 24, height: 1, backgroundColor: colors.text }} />
-                {/* Vertical axis line down the center line (nose center) */}
-                <View style={{ position: 'absolute', left: W * 0.5, top: H * 0.16, bottom: H * 0.45, width: 1, backgroundColor: colors.text }} />
-              </View>
-            </Animated.View>
-
             {/* ── PHASE 1: INTRO NARRATIVE (0s - 2.5s) ── */}
             <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
               <Text style={{
