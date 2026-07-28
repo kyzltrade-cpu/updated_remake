@@ -163,7 +163,7 @@ const SLIDE_COLORS: SlideColors[] = [
   // 6 — Lashes: Elegant Cashmere Champagne & Lilac Dust (premium soft warm/cool editorial neutral)
   { 
     gradientTop: '#FAF5F6', gradientBot: '#F2EAEF', 
-    blobA: '#F3D9FA', blobB: '#FFEATE5', 
+    blobA: '#F3D9FA', blobB: '#FFEAE5', 
     text: '#2D1C24', muted: 'rgba(45,28,36,0.65)', 
     eyebrow: '#A888B5', accent: '#D98A96' 
   },
