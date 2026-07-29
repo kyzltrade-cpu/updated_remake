@@ -2860,9 +2860,82 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     opacity: fillOpacity.value,
   }));
 
-  // Premium fanned closed-eye lash sweep coordinates (traces eyelid then curves lashes down & out)
-  const leftLashPath = 'M 16,33 Q 30,19 44,33 M 16,33 Q 30,41 44,33 M 18,31 Q 15,22 13,20 M 22,27 Q 20,17 18,15 M 26,24 Q 25,12 24,10 M 30,23 Q 30,10 30,8 M 34,24 Q 35,12 36,10 M 38,27 Q 40,17 42,15 M 42,31 Q 45,22 47,20 M 20,35 Q 18,43 17,45 M 25,37 Q 24,46 23,48 M 30,38 Q 30,48 30,50 M 35,37 Q 36,46 37,48 M 40,35 Q 42,43 43,45';
-  const rightLashPath = 'M 56,33 Q 70,19 84,33 M 56,33 Q 70,41 84,33 M 58,31 Q 55,22 53,20 M 62,27 Q 60,17 58,15 M 66,24 Q 65,12 64,10 M 70,23 Q 70,10 70,8 M 74,24 Q 75,12 76,10 M 78,27 Q 80,17 82,15 M 82,31 Q 85,22 87,20 M 60,35 Q 58,43 57,45 M 65,37 Q 64,46 63,48 M 70,38 Q 70,48 70,50 M 75,37 Q 76,46 77,48 M 80,35 Q 82,43 83,45';
+  // Premium symmetrical fanned closed-eye lash sweep coordinates (Left Eye + Right Eye)
+  const LEFT_EYE_PATHS = [
+    'M 16,33 Q 30,19 44,33',
+    'M 16,33 Q 30,41 44,33',
+    'M 16,32.5 Q 30,18.5 44,32.5',
+    'M 18,32.5 Q 14,24 10,23',
+    'M 19,32.2 Q 15,22 11,21',
+    'M 17.5,32.8 Q 13,26 9,25',
+    'M 21,31 Q 17,20 13,18',
+    'M 22,30.8 Q 18,19 14,17',
+    'M 20.5,31.2 Q 16.5,22 12,19.5',
+    'M 24,28 Q 21,17 17,14',
+    'M 25,27.5 Q 22,16 18,13',
+    'M 23.5,28.2 Q 20.5,18.5 16.5,15.5',
+    'M 27,26 Q 25,14 21,11',
+    'M 28,25.5 Q 26,13 22,10',
+    'M 26.5,26.2 Q 24.5,15.5 20.5,12.5',
+    'M 30,25 Q 30,12 28,9',
+    'M 31,25 Q 31,11 29,8',
+    'M 29.5,25.2 Q 29.5,13.5 27.5,10.5',
+    'M 33,25 Q 34,12 33,9',
+    'M 34,25.5 Q 35,11 34,8',
+    'M 32.5,25.2 Q 33.5,13.5 32.5,10.5',
+    'M 36,26 Q 38,15 39,12',
+    'M 37,25.5 Q 39,14 40,11',
+    'M 35.5,26.2 Q 37.5,16.5 38.5,13.5',
+    'M 39,28 Q 42,18 43,15',
+    'M 40,27.5 Q 43,17 44,14',
+    'M 38.5,28.2 Q 41.5,19.5 42.5,16.5',
+    'M 42,31 Q 45,23 46,21',
+    'M 43,30.8 Q 46,22 47,20',
+    'M 41.5,31.2 Q 44.5,24.5 45.5,22.5',
+    'M 20,35 Q 18,43 17,45',
+    'M 25,37 Q 24,46 23,48',
+    'M 30,38 Q 30,48 30,50',
+    'M 35,37 Q 36,46 37,48',
+    'M 40,35 Q 42,43 43,45',
+  ];
+
+  const RIGHT_EYE_PATHS = [
+    'M 84.0,33.0 Q 70.0,19.0 56.0,33.0',
+    'M 84.0,33.0 Q 70.0,41.0 56.0,33.0',
+    'M 84.0,32.5 Q 70.0,18.5 56.0,32.5',
+    'M 82.0,32.5 Q 86.0,24.0 90.0,23.0',
+    'M 81.0,32.2 Q 85.0,22.0 89.0,21.0',
+    'M 82.5,32.8 Q 87.0,26.0 91.0,25.0',
+    'M 79.0,31.0 Q 83.0,20.0 87.0,18.0',
+    'M 78.0,30.8 Q 82.0,19.0 86.0,17.0',
+    'M 79.5,31.2 Q 83.5,22.0 88.0,19.5',
+    'M 76.0,28.0 Q 79.0,17.0 83.0,14.0',
+    'M 75.0,27.5 Q 78.0,16.0 82.0,13.0',
+    'M 76.5,28.2 Q 79.5,18.5 83.5,15.5',
+    'M 73.0,26.0 Q 75.0,14.0 79.0,11.0',
+    'M 72.0,25.5 Q 74.0,13.0 78.0,10.0',
+    'M 73.5,26.2 Q 75.5,15.5 79.5,12.5',
+    'M 70.0,25.0 Q 70.0,12.0 72.0,9.0',
+    'M 69.0,25.0 Q 69.0,11.0 71.0,8.0',
+    'M 70.5,25.2 Q 70.5,13.5 72.5,10.5',
+    'M 67.0,25.0 Q 66.0,12.0 67.0,9.0',
+    'M 66.0,25.5 Q 65.0,11.0 66.0,8.0',
+    'M 67.5,25.2 Q 66.5,13.5 67.5,10.5',
+    'M 64.0,26.0 Q 62.0,15.0 61.0,12.0',
+    'M 63.0,25.5 Q 61.0,14.0 60.0,11.0',
+    'M 64.5,26.2 Q 62.5,16.5 61.5,13.5',
+    'M 61.0,28.0 Q 58.0,18.0 57.0,15.0',
+    'M 60.0,27.5 Q 57.0,17.0 56.0,14.0',
+    'M 61.5,28.2 Q 58.5,19.5 57.5,16.5',
+    'M 58.0,31.0 Q 55.0,23.0 54.0,21.0',
+    'M 57.0,30.8 Q 54.0,22.0 53.0,20.0',
+    'M 58.5,31.2 Q 55.5,24.5 54.5,22.5',
+    'M 80.0,35.0 Q 82.0,43.0 83.0,45.0',
+    'M 75.0,37.0 Q 76.0,46.0 77.0,48.0',
+    'M 70.0,38.0 Q 70.0,48.0 70.0,50.0',
+    'M 65.0,37.0 Q 64.0,46.0 63.0,48.0',
+    'M 60.0,35.0 Q 58.0,43.0 57.0,45.0',
+  ];
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -2924,16 +2997,19 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
 
           <Svg width={300} height={120} viewBox="10 5 80 48" style={{ alignSelf: 'center', overflow: 'visible' }}>
             {/* Symmetrical Left Eye & lashes */}
-            <AnimatedPath
-              d={leftLashPath}
-              stroke="#2D1C24"
-              strokeWidth={1.2}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={pathLength}
-              animatedProps={animatedProps}
-            />
+            {LEFT_EYE_PATHS.map((path, idx) => (
+              <AnimatedPath
+                key={`left-lash-${idx}`}
+                d={path}
+                stroke="#2D1C24"
+                strokeWidth={idx < 3 ? 1.4 : 0.65}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray={pathLength}
+                animatedProps={animatedProps}
+              />
+            ))}
 
             {/* Left Iris & Pupil (fades in) */}
             <AnimatedCircle
@@ -2945,7 +3021,7 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
             />
             {/* Left Iris crescent highlight (fades in) */}
             <AnimatedCircle
-              cx="32"
+              cx="32.2"
               cy="28"
               r="1.4"
               fill="#FAF5F6"
@@ -2953,16 +3029,19 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
             />
 
             {/* Symmetrical Right Eye & lashes */}
-            <AnimatedPath
-              d={rightLashPath}
-              stroke="#2D1C24"
-              strokeWidth={1.2}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={pathLength}
-              animatedProps={animatedProps}
-            />
+            {RIGHT_EYE_PATHS.map((path, idx) => (
+              <AnimatedPath
+                key={`right-lash-${idx}`}
+                d={path}
+                stroke="#2D1C24"
+                strokeWidth={idx < 3 ? 1.4 : 0.65}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray={pathLength}
+                animatedProps={animatedProps}
+              />
+            ))}
 
             {/* Right Iris & Pupil (fades in) */}
             <AnimatedCircle
@@ -2974,7 +3053,7 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
             />
             {/* Right Iris crescent highlight (fades in) */}
             <AnimatedCircle
-              cx="72"
+              cx="72.2"
               cy="28"
               r="1.4"
               fill="#FAF5F6"
