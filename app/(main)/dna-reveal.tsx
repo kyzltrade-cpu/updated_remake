@@ -2731,9 +2731,8 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
   const revealY = useSharedValue(30);
 
   const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
-  const fillOpacity = useSharedValue(0); // 0 = transparent, 1 = fully filled
   const traceOp = useSharedValue(0);
-  const pathLength = 150;
+  const pathLength = 400;
 
   const triggerLightHaptic = () => {
     if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -2764,8 +2763,6 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     }, (finished) => {
       if (finished) {
         runOnJS(triggerSuccessHaptic)();
-        // Fade in the rich dark irises and reflections
-        fillOpacity.value = withTiming(0.9, { duration: 700 });
         // Trigger Phase 3: the layout shift and vertical count-up reveal
         runOnJS(setRevealPhase)(true);
       }
@@ -2856,42 +2853,8 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     strokeDashoffset: traceProgress.value * pathLength,
   }));
 
-  const irisAnimatedProps = useAnimatedProps(() => ({
-    opacity: fillOpacity.value,
-  }));
-
-  // Premium fanned closed-eye lash sweep coordinates (Left Eye + Right Eye)
-  const LEFT_EYE_PATHS = [
-    'M 18,26 Q 30,34 42,26 Q 30,31 18,26 Z',
-    'M 18.5,26.5 C 18,27.5 17,28.5 17,28.5 C 14,32 10,34 6,35 C 10,32.5 14,29 18.5,26.5 Z',
-    'M 20.2,28.2 C 19.7,29.2 18.7,30.2 18.7,30.2 C 16,34 11,37 7,39 C 11.5,35 16,31 20.2,28.2 Z',
-    'M 22.0,29.5 L 20.5,31.2 C 18.2,35.5 13.5,39.5 9.5,41.5 C 14.0,37.5 18.5,33.0 22.0,29.5 Z',
-    'M 24.2,30.8 L 22.7,32.5 C 20.8,37.2 16.5,41.5 12.5,44.0 C 17.0,39.5 21.0,34.8 24.2,30.8 Z',
-    'M 26.5,31.8 L 25.0,33.5 C 23.5,38.5 19.5,43.5 16.0,46.0 C 20.0,41.5 24.0,36.5 26.5,31.8 Z',
-    'M 29.0,32.3 L 27.5,34.0 C 26.5,39.5 23.5,45.0 20.0,48.0 C 23.5,43.0 26.5,37.5 29.0,32.3 Z',
-    'M 31.5,32.3 L 30.0,34.0 C 29.5,39.5 28.0,45.5 25.5,49.0 C 28.0,44.0 30.0,38.0 31.5,32.3 Z',
-    'M 34.0,31.8 L 32.5,33.5 C 32.5,39.0 32.5,45.5 31.5,49.5 C 33.0,44.0 33.5,38.0 34.0,31.8 Z',
-    'M 36.5,30.8 L 35.0,32.5 C 35.5,37.5 37.0,44.0 37.5,48.0 C 37.0,43.0 36.0,37.5 36.5,30.8 Z',
-    'M 38.8,29.5 L 37.3,31.2 C 38.5,36.0 41.5,41.5 43.5,45.0 C 41.5,40.0 39.5,35.0 38.8,29.5 Z',
-    'M 41.0,27.8 L 39.5,29.5 C 41.5,33.5 45.5,38.0 48.5,41.0 C 45.5,37.0 42.5,32.5 41.0,27.8 Z',
-    'M 43.0,25.5 L 41.5,27.0 C 44.0,30.0 48.5,34.0 52.0,36.5 C 48.5,33.0 45.0,29.5 43.0,25.5 Z',
-  ];
-
-  const RIGHT_EYE_PATHS = [
-    'M 82.0,26.0 Q 70.0,34.0 58.0,26.0 Q 70.0,31.0 82.0,26.0 Z',
-    'M 81.5,26.5 C 82.0,27.5 83.0,28.5 83.0,28.5 C 86.0,32.0 90.0,34.0 94.0,35.0 C 90.0,32.5 86.0,29.0 81.5,26.5 Z',
-    'M 79.8,28.2 C 80.3,29.2 81.3,30.2 81.3,30.2 C 84.0,34.0 89.0,37.0 93.0,39.0 C 88.5,35.0 84.0,31.0 79.8,28.2 Z',
-    'M 78.0,29.5 L 79.5,31.2 C 81.8,35.5 86.5,39.5 90.5,41.5 C 86.0,37.5 81.5,33.0 78.0,29.5 Z',
-    'M 75.8,30.8 L 77.3,32.5 C 79.2,37.2 83.5,41.5 87.5,44.0 C 83.0,39.5 79.0,34.8 75.8,30.8 Z',
-    'M 73.5,31.8 L 75.0,33.5 C 76.5,38.5 80.5,43.5 84.0,46.0 C 80.0,41.5 76.0,36.5 73.5,31.8 Z',
-    'M 71.0,32.3 L 72.5,34.0 C 73.5,39.5 76.5,45.0 80.0,48.0 C 76.5,43.0 73.5,37.5 71.0,32.3 Z',
-    'M 68.5,32.3 L 70.0,34.0 C 70.5,39.5 72.0,45.5 74.5,49.0 C 72.0,44.0 70.0,38.0 68.5,32.3 Z',
-    'M 66.0,31.8 L 67.5,33.5 C 67.5,39.0 67.5,45.5 68.5,49.5 C 67.0,44.0 66.5,38.0 66.0,31.8 Z',
-    'M 63.5,30.8 L 65.0,32.5 C 64.5,37.5 63.0,44.0 62.5,48.0 C 63.0,43.0 64.0,37.5 63.5,30.8 Z',
-    'M 61.2,29.5 L 62.7,31.2 C 61.5,36.0 58.5,41.5 56.5,45.0 C 58.5,40.0 60.5,35.0 61.2,29.5 Z',
-    'M 59.0,27.8 L 60.5,29.5 C 58.5,33.5 54.5,38.0 51.5,41.0 C 54.5,37.0 57.5,32.5 59.0,27.8 Z',
-    'M 57.0,25.5 L 58.5,27.0 C 56.0,30.0 51.5,34.0 48.0,36.5 C 51.5,33.0 55.0,29.5 57.0,25.5 Z',
-  ];
+  // Simple symmetrical double-eyelash closed-eye design (traces two elegant curved lash lines with simple sweeping eyelashes)
+  const lashesPath = 'M 70,50 Q 100,62 130,50 M 80,53 Q 75,59 70,61 M 93,55 Q 90,64 85,69 M 107,55 Q 108,65 106,70 M 120,53 Q 128,62 135,64 M 170,50 Q 200,62 230,50 M 180,53 Q 172,62 165,64 M 193,55 Q 192,65 194,70 M 207,55 Q 210,64 215,69 M 220,53 Q 225,59 230,61';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -2951,36 +2914,17 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
           <View style={{ position: 'absolute', bottom: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
           <View style={{ position: 'absolute', bottom: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
 
-          <Svg width={300} height={120} viewBox="10 5 80 48" style={{ alignSelf: 'center', overflow: 'visible' }}>
-            {/* Symmetrical Left Eye & lashes */}
-            {LEFT_EYE_PATHS.map((path, idx) => (
-              <AnimatedPath
-                key={`left-lash-${idx}`}
-                d={path}
-                stroke="#2D1C24"
-                strokeWidth={idx === 0 ? 1.4 : 0.4}
-                fill="#2D1C24"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeDasharray={pathLength}
-                animatedProps={animatedProps}
-              />
-            ))}
-
-            {/* Symmetrical Right Eye & lashes */}
-            {RIGHT_EYE_PATHS.map((path, idx) => (
-              <AnimatedPath
-                key={`right-lash-${idx}`}
-                d={path}
-                stroke="#2D1C24"
-                strokeWidth={idx === 0 ? 1.4 : 0.4}
-                fill="#2D1C24"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeDasharray={pathLength}
-                animatedProps={animatedProps}
-              />
-            ))}
+          <Svg width={300} height={100} viewBox="0 0 300 100" style={{ alignSelf: 'center', overflow: 'visible' }}>
+            <AnimatedPath
+              d={lashesPath}
+              stroke="#2D1C24"
+              strokeWidth={1.8}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray={pathLength}
+              animatedProps={animatedProps}
+            />
           </Svg>
         </View>
 
