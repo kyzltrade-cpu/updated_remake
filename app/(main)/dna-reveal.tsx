@@ -2703,6 +2703,8 @@ function SlideBrows({ dna, isLocked, colors }: SlideBrowsProps) {
 
 // ── Slide: Lashes ─────────────────────────────────────────────────────────────
 
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 interface SlideLashesProps {
   dna: DnaResult;
   isLocked?: boolean;
@@ -2729,6 +2731,7 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
   const revealY = useSharedValue(30);
 
   const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
+  const fillOpacity = useSharedValue(0); // 0 = transparent, 1 = fully filled
   const traceOp = useSharedValue(0);
   const pathLength = 150;
 
@@ -2761,6 +2764,8 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     }, (finished) => {
       if (finished) {
         runOnJS(triggerSuccessHaptic)();
+        // Fade in the rich dark irises and reflections
+        fillOpacity.value = withTiming(0.9, { duration: 700 });
         // Trigger Phase 3: the layout shift and vertical count-up reveal
         runOnJS(setRevealPhase)(true);
       }
@@ -2851,9 +2856,13 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     strokeDashoffset: traceProgress.value * pathLength,
   }));
 
-  // Premium symmetrical fanned closed-eye lash sweep coordinates (Left Eye + Right Eye)
-  const leftLashPath = 'M 22,25 Q 32,18 42,25 M 25,24 Q 22,29 19,31 M 30,23 Q 27,31 23,34 M 35,23 Q 32,32 28,36 M 40,24 Q 38,32 34,35';
-  const rightLashPath = 'M 58,25 Q 68,18 78,25 M 75,24 Q 78,29 81,31 M 70,23 Q 73,31 77,34 M 65,23 Q 68,32 72,36 M 60,24 Q 62,32 66,35';
+  const irisAnimatedProps = useAnimatedProps(() => ({
+    opacity: fillOpacity.value,
+  }));
+
+  // Premium fanned closed-eye lash sweep coordinates (traces eyelid then curves lashes down & out)
+  const leftLashPath = 'M 16,33 Q 30,19 44,33 M 16,33 Q 30,41 44,33 M 18,31 Q 15,22 13,20 M 22,27 Q 20,17 18,15 M 26,24 Q 25,12 24,10 M 30,23 Q 30,10 30,8 M 34,24 Q 35,12 36,10 M 38,27 Q 40,17 42,15 M 42,31 Q 45,22 47,20 M 20,35 Q 18,43 17,45 M 25,37 Q 24,46 23,48 M 30,38 Q 30,48 30,50 M 35,37 Q 36,46 37,48 M 40,35 Q 42,43 43,45';
+  const rightLashPath = 'M 56,33 Q 70,19 84,33 M 56,33 Q 70,41 84,33 M 58,31 Q 55,22 53,20 M 62,27 Q 60,17 58,15 M 66,24 Q 65,12 64,10 M 70,23 Q 70,10 70,8 M 74,24 Q 75,12 76,10 M 78,27 Q 80,17 82,15 M 82,31 Q 85,22 87,20 M 60,35 Q 58,43 57,45 M 65,37 Q 64,46 63,48 M 70,38 Q 70,48 70,50 M 75,37 Q 76,46 77,48 M 80,35 Q 82,43 83,45';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -2906,19 +2915,19 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
         </Text>
         
         {/* Svg frame holding centered continuous-line sketches with elegant corner brackets */}
-        <View style={{ width: 300, height: 100, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+        <View style={{ width: 300, height: 120, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
           {/* Faint elegant corner framing brackets (Fills local empty space) */}
           <View style={{ position: 'absolute', top: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
           <View style={{ position: 'absolute', top: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
           <View style={{ position: 'absolute', bottom: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
           <View style={{ position: 'absolute', bottom: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
 
-          <Svg width={300} height={100} viewBox="10 12 80 28" style={{ alignSelf: 'center', overflow: 'visible' }}>
+          <Svg width={300} height={120} viewBox="10 5 80 48" style={{ alignSelf: 'center', overflow: 'visible' }}>
             {/* Symmetrical Left Eye & lashes */}
             <AnimatedPath
               d={leftLashPath}
               stroke="#2D1C24"
-              strokeWidth={1.8}
+              strokeWidth={1.2}
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -2926,16 +2935,50 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
               animatedProps={animatedProps}
             />
 
+            {/* Left Iris & Pupil (fades in) */}
+            <AnimatedCircle
+              cx="30"
+              cy="30"
+              r="5.5"
+              fill="#2D1C24"
+              animatedProps={irisAnimatedProps}
+            />
+            {/* Left Iris crescent highlight (fades in) */}
+            <AnimatedCircle
+              cx="32"
+              cy="28"
+              r="1.4"
+              fill="#FAF5F6"
+              animatedProps={irisAnimatedProps}
+            />
+
             {/* Symmetrical Right Eye & lashes */}
             <AnimatedPath
               d={rightLashPath}
               stroke="#2D1C24"
-              strokeWidth={1.8}
+              strokeWidth={1.2}
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={pathLength}
               animatedProps={animatedProps}
+            />
+
+            {/* Right Iris & Pupil (fades in) */}
+            <AnimatedCircle
+              cx="70"
+              cy="30"
+              r="5.5"
+              fill="#2D1C24"
+              animatedProps={irisAnimatedProps}
+            />
+            {/* Right Iris crescent highlight (fades in) */}
+            <AnimatedCircle
+              cx="72"
+              cy="28"
+              r="1.4"
+              fill="#FAF5F6"
+              animatedProps={irisAnimatedProps}
             />
           </Svg>
         </View>
