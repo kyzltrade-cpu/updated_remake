@@ -2851,8 +2851,9 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     strokeDashoffset: traceProgress.value * pathLength,
   }));
 
-  // Premium fanned closed-eye lash sweep coordinates (traces eyelid then curves lashes down & out)
-  const lashesPath = 'M 25,35 Q 50,22 75,35 M 32,31 Q 28,38 23,41 M 41,29 Q 36,39 30,44 M 50,28 Q 46,41 38,47 M 59,29 Q 55,41 47,47 M 68,31 Q 65,40 57,45';
+  // Premium symmetrical fanned closed-eye lash sweep coordinates (Left Eye + Right Eye)
+  const leftLashPath = 'M 22,25 Q 32,18 42,25 M 25,24 Q 22,29 19,31 M 30,23 Q 27,31 23,34 M 35,23 Q 32,32 28,36 M 40,24 Q 38,32 34,35';
+  const rightLashPath = 'M 58,25 Q 68,18 78,25 M 75,24 Q 78,29 81,31 M 70,23 Q 73,31 77,34 M 65,23 Q 68,32 72,36 M 60,24 Q 62,32 66,35';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
@@ -2912,9 +2913,22 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
           <View style={{ position: 'absolute', bottom: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
           <View style={{ position: 'absolute', bottom: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
 
-          <Svg width={300} height={100} viewBox="15 15 70 30" style={{ alignSelf: 'center', overflow: 'visible' }}>
+          <Svg width={300} height={100} viewBox="10 12 80 28" style={{ alignSelf: 'center', overflow: 'visible' }}>
+            {/* Symmetrical Left Eye & lashes */}
             <AnimatedPath
-              d={lashesPath}
+              d={leftLashPath}
+              stroke="#2D1C24"
+              strokeWidth={1.8}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray={pathLength}
+              animatedProps={animatedProps}
+            />
+
+            {/* Symmetrical Right Eye & lashes */}
+            <AnimatedPath
+              d={rightLashPath}
               stroke="#2D1C24"
               strokeWidth={1.8}
               fill="none"
