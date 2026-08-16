@@ -2732,7 +2732,7 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
 
   const traceProgress = useSharedValue(1); // 1 = hidden, 0 = fully drawn
   const traceOp = useSharedValue(0);
-  const pathLength = 400;
+  const pathLength = 1200;
 
   const triggerLightHaptic = () => {
     if (!isLocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -2853,8 +2853,8 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     strokeDashoffset: traceProgress.value * pathLength,
   }));
 
-  // Simple symmetrical double-eyelash closed-eye design (traces two elegant curved lash lines with simple sweeping eyelashes)
-  const lashesPath = 'M 70,50 Q 100,62 130,50 M 80,53 Q 75,59 70,61 M 93,55 Q 90,64 85,69 M 107,55 Q 108,65 106,70 M 120,53 Q 128,62 135,64 M 170,50 Q 200,62 230,50 M 180,53 Q 172,62 165,64 M 193,55 Q 192,65 194,70 M 207,55 Q 210,64 215,69 M 220,53 Q 225,59 230,61';
+  // Highly realistic symmetrical double-eyelash closed-eye design (elegant continuous-line hand-drawn curves with 8 fanned wispy eyelashes per eye)
+  const lashesPath = 'M 130,50 Q 100,62 70,50 C 70,50 63,40 58,32 C 64,41 68,48 70,50 Q 74,53 77,54 C 77,54 71,43 66,35 C 71,44 75,51 77,54 Q 81,56 85,57 C 85,57 81,45 77,37 C 81,46 83,53 85,57 Q 89,58 93,59 C 93,59 90,46 88,38 C 90,47 91,55 93,59 Q 97,59 101,59 C 101,59 100,46 100,39 C 100,47 100,55 101,59 Q 105,58 109,57 C 109,57 110,46 111,40 C 110,47 108,54 109,57 Q 113,56 117,54 C 117,54 120,45 122,41 C 119,46 116,52 117,54 Q 121,52 125,50 C 125,50 128,44 130,42 C 127,45 124,48 125,50 Q 127,50 130,50 M 170,50 Q 200,62 230,50 C 230,50 237,40 242,32 C 236,41 232,48 230,50 Q 226,53 223,54 C 223,54 229,43 234,35 C 229,44 225,51 223,54 Q 219,56 215,57 C 215,57 219,45 223,37 C 219,46 217,53 215,57 Q 211,58 207,59 C 207,59 210,46 212,38 C 210,47 209,55 207,59 Q 203,59 199,59 C 199,59 200,46 200,39 C 200,47 200,55 199,59 Q 195,58 191,57 C 191,57 190,46 189,40 C 190,47 192,54 191,57 Q 187,56 183,54 C 183,54 180,45 178,41 C 181,46 184,52 183,54 Q 179,52 175,50 C 175,50 172,44 170,42 C 173,45 176,48 175,50 Q 173,50 170,50';
 
   return (
     <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
