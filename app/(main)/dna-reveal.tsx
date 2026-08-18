@@ -3036,87 +3036,226 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
 
 // ── Slide: Eye Shape ──────────────────────────────────────────────────────────
 
+// ── Slide: Eye Shape ──────────────────────────────────────────────────────────
+
 function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: boolean; colors: SlideColors }) {
+  const [revealPhase, setRevealPhase] = useState(false);
+
+  // Timings and Anim state
+  const introOp = useSharedValue(0);
+  const introY = useSharedValue(20);
+  const introScale = useSharedValue(0.93);
+
+  // Tracer shared values
+  const mainShiftY = useSharedValue(0);
+  const mainScale = useSharedValue(1);
+  const floatY = useSharedValue(0);
+
+  // Calibration card animations
+  const revealOp = useSharedValue(0);
+  const revealY = useSharedValue(30);
+  const traceOp = useSharedValue(0);
+
+  useEffect(() => {
+    // 1. Phase 1: Intro Narrative Text (0ms to 2.5s)
+    introOp.value = withSequence(
+      withTiming(1, { duration: 1200 }),
+      withDelay(700, withTiming(0, { duration: 600 }))
+    );
+    introY.value = withSequence(
+      withTiming(0, { duration: 1400, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }),
+      withDelay(500, withTiming(-20, { duration: 600 }))
+    );
+    introScale.value = withTiming(1.04, { duration: 2500, easing: Easing.out(Easing.quad) });
+
+    // 2. Phase 2: Standalone tracer drawing entrance (2.5s onwards)
+    traceOp.value = withDelay(2500, withTiming(1, { duration: 500 }));
+    
+    // Once the drawing completes (approx 2.6 seconds of drawing, i.e., at 2700 + 2600 = 5300ms)
+    const timer = setTimeout(() => {
+      runOnJS(setRevealPhase)(true);
+    }, 5300);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Watch reveal phase to animate layout shift and card slide-up
+  useEffect(() => {
+    if (revealPhase) {
+      // 1. Slide tracer slightly up and scale down slightly for a perfect dual dashboard layout
+      mainShiftY.value = withTiming(-50, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
+      mainScale.value = withTiming(0.94, { duration: 1500, easing: Easing.bezier(0.15, 0.85, 0.2, 1) });
+
+      // 2. Continuous breathing float for tracer to make it look "alive"
+      floatY.value = withRepeat(
+        withSequence(
+          withTiming(-4, { duration: 2600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(4, { duration: 2600, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+
+      // 3. Slide up and fade in the frosted glass eye card
+      revealOp.value = withDelay(400, withTiming(1, { duration: 1000 }));
+      revealY.value = withDelay(400, withTiming(0, { duration: 1600, easing: Easing.bezier(0.1, 0.8, 0.2, 1) }));
+    }
+  }, [revealPhase]);
+
+  const introStyle = useAnimatedStyle(() => ({
+    opacity: introOp.value,
+    transform: [
+      { translateY: introY.value },
+      { scale: introScale.value }
+    ],
+  }));
+
+  const tracerAnimStyle = useAnimatedStyle(() => ({
+    opacity: traceOp.value,
+    transform: [
+      { translateY: mainShiftY.value + floatY.value },
+      { scale: mainScale.value }
+    ],
+  }));
+
+  const revealStyle = useAnimatedStyle(() => ({
+    opacity: revealOp.value,
+    transform: [{ translateY: revealY.value }],
+  }));
+
   return (
-    <View style={[ds.page, { backgroundColor: 'transparent' }]}>
-      <View style={ds.bodyWrap}>
-        <DropIn delay={100}>
-          <Text style={[ds.eyebrow, { color: colors.eyebrow }]}>EYE SHAPE & MAKEUP 🎀</Text>
-        </DropIn>
+    <View style={[ds.page, { backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' }]}>
+      
+      {/* ── PHASE 1: INTRO NARRATIVE (0s - 2.5s) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }, introStyle]} pointerEvents="none">
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 22,
+          fontWeight: '600',
+          color: colors.text,
+          textAlign: 'center',
+          lineHeight: 30,
+          letterSpacing: -0.5,
+          marginBottom: 10,
+        }}>
+          Your eyes have their own custom alignment and sweep… 👁️
+        </Text>
+        <Text style={{
+          fontFamily: 'Playfair Display',
+          fontSize: 24,
+          fontStyle: 'italic',
+          color: colors.accent,
+          textAlign: 'center',
+        }}>
+          the perfect liner blueprint makes everything pop. ✨
+        </Text>
+      </Animated.View>
 
-        {/* Word-by-word kinetic headers */}
-        <WordByWordReveal
-          text="Your eyes have their own custom alignment and sweep…"
-          style={[ds.narrativeHook, { color: colors.muted }]}
-          delay={400}
-        />
-        <WordByWordReveal
-          text="the perfect liner blueprint makes everything pop. ✨"
-          style={[ds.narrativePunch, { color: colors.text }]}
-          delay={1100}
-        />
+      {/* ── PHASE 2: HOLOGRAPHIC EYE SHAPE TRACER (Animated Float + Upward Shift) ── */}
+      <Animated.View style={[{
+        width: 320,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        top: -H * 0.05,
+      }, tracerAnimStyle]}>
+        {/* Above-tracer elegant micro-header */}
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 4,
+          color: colors.accent,
+          textAlign: 'center',
+          opacity: 0.9,
+          marginBottom: 15,
+        }}>
+          ✦ EYE SHAPE TRACE ✦
+        </Text>
+        
+        {/* Svg frame holding centered continuous-line sketches with elegant corner brackets */}
+        <View style={{ width: 280, height: 160, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+          {/* Faint elegant corner framing brackets (Fills local empty space) */}
+          <View style={{ position: 'absolute', top: 4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.5 }} />
+          <View style={{ position: 'absolute', top: 4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderTopWidth: 1.2, borderColor: colors.accent, opacity: 0.5 }} />
+          <View style={{ position: 'absolute', bottom: 4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.5 }} />
+          <View style={{ position: 'absolute', bottom: 4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.5 }} />
 
-        {isLocked ? (
-          <SpinIn delay={1500}>
-            <Text style={[ds.shapeGlyph, { color: `${colors.text}99` }]}>○</Text>
-          </SpinIn>
-        ) : (
-          <RevealItem delay={1500}>
+          {isLocked ? (
+            <Text style={{ fontFamily: 'Inter', fontSize: 18, color: colors.muted }}>Locked ○</Text>
+          ) : (
             <HolographicTracer shape={dna.eyeShape ?? 'Almond Eye'} color={colors.accent} />
-          </RevealItem>
-        )}
+          )}
+        </View>
 
-        {isLocked ? (
-          <RevealItem delay={2100}>
-            <LockedValue size="lg" color={colors.muted} />
-          </RevealItem>
-        ) : (
-          <>
-            <RevealItem delay={2000}>
-              <Text style={[ds.revealLabel, { color: colors.muted }]}>Your official eye shape:</Text>
-            </RevealItem>
-            <RevealPop delay={2100}>
-              <Text style={[ds.bigVal, { color: colors.accent }]}>
-                {dna.eyeShape ?? 'Almond Eye'}
+        {/* Below-tracer mapping label */}
+        <Text style={{
+          fontFamily: 'Inter',
+          fontSize: 10,
+          fontWeight: '600',
+          letterSpacing: 1.5,
+          color: colors.muted,
+          textAlign: 'center',
+          opacity: 0.7,
+          marginTop: 15,
+        }}>
+          [ CALIBRATING WATERLINE & ALIGNMENT ]
+        </Text>
+      </Animated.View>
+
+      {/* ── PHASE 3: THE EYE REVEAL CARD (Frosted Glass with Elegant Blueprint Details) ── */}
+      {revealPhase && (
+        <Animated.View style={[{
+          width: W - 32,
+          backgroundColor: 'rgba(255, 255, 255, 0.08)', // Beautiful dark-room frosting
+          borderRadius: 24,
+          padding: 18,
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.16)', // Crisp crystal border
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 20,
+          position: 'absolute',
+          bottom: H * 0.12,
+        }, revealStyle]}>
+          
+          {/* Dynamic Lock-on Match Ring */}
+          <View style={{ width: 64, height: 110, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{
+              width: 54,
+              height: 54,
+              borderRadius: 27,
+              borderWidth: 2,
+              borderColor: colors.accent,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 245, 255, 0.04)',
+            }}>
+              <Text style={{ fontFamily: 'Playfair Display', fontSize: 16, fontWeight: '700', color: colors.accent, fontStyle: 'italic' }}>
+                OK
               </Text>
-            </RevealPop>
-            <RevealItem delay={2600}>
-              <View style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                borderRadius: 16,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.12)',
-                marginTop: 18,
-                width: W - 56,
-                alignItems: 'center',
-              }}>
-                <Text style={{
-                  fontFamily: tokens.fonts.regular,
-                  fontSize: 14,
-                  fontWeight: '700',
-                  color: colors.text,
-                  marginBottom: 6,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1.5,
-                }}>
-                  ✨ Best Makeup Blueprint
-                </Text>
-                <Text style={{
-                  fontFamily: tokens.fonts.regular,
-                  fontSize: 13,
-                  fontWeight: '400',
-                  color: `${colors.text}aa`,
-                  textAlign: 'center',
-                  lineHeight: 18,
-                }}>
-                  {dna.eyeMakeup ?? 'Classic wing with highlighted crease.'}
-                </Text>
-              </View>
-            </RevealItem>
-          </>
-        )}
-      </View>
+            </View>
+            <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '700', letterSpacing: 1, color: colors.muted, marginTop: 10, textAlign: 'center' }}>
+              ALIGNMENT
+            </Text>
+          </View>
+
+          {/* Right Column details */}
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 2, color: colors.accent, textTransform: 'uppercase', marginBottom: 4 }}>
+              OFFICIAL SHAPE
+            </Text>
+            <Text style={{ fontFamily: 'Playfair Display', fontSize: 22, fontStyle: 'italic', fontWeight: '700', color: '#FFFFFF', marginBottom: 6 }}>
+              {isLocked ? 'Locked Profile ✧' : (dna.eyeShape ?? 'Almond Eye')}
+            </Text>
+            
+            {/* Dynamic customized non-clinical narrative */}
+            <Text style={{ fontFamily: 'Inter', fontSize: 11.5, color: '#E5D5DA', lineHeight: 16, fontWeight: '500' }}>
+              <Text style={{ fontWeight: '700', color: colors.accent }}>Best Blueprint:</Text> {isLocked ? 'Unlock to view your custom eyeliner and shadow layout.' : (dna.eyeMakeup ?? 'Classic wing with highlighted crease.')}
+            </Text>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
