@@ -2850,12 +2850,21 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
     transform: [{ translateY: revealY.value }],
   }));
 
-  const imageRevealStyle = useAnimatedStyle(() => {
+  const maskStyle = useAnimatedStyle(() => {
+    const width = 250 * (1 - traceProgress.value);
     const opacity = 1 - traceProgress.value;
-    const scale = 1.0 - (traceProgress.value * 0.05);
     return {
+      width,
       opacity,
-      transform: [{ scale }],
+    };
+  });
+
+  const laserStyle = useAnimatedStyle(() => {
+    const opacity = traceProgress.value > 0.01 && traceProgress.value < 0.99 ? 1 : 0;
+    const left = 25 + 250 * (1 - traceProgress.value);
+    return {
+      left,
+      opacity,
     };
   });
 
@@ -2917,15 +2926,35 @@ function SlideLashes({ dna, isLocked, colors }: SlideLashesProps) {
           <View style={{ position: 'absolute', bottom: -4, left: 16, width: 8, height: 8, borderLeftWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
           <View style={{ position: 'absolute', bottom: -4, right: 16, width: 8, height: 8, borderRightWidth: 1.2, borderBottomWidth: 1.2, borderColor: colors.accent, opacity: 0.45 }} />
 
-          <Animated.Image
-            source={EyelashesImg}
-            style={[{
-              width: 250,
-              height: 100,
-              resizeMode: 'contain',
-              tintColor: '#2D1C24',
-            }, imageRevealStyle]}
-          />
+          <Animated.View style={[{
+            width: 250,
+            height: 100,
+            overflow: 'hidden',
+            position: 'absolute',
+            left: 25,
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+          }, maskStyle]}>
+            <Image
+              source={EyelashesImg}
+              style={{
+                width: 250,
+                height: 100,
+                resizeMode: 'contain',
+                tintColor: '#2D1C24',
+                position: 'absolute',
+                left: 0,
+              }}
+            />
+          </Animated.View>
+
+          <Animated.View style={[{
+            position: 'absolute',
+            top: 10,
+            bottom: 10,
+            width: 1.5,
+            backgroundColor: '#D98A96',
+          }, laserStyle]} />
         </View>
 
         {/* Below-lash high-tech elegant mapping label */}
