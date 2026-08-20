@@ -167,12 +167,12 @@ const SLIDE_COLORS: SlideColors[] = [
     text: '#2D1C24', muted: 'rgba(45,28,36,0.65)', 
     eyebrow: '#A888B5', accent: '#D98A96' 
   },
-  // 7 — Eye Shape: DEEP CHERRY RED (stark white & cyan contrast)
+  // 7 — Eye Shape: Premium Soft Rose Quartz & Cashmere (quiet luxury editorial warm pastel)
   { 
-    gradientTop: '#4C0519', gradientBot: '#2D0011', 
-    blobA: '#00F5FF', blobB: '#880E4F', 
-    text: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', 
-    eyebrow: '#00F5FF', accent: '#00F5FF' 
+    gradientTop: '#FAF5F6', gradientBot: '#F0E5E7', 
+    blobA: '#FFD6DD', blobB: '#F5E6EC', 
+    text: '#2C1D21', muted: 'rgba(44,29,33,0.65)', 
+    eyebrow: '#D98A96', accent: '#D98A96' 
   },
   // 8 — Celebrity Match: Starry gold over rich obsidian (stark white & coquette gold contrast)
   { 
@@ -3207,11 +3207,11 @@ function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: b
       {revealPhase && (
         <Animated.View style={[{
           width: W - 32,
-          backgroundColor: 'rgba(255, 255, 255, 0.08)', // Beautiful dark-room frosting
+          backgroundColor: 'rgba(255, 255, 255, 0.52)', // Milky frosted glass
           borderRadius: 24,
           padding: 18,
-          borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.16)', // Crisp crystal border
+          borderWidth: 1.5,
+          borderColor: 'rgba(255, 255, 255, 0.65)', // Super crisp crystal border
           flexDirection: 'row',
           alignItems: 'center',
           gap: 20,
@@ -3229,29 +3229,29 @@ function SlideEyeShape({ dna, isLocked, colors }: { dna: DnaResult; isLocked?: b
               borderColor: colors.accent,
               justifyContent: 'center',
               alignItems: 'center',
-              backgroundColor: 'rgba(0, 245, 255, 0.04)',
+              backgroundColor: `${colors.accent}10`,
             }}>
               <Text style={{ fontFamily: 'Playfair Display', fontSize: 16, fontWeight: '700', color: colors.accent, fontStyle: 'italic' }}>
                 OK
               </Text>
             </View>
-            <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '700', letterSpacing: 1, color: colors.muted, marginTop: 10, textAlign: 'center' }}>
+            <Text style={{ fontFamily: 'Inter', fontSize: 8.5, fontWeight: '700', letterSpacing: 1, color: '#8A95A5', marginTop: 10, textAlign: 'center' }}>
               ALIGNMENT
             </Text>
           </View>
 
           {/* Right Column details */}
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 2, color: colors.accent, textTransform: 'uppercase', marginBottom: 4 }}>
+            <Text style={{ fontFamily: 'Inter', fontSize: 10, fontWeight: '700', letterSpacing: 2, color: '#8A95A5', textTransform: 'uppercase', marginBottom: 4 }}>
               OFFICIAL SHAPE
             </Text>
-            <Text style={{ fontFamily: 'Playfair Display', fontSize: 22, fontStyle: 'italic', fontWeight: '700', color: '#FFFFFF', marginBottom: 6 }}>
+            <Text style={{ fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#2C1D21', marginBottom: 6 }}>
               {isLocked ? 'Locked Profile ✧' : (dna.eyeShape ?? 'Almond Eye')}
             </Text>
             
             {/* Dynamic customized non-clinical narrative */}
-            <Text style={{ fontFamily: 'Inter', fontSize: 11.5, color: '#E5D5DA', lineHeight: 16, fontWeight: '500' }}>
-              <Text style={{ fontWeight: '700', color: colors.accent }}>Best Blueprint:</Text> {isLocked ? 'Unlock to view your custom eyeliner and shadow layout.' : (dna.eyeMakeup ?? 'Classic wing with highlighted crease.')}
+            <Text style={{ fontFamily: 'Inter', fontSize: 11.5, color: '#4E5A6A', lineHeight: 16, fontWeight: '500' }}>
+              <Text style={{ fontWeight: '700', color: '#2C1D21' }}>Best Blueprint:</Text> {isLocked ? 'Unlock to view your custom eyeliner and shadow layout.' : (dna.eyeMakeup ?? 'Classic wing with highlighted crease.')}
             </Text>
           </View>
         </Animated.View>
