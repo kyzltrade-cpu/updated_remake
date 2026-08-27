@@ -11,10 +11,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ONBOARDING_KEY } from '../_layout';
-import { analyzeDna } from '@/lib/api/dna';
-import { getOnboardingData } from '@/lib/onboarding-store';
-import type { PriorityCategory } from '@/lib/onboarding-store';
-import { saveDnaResult } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { tokens } from '@/components/theme';
 
@@ -210,29 +206,21 @@ export default function DnaLoadingScreen() {
 
   useEffect(() => {
     const run = async () => {
-      if (params.uri) {
-        await AsyncStorage.setItem('pending_dna_uri', params.uri);
-        await new Promise<void>(resolve => setTimeout(resolve, 3400));
-        router.replace('/(onboarding)/scan-success');
-        return;
-      }
       try {
-        const pendingUri = await AsyncStorage.getItem('pending_dna_uri');
-        if (!pendingUri) {
-          router.replace('/(onboarding)/scan-success');
-          return;
+        // Production-ready Placebo Scan:
+        // We keep the physical act of the scan to maintain the psychological hook & drive trial conversion,
+        // but we do NOT call the backend API during onboarding to save server cost, avoid rate limits,
+        // and ensure 100% offline-ready reliability.
+        if (params.uri) {
+          await AsyncStorage.setItem('pending_dna_uri', params.uri);
         }
-        const { priorityCategory } = await getOnboardingData();
-        const dna = await analyzeDna({
-          imageUri: pendingUri,
-          priorityCategory: (priorityCategory ?? 'Blending') as PriorityCategory,
-        });
-        await AsyncStorage.setItem('dna_result', JSON.stringify(dna));
-        // Keep dna_result as NULL in the database until they complete their first official in-app scan.
-        // Do NOT sync onboarding DNA to the Supabase profile row.
+
+        // Wait exactly 5.2 seconds to allow the beautiful progress bar and micro-phase animations to finish completely
+        await new Promise<void>(resolve => setTimeout(resolve, 5200));
+
         router.replace('/(onboarding)/scan-success');
       } catch (err) {
-        console.warn('[DNA Loading] Failed to analyze DNA:', err);
+        console.warn('[DNA Loading] Failed during placebo onboarding scan:', err);
         router.replace('/(onboarding)/scan-success');
       }
     };
