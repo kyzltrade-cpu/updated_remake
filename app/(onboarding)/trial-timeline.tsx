@@ -86,9 +86,9 @@ export default function TrialTimelineScreen() {
         <Animated.View entering={FadeInUp.delay(450).duration(600)} style={styles.timelineBox}>
           <TimelineItem
             day="TODAY (DAY 0)"
-            title="Activate Skin Watchdog"
+            title="Seal Your Beauty DNA"
             desc="Unlock barcode scanning, comedogenic checks, and safety watchdog alerts for 100+ toxins."
-            icon="🛡️"
+            icon="🧬"
           />
           <TimelineItem
             day="DAY 2"
