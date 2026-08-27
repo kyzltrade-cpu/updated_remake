@@ -400,6 +400,18 @@ export default function SettingsScreen() {
         {/* ── About ── */}
         <Section title="About" delay={330}>
           <Row label="Version" right={<Text style={styles.rowValue}>1.0.0</Text>} />
+          <View style={styles.divider} />
+          <Row
+            label="Terms & Privacy Policy"
+            sub="Read our legal policies"
+            onPress={() => {
+              if (settings.hapticsEnabled) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              router.push('/(onboarding)/legal');
+            }}
+            right={<MaterialIcons name="chevron-right" size={16} color={tokens.colors.pinkDeep} />}
+          />
           {isLoggedIn && (
             <>
               <View style={styles.divider} />
