@@ -555,6 +555,12 @@ export default function ProductScanResultsScreen() {
           </View>
         </Card>
 
+        <View style={s.disclaimerWrap}>
+          <Text style={s.disclaimerText}>
+            Disclaimer: ReMake is for cosmetic and educational purposes only. It does not provide medical or dermatological advice.
+          </Text>
+        </View>
+
         <View style={{ height: 76 }} />
       </ScrollView>
 
@@ -883,5 +889,18 @@ const s = StyleSheet.create({
   },
   dotInactive: {
     backgroundColor: '#E8DDD8',
+  },
+  disclaimerWrap: {
+    marginTop: 16,
+    marginBottom: 8,
+    alignItems: 'center',
+    paddingHorizontal: 28,
+  },
+  disclaimerText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    color: tokens.colors.grayLight,
+    textAlign: 'center',
+    lineHeight: 15,
   },
 });

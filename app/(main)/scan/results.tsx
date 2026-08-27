@@ -307,6 +307,12 @@ export default function ResultsScreen() {
             <Text style={s.doneTxt}>Done</Text>
           </Pressable>
         </Animated.View>
+
+        <Animated.View entering={FadeIn.delay(800).duration(300)} style={s.disclaimerWrap}>
+          <Text style={s.disclaimerText}>
+            Disclaimer: ReMake is for cosmetic and educational purposes only. It does not provide medical or dermatological advice.
+          </Text>
+        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -410,4 +416,18 @@ const s = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 5,
   },
   doneTxt: { fontFamily: tokens.fonts.regular, fontSize: 13, fontWeight: '600', color: '#FFF9F7' },
+
+  disclaimerWrap: {
+    marginTop: 24,
+    marginBottom: 8,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  disclaimerText: {
+    fontFamily: tokens.fonts.regular,
+    fontSize: 10,
+    color: tokens.colors.grayLight,
+    textAlign: 'center',
+    lineHeight: 15,
+  },
 });
