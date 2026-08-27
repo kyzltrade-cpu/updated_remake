@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase';
 import { setupUserPushNotifications } from '@/lib/api/notifications';
 
 const advance = (router: ReturnType<typeof useRouter>) => {
-  router.replace('/(onboarding)/scan-prep');
+  router.replace('/(onboarding)/trial-timeline');
 };
 
 export default function CreateAccountScreen() {

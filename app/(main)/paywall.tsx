@@ -54,10 +54,10 @@ interface ValueBullet {
 
 const VALUE_BULLETS: ValueBullet[] = [
   { icon: 'camera-alt', text: 'Unlimited Face & Product Scans' },
-  { icon: 'fingerprint', text: 'Full Makeup DNA Reveal (8 Custom Slides)' },
   { icon: 'security', text: '100+ Comedogenic & Toxic Ingredient Alerts' },
-  { icon: 'palette', text: 'Shade Matching & Custom Archetype Cards' },
+  { icon: 'palette', text: 'Custom Shade Matcher & Product Comparison' },
   { icon: 'spa', text: 'Daily Skincare Coaching & Streak Rewards' },
+  { icon: 'science', text: 'Instantly Screen 100+ Toxin Categories' },
 ];
 
 export default function SettingsPaywallScreen() {
