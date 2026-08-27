@@ -176,11 +176,10 @@ export default function SubscriptionDetails() {
               </View>
             </View>
 
-            <View style={styles.divider} />
-
             {/* Expiry/Renewal Date Row */}
             {details.expiryDate && (
               <>
+                <View style={styles.divider} />
                 <View style={styles.cardRow}>
                   <View style={styles.rowLabelGroup}>
                     <MaterialIcons name="event" size={20} color={tokens.colors.gray} />
@@ -190,13 +189,13 @@ export default function SubscriptionDetails() {
                   </View>
                   <Text style={styles.rowValueText}>{formatFriendlyDate(details.expiryDate)}</Text>
                 </View>
-                <View style={styles.divider} />
               </>
             )}
 
             {/* Trial Time Remaining */}
             {details.isTrial && (
               <>
+                <View style={styles.divider} />
                 <View style={styles.cardRow}>
                   <View style={styles.rowLabelGroup}>
                     <MaterialIcons name="timer" size={20} color={tokens.colors.gray} />
@@ -204,18 +203,8 @@ export default function SubscriptionDetails() {
                   </View>
                   <Text style={styles.rowValueText}>{details.daysRemaining} days left</Text>
                 </View>
-                <View style={styles.divider} />
               </>
             )}
-
-            {/* Billing Source */}
-            <View style={styles.cardRow}>
-              <View style={styles.rowLabelGroup}>
-                <MaterialIcons name="payment" size={20} color={tokens.colors.gray} />
-                <Text style={styles.rowLabelText}>Billing Method</Text>
-              </View>
-              <Text style={styles.rowValueText}>{details.billingSource}</Text>
-            </View>
           </View>
         </Animated.View>
 
