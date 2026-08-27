@@ -4,8 +4,7 @@ import { View, Alert, AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@/lib/supabase';
 import { ScanLoadingScreen } from '@/components/scan-loading-screen';
-import { analyzeImage, getCoaching } from '@/lib/api';
-import { analyzeDna } from '@/lib/api/dna';
+import { runUnifiedFaceScan } from '@/lib/api';
 import { getOnboardingData } from '@/lib/onboarding-store';
 import { saveScan, getLastScan, saveDnaResult } from '@/lib/api/scan-storage';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,37 +110,19 @@ export default function LoadingPage() {
         }
       }
 
-      // 2. Perform analysis (skipping DNA evaluation if it is already generated & frozen)
-      let diagnosis: any;
-      let dna: any = null;
-
-      if (hasExistingDna) {
-        console.log('[loading] Existing Beauty DNA found. Skipping DNA analysis and freezing results.');
-        diagnosis = await analyzeImage({
+      // 2. Execute the Unified Face Scan (Single round-trip, lightweight Qwen 3 VL 8B)
+      console.log(`[loading] Triggering unified speed scan. hasExistingDna: ${hasExistingDna}`);
+      const unifiedResult = await runUnifiedFaceScan(
+        {
           imageUri: validUri,
           priorityCategory: priorityCategory ?? 'Blending',
           skillLevel: skillLevel ?? 'Intermediate',
           referenceUri,
-        });
-      } else {
-        console.log('[loading] No existing Beauty DNA found. Executing 100% personalized dynamic first-scan evaluation in parallel.');
-        const [diagResult, dnaResult] = await Promise.all([
-          analyzeImage({
-            imageUri: validUri,
-            priorityCategory: priorityCategory ?? 'Blending',
-            skillLevel: skillLevel ?? 'Intermediate',
-            referenceUri,
-          }),
-          analyzeDna({
-            imageUri: validUri,
-            priorityCategory: priorityCategory ?? 'Blending',
-          })
-        ]);
-        diagnosis = diagResult;
-        dna = dnaResult;
-      }
+        },
+        hasExistingDna
+      );
 
-      const coaching = await getCoaching({ diagnosis });
+      const { diagnosis, dna, coaching } = unifiedResult;
 
       const allBare = diagnosis.overallScore === null || diagnosis.categories.every((cat: any) => cat.detected === false);
       if (allBare) {

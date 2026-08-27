@@ -212,3 +212,213 @@ export function getDiagnosisProvider(): DiagnosisProvider {
 export async function analyzeImage(request: AnalyzeImageRequest): Promise<DiagnosisResult> {
   return getDiagnosisProvider().analyze(request);
 }
+
+// ─── UNIFIED FACE SCAN SPEED & ACCURACY UPGRADE ───────────────────────────────
+
+const UNIFIED_FULL_PROMPT = (priority: string, skill: string) => `
+You are an expert makeup artist AI and beauty analyst. You are analyzing a selfie for cosmetic quality, skin structure, and facial geometry.
+
+Return a single JSON object that contains the complete analysis across three distinct domains.
+
+<task_makeup_scoring>
+Evaluate the cosmetic quality of the makeup in the selfie. Score each of the six categories (Blending, Symmetry, Colour Harmony, Coverage, Cleanliness, Brow Framing) from 0-100.
+If no makeup/product is detected for a category (i.e., bare skin, bare eyes, natural brows with no product), set "detected" to false. If makeup is detected, set "detected" to true.
+If a category is not detected (detected is false), score it 75 and explain in the reasoning/tip that no makeup was detected for this category (be constructive!).
+The "${priority}" category must receive the most detailed feedback.
+</task_makeup_scoring>
+
+<task_beauty_dna>
+Analyze the physical facial structure:
+- faceShape: Oval, Round, Heart, Square, Oblong
+- colorSeason: Warm Autumn, Cool Summer, Deep Winter, Light Spring, etc.
+- skinToneHex: Primary skin tone color hex (e.g., #C8956A)
+- eyeShape: Siren Eye, Doe Eye, Almond Eye, Hooded Eye, Monolid Eye, Dove Eye
+- browShape: Soft Arch, High Arch, S-Curve, Flat, Tapered
+- browSymmetryPct: 70-100 symmetry rating
+- lashProfile: Long & Sparse, Short & Full, Long & Full, Curly
+- archetype: Creative name for their style blueprint (e.g., "The Soft Romantic")
+- archetypeDescription: 2-sentence description of why they fit this archetype.
+</task_beauty_dna>
+
+<task_coaching>
+Draft a highly personalized, warm 1-2 sentence coaching compliment from a personal beauty editor. It must match their scores and physical traits perfectly. Calibrate language to skill level (${skill}).
+</task_coaching>
+
+CRITICAL: You must return ONLY a raw JSON object matching the schema below. No markdown wrapping, no text before or after the JSON.
+
+JSON Schema:
+{
+  "makeup_analysis": {
+    "categories": [
+      {
+        "name": "Blending",
+        "detected": boolean,
+        "reasoning": "Detailed 2-sentence explanation of what is visible in the photo.",
+        "score": number,
+        "tip": "Constructive 1-sentence tip.",
+        "tipShort": "Short action item."
+      },
+      { "name": "Symmetry", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Colour Harmony", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Coverage", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Cleanliness", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Brow Framing", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." }
+    ]
+  },
+  "beauty_dna": {
+    "faceShape": "string",
+    "colorSeason": "string",
+    "skinToneHex": "string",
+    "eyeShape": "string",
+    "browShape": "string",
+    "browSymmetryPct": number,
+    "lashProfile": "string",
+    "archetype": "string",
+    "archetypeDescription": "string"
+  },
+  "coaching": {
+    "compliment": "string"
+  }
+}
+`.strip();
+
+const UNIFIED_QUICK_PROMPT = (priority: string, skill: string) => `
+You are an expert makeup artist AI. You are analyzing a selfie for cosmetic quality and providing personalized beauty coaching.
+
+Return a single JSON object that contains the complete analysis across two distinct domains.
+
+<task_makeup_scoring>
+Evaluate the cosmetic quality of the makeup in the selfie. Score each of the six categories (Blending, Symmetry, Colour Harmony, Coverage, Cleanliness, Brow Framing) from 0-100.
+If no makeup/product is detected for a category (i.e., bare skin, bare eyes, natural brows with no product), set "detected" to false. If makeup is detected, set "detected" to true.
+If a category is not detected (detected is false), score it 75 and explain in the reasoning/tip that no makeup was detected for this category (be constructive!).
+The "${priority}" category must receive the most detailed feedback.
+</task_makeup_scoring>
+
+<task_coaching>
+Draft a highly personalized, warm 1-2 sentence coaching compliment from a personal beauty editor. It must match their scores and physical traits perfectly. Calibrate language to skill level (${skill}).
+</task_coaching>
+
+CRITICAL: You must return ONLY a raw JSON object matching the schema below. No markdown wrapping, no text before or after the JSON.
+
+JSON Schema:
+{
+  "makeup_analysis": {
+    "categories": [
+      {
+        "name": "Blending",
+        "detected": boolean,
+        "reasoning": "Detailed 2-sentence explanation of what is visible in the photo.",
+        "score": number,
+        "tip": "Constructive 1-sentence tip.",
+        "tipShort": "Short action item."
+      },
+      { "name": "Symmetry", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Colour Harmony", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Coverage", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Cleanliness", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." },
+      { "name": "Brow Framing", "detected": boolean, "reasoning": "...", "score": 50, "tip": "...", "tipShort": "..." }
+    ]
+  },
+  "coaching": {
+    "compliment": "string"
+  }
+}
+`.strip();
+
+export interface UnifiedScanResult {
+  diagnosis: DiagnosisResult;
+  dna: any | null;
+  coaching: CoachingResult;
+}
+
+export async function runUnifiedFaceScan(request: AnalyzeImageRequest, hasExistingDna: boolean): Promise<UnifiedScanResult> {
+  if (!request.imageUri || !isSafeImageUri(request.imageUri)) {
+    throw new Error('Invalid image URI');
+  }
+
+  const priority = request.priorityCategory ?? 'Blending';
+  const skill = request.skillLevel ?? 'Intermediate';
+  const imageBase64 = await uriToBase64(request.imageUri);
+
+  const prompt = hasExistingDna 
+    ? UNIFIED_QUICK_PROMPT(priority, skill)
+    : UNIFIED_FULL_PROMPT(priority, skill);
+
+  // We use Qwen 3 VL 8B as our unified speed & accuracy model for HK-compatible lightning-fast face scanning!
+  const MODEL_ID = 'qwen/qwen3-vl-8b-instruct';
+
+  console.log(`[Unified Scan] Triggering single-request face scan via ${MODEL_ID} (hasExistingDna: ${hasExistingDna})...`);
+  
+  const result = await openRouterVision<any>(imageBase64, prompt, MODEL_ID);
+  console.log('[Unified Scan] Successfully received unified response:', JSON.stringify(result));
+
+  // Extract and compute makeup scores
+  const makeupData = result.makeup_analysis || { categories: [] };
+  const categories: CategoryAnalysis[] = (Object.keys(CATEGORY_WEIGHTS) as SixCategory[]).map(name => {
+    const found = makeupData.categories?.find((c: any) => c.name === name);
+    const rawScore = found
+      ? Math.min(100, Math.max(0, Math.round(found.score)))
+      : jitter(78, 18);
+    const score = scaleScore(rawScore);
+    const isPriority = name === priority;
+
+    return {
+      name,
+      weight: isPriority ? Math.round(CATEGORY_WEIGHTS[name] * 1.3) : CATEGORY_WEIGHTS[name],
+      score,
+      isPriority,
+      tip: found?.tip ?? FALLBACK_TIPS[name].tip,
+      tipShort: found?.tipShort ?? FALLBACK_TIPS[name].tipShort,
+      tutorialQuery: buildQuery(name, skill),
+      detected: found ? found.detected !== false : false,
+    };
+  });
+
+  const allBare = categories.every(cat => cat.detected === false);
+  const overallScore = allBare ? null : weightedScore(categories);
+  const verdict: Verdict = allBare ? 'GO' : (overallScore! >= 72 ? 'GO' : 'FIX');
+
+  const diagnosis: DiagnosisResult = {
+    overallScore,
+    verdict,
+    categories
+  };
+
+  // Extract Beauty DNA if computed, otherwise null
+  let dna = null;
+  if (!hasExistingDna && result.beauty_dna) {
+    const rawDna = result.beauty_dna;
+    dna = {
+      faceShape: rawDna.faceShape || 'Oval',
+      colorSeason: rawDna.colorSeason || 'Warm Autumn',
+      skinToneHex: rawDna.skinToneHex || '#C9956A',
+      eyeShape: rawDna.eyeShape || 'Almond Eye',
+      browShape: rawDna.browShape || 'Soft Arch',
+      browSymmetryPct: Math.min(100, Math.max(70, Math.round(rawDna.browSymmetryPct ?? 85))),
+      lashProfile: rawDna.lashProfile || 'Long & Sparse',
+      archetype: rawDna.archetype || 'The Soft Romantic',
+      archetypeDescription: rawDna.archetypeDescription || '',
+      lipProfile: 'Warm Satin', // Fallbacks matching dna.ts defaults
+      blushProfile: 'Peach Flush',
+      foundationShade: '',
+    };
+  }
+
+  // Extract coaching compliment
+  const compliment = result.coaching?.compliment ?? (
+    allBare 
+      ? 'Gorgeous bare skin canvas! Focus on keeping your natural skin barrier protected and your brows framed to look effortlessly glowing.'
+      : 'Good effort — the improvements below will make a noticeable difference today.'
+  );
+
+  const coaching: CoachingResult = {
+    compliment: compliment.trim(),
+    verdict
+  };
+
+  return {
+    diagnosis,
+    dna,
+    coaching
+  };
+}
