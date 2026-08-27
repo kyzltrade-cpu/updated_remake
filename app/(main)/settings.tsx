@@ -346,16 +346,8 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        {/* ── Reference Photo ── */}
-        <Section title="Reference Photo" delay={210}>
-          <ReferencePhotoCard
-            uri={settings.referencePhoto ?? null}
-            onRetake={handleRetake}
-          />
-        </Section>
-
         {/* ── Subscription ── */}
-        <Section title="Subscription" delay={270}>
+        <Section title="Subscription" delay={210}>
           <Row
             label="Current plan"
             sub={isPro ? 'Pro · $39.99 / year' : 'Free — 1 scan included'}
@@ -381,7 +373,7 @@ export default function SettingsScreen() {
         </Section>
 
         {/* ── Redeem Code ── */}
-        <Section title="Redeem Code" delay={310}>
+        <Section title="Redeem Code" delay={270}>
           <View style={styles.promoRow}>
             <TextInput
               style={[styles.promoInput, isApplyingCode && { opacity: 0.6 }]}
@@ -406,7 +398,7 @@ export default function SettingsScreen() {
         </Section>
 
         {/* ── About ── */}
-        <Section title="About" delay={350}>
+        <Section title="About" delay={330}>
           <Row label="Version" right={<Text style={styles.rowValue}>1.0.0</Text>} />
           {isLoggedIn && (
             <>
@@ -419,14 +411,14 @@ export default function SettingsScreen() {
         {/* Sign out & Delete Account */}
         {isLoggedIn && (
           <View style={{ gap: 10, marginBottom: 20 }}>
-            <Animated.View entering={FadeInUp.delay(410).duration(400)}>
+            <Animated.View entering={FadeInUp.delay(390).duration(400)}>
               <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
                 <MaterialIcons name="logout" size={16} color="#B04040" />
                 <Text style={styles.signOutText}>Sign Out</Text>
               </Pressable>
             </Animated.View>
 
-            <Animated.View entering={FadeInUp.delay(440).duration(400)}>
+            <Animated.View entering={FadeInUp.delay(420).duration(400)}>
               <Pressable style={styles.deleteAccountBtn} onPress={handleDeleteAccount}>
                 <MaterialIcons name="delete-forever" size={16} color="rgba(176,64,64,0.6)" />
                 <Text style={styles.deleteAccountText}>Delete Account</Text>
