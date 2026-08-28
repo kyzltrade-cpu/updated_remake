@@ -116,12 +116,12 @@ export default function UvTrackerScreen() {
           <View style={styles.cardHeaderBlock}>
             <View style={styles.cardHeader}>
               <View>
-                <Text style={styles.cardEyebrow}>{uv ? 'TODAY · YOUR LOCATION' : 'TODAY · LONDON'}</Text>
+                <Text style={styles.cardEyebrow}>TODAY · LONDON</Text>
                 <Text style={styles.cardTitle}>Best tanning window</Text>
               </View>
-              <View style={[styles.uvIndexBadge, uv && { borderColor: uv.color + '40', backgroundColor: uv.color + '14' }]}>
-                <Text style={[styles.uvIndexNum, uv && { color: uv.color }]}>{uv ? uv.uvIndex : '3'}</Text>
-                <Text style={[styles.uvIndexLabel, uv && { color: uv.color }]}>UV</Text>
+              <View style={[styles.uvIndexBadge, { borderColor: '#D4AF3740', backgroundColor: '#D4AF3714' }]}>
+                <Text style={[styles.uvIndexNum, { color: '#D4AF37' }]}>3</Text>
+                <Text style={[styles.uvIndexLabel, { color: '#D4AF37' }]}>UV</Text>
               </View>
             </View>
             <View style={styles.windowRow}>
@@ -131,14 +131,14 @@ export default function UvTrackerScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.windowPill}
               >
-                <Text style={styles.windowTime}>{uv ? uv.tanningWindow : '10:00 – 11:30 am'}</Text>
+                <Text style={styles.windowTime}>10:00 – 11:30 am</Text>
               </LinearGradient>
-              <Text style={styles.windowNote}>{uv ? uv.tanningWindowNote : 'Low risk · 30 min max'}</Text>
+              <Text style={styles.windowNote}>Low risk · 30 min max</Text>
             </View>
           </View>
 
           {/* UV chart */}
-          <UvChart forecast={uv?.hourlyForecast} />
+          <UvChart forecast={UV_HOURS} />
 
           {/* Safe / avoid legend */}
           <View style={styles.legendRow}>
