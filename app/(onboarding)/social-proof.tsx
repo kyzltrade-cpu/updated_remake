@@ -11,21 +11,21 @@ const REVIEWS = [
     name: 'Mia T.',
     stars: 5,
     text: "First scan nailed my shade. I've been buying the wrong foundation for three years.",
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop',
+    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=150&auto=format&fit=crop',
     color: '#E3A6A1', // dusty rose
   },
   {
     name: 'Sarah K.',
     stars: 5,
     text: "Stopped guessing, stopped wasting money. My routine finally makes sense.",
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=120&auto=format&fit=crop',
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150&auto=format&fit=crop',
     color: '#D4C3B3', // warm taupe
   },
   {
     name: 'Priya R.',
     stars: 5,
     text: "The ingredient screening alone is worth it. My skin hasn't reacted once since I started using it.",
-    avatarUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=120&auto=format&fit=crop',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
     color: '#CEB8DC', // soft lavender
   },
 ];
