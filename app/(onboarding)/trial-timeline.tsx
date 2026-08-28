@@ -114,7 +114,7 @@ export default function TrialTimelineScreen() {
           onPress={handleNext}
           style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] }]}
         >
-          <Text style={styles.ctaText}>Activate Trial & Reminder ✦</Text>
+          <Text style={styles.ctaText}>Continue with Trial & Reminder ✦</Text>
         </Pressable>
 
         <Text style={styles.legalText}>
