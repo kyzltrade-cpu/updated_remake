@@ -9,7 +9,7 @@ import { tokens } from '@/components/theme';
 const FEATURES = [
   {
     icon: '🔬',
-    title: 'AI-rated in seconds',
+    title: 'Rated in seconds',
     body: 'Point. Shoot. Get a score across Complexion, Eyes, Lips, and Sculpt.',
   },
   {
