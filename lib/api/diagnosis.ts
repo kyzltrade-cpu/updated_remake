@@ -1,4 +1,4 @@
-import type { AnalyzeImageRequest, DiagnosisResult, DiagnosisProvider, CategoryAnalysis, SixCategory, Verdict } from './types';
+import type { AnalyzeImageRequest, DiagnosisResult, DiagnosisProvider, CategoryAnalysis, SixCategory, Verdict, CoachingResult } from './types';
 import { isSafeImageUri } from '@/lib/validation';
 import { hasOpenRouterKey, uriToBase64, openRouterVision, openRouterVisionDual } from './openrouter';
 
@@ -280,7 +280,7 @@ JSON Schema:
     "compliment": "string"
   }
 }
-`.strip();
+`.trim();
 
 const UNIFIED_QUICK_PROMPT = (priority: string, skill: string) => `
 You are an expert makeup artist AI. You are analyzing a selfie for cosmetic quality and providing personalized beauty coaching.
@@ -323,7 +323,7 @@ JSON Schema:
     "compliment": "string"
   }
 }
-`.strip();
+`.trim();
 
 export interface UnifiedScanResult {
   diagnosis: DiagnosisResult;

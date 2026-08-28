@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase';
 import * as FileSystem from 'expo-file-system/legacy';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
 export function hasOpenRouterKey(): boolean {
   // Always true in production because the key is secured on the backend in Supabase Edge Functions!
@@ -18,11 +18,14 @@ export async function uriToBase64(uri: string): Promise<string> {
     console.log('[Image Compression] Shrinking and compressing raw selfie client-side...');
     
     // Scale maximum dimension to 1024px while keeping aspect ratio, and compress to 0.7 JPEG
-    const manipResult = await manipulateAsync(
-      uri,
-      [{ resize: { width: 1024 } }],
-      { compress: 0.7, format: SaveFormat.JPEG, base64: true }
-    );
+    const context = ImageManipulator.manipulate(uri);
+    context.resize({ width: 1024 });
+    const rendered = await context.renderAsync();
+    const manipResult = await rendered.saveAsync({
+      compress: 0.7,
+      format: SaveFormat.JPEG,
+      base64: true,
+    });
 
     const base64 = manipResult.base64;
     if (!base64) {
