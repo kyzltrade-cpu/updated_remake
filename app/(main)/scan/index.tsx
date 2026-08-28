@@ -573,8 +573,8 @@ export default function ScanScreen() {
           >
             <BlurView tint="dark" intensity={35} style={styles.makeupAlertInner}>
               <Text style={styles.makeupAlertIcon}>✦</Text>
-              <Text style={styles.makeupAlertText}>
-                Designed for makeup wearers — results may vary if scanned barefaced
+              <Text numberOfLines={1} style={styles.makeupAlertText}>
+                Designed for makeup wearers — results vary if scanned barefaced
               </Text>
             </BlurView>
           </Animated.View>
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingLeft: 12,
-    paddingRight: 18,
+    paddingRight: 14,
     paddingVertical: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
@@ -870,10 +870,10 @@ const styles = StyleSheet.create({
   },
   makeupAlertText: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.78)',
-    letterSpacing: 0.1,
+    letterSpacing: 0.05,
   },
 
   // ── Snapchat Ring Light Controls ──────────────────────────
