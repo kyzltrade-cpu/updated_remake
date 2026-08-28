@@ -8,24 +8,24 @@ import { tokens } from '@/components/theme';
 
 const REVIEWS = [
   {
-    name: 'Chloe, 22 (Dry / Fair-Cool)',
+    name: 'Mia T.',
     stars: 5,
-    text: "No way... the shade finder actually worked. I'm usually a cool olive (impossible to match) and it got my exact shade first try.",
+    text: "First scan nailed my shade. I've been buying the wrong foundation for three years.",
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop',
     color: '#E3A6A1', // dusty rose
   },
   {
-    name: 'Clara, 21 (Cystic Acne)',
+    name: 'Sarah K.',
     stars: 5,
-    text: "I checked my 'holy grail' blush and it had 3 comedogenic pore-cloggers. Swapped it and my cystic acne cleared up in 2 weeks. Insane.",
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=120&auto=format&fit=crop',
+    text: "Stopped guessing, stopped wasting money. My routine finally makes sense.",
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=120&auto=format&fit=crop',
     color: '#D4C3B3', // warm taupe
   },
   {
-    name: 'Sofia, 24 (Oily / Sensitive)',
+    name: 'Priya R.',
     stars: 5,
-    text: "My barrier was completely wrecked from viral TikTok serums. Remake flagged 4 hidden allergens in them. Literally saved my skin.",
-    avatarUrl: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=120&auto=format&fit=crop',
+    text: "The ingredient screening alone is worth it. My skin hasn't reacted once since I started using it.",
+    avatarUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=120&auto=format&fit=crop',
     color: '#CEB8DC', // soft lavender
   },
 ];
