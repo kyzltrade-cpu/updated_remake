@@ -350,7 +350,7 @@ export default function SettingsScreen() {
         <Section title="Subscription" delay={210}>
           <Row
             label="Current plan"
-            sub={isPro ? 'Pro · $39.99 / year' : 'Free — 1 scan included'}
+            sub={isPro ? 'Pro · $39.99 / year' : 'Free'}
             right={
               <Pressable
                 onPress={() => {
