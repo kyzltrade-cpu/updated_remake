@@ -59,14 +59,16 @@ export default function LegalScreen() {
 
             <Text style={styles.disclaimerBox}>
               ⚠️ MEDICAL DISCLAIMER: ReMake provides AI-driven self-analysis of makeup and skin aesthetics. 
-              The suggestions and ratings are for educational and cosmetic coaching purposes only. 
-              ReMake does NOT provide medical advice, diagnosis, or treatment. Always consult a dermatologist 
+              The suggestions and ratings are for educational, cosmetic, and coaching purposes only. 
+              ReMake does NOT provide medical advice, dermatology diagnosis, or healthcare treatment. 
+              Our recommendations are not a replacement for clinical evaluation, diagnostic screening, 
+              or professional medical advice. Always consult a licensed dermatologist or medical professional 
               for skin health concerns.
             </Text>
 
             <Text style={styles.heading}>1. Agreement to Terms</Text>
             <Text style={styles.paragraph}>
-              By creating an account, scanning your face, or using the ReMake mobile application, you agree to be bound by these Terms of Service. If you do not agree to all terms, do not use our services.
+              By creating an account, scanning your face, using the ReMake mobile application, or subscribing to our service, you agree to be bound by these Terms of Service. If you do not agree to all terms, do not download or use our services.
             </Text>
 
             <Text style={styles.heading}>2. Description of Service</Text>
@@ -81,7 +83,10 @@ export default function LegalScreen() {
 
             <Text style={styles.heading}>4. Subscription & Billing</Text>
             <Text style={styles.paragraph}>
-              ReMake is a premium service that requires an active monthly or annual paid subscription. Subscriptions are billed directly through Apple In-App Purchases (App Store) and will auto-renew unless cancelled at least 24 hours before the end of the current billing cycle. No refunds are provided for partial periods.
+              ReMake is a premium service that requires an active monthly or annual paid subscription to access advanced analysis and streak tracking. Subscriptions are billed directly through Apple In-App Purchases (App Store) and will auto-renew unless cancelled at least 24 hours before the end of the current billing cycle. 
+            </Text>
+            <Text style={styles.paragraph}>
+              Payments are charged to your Apple ID account at confirmation of purchase. You can manage and cancel your subscriptions in your App Store Account Settings after purchase. No refunds are provided for partial subscription periods.
             </Text>
             <Text style={styles.paragraph}>
               By using and subscribing to the App, you agree to be bound by Apple's standard Terms of Use (EULA), which can be accessed here:
@@ -96,9 +101,34 @@ export default function LegalScreen() {
               <Text style={styles.linkText}>Apple Standard Terms of Use (EULA) ↗</Text>
             </Pressable>
 
-            <Text style={styles.heading}>5. Intellectual Property</Text>
+            <Text style={styles.heading}>5. User Content & Camera Use</Text>
             <Text style={styles.paragraph}>
-              All content, algorithms, designs, logos, text, and visual layouts inside ReMake are the sole property of ReMake and are protected under international copyright and intellectual property laws.
+              You retain full ownership of any photos you capture or upload inside ReMake. By submitting photos for analysis, you grant ReMake a limited, secure, and non-exclusive license to process, analyze, and render your images solely to generate cosmetic analysis. We do not use your personal images for marketing or promotional purposes.
+            </Text>
+
+            <Text style={styles.heading}>6. Intellectual Property</Text>
+            <Text style={styles.paragraph}>
+              All content, algorithms, designs, logos, text, and visual layouts inside ReMake are the sole property of ReMake and are protected under international copyright, trademark, and intellectual property laws. You may not copy, reverse-engineer, or distribute any part of the service.
+            </Text>
+
+            <Text style={styles.heading}>7. Disclaimer of Warranties</Text>
+            <Text style={styles.paragraph}>
+              The services and recommendations are provided on an "as is" and "as available" basis without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or accuracy of skin and makeup scoring.
+            </Text>
+
+            <Text style={styles.heading}>8. Limitation of Liability</Text>
+            <Text style={styles.paragraph}>
+              To the maximum extent permitted by applicable law, ReMake and its developers shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising out of your use of or inability to use the services, even if advised of the possibility of such damages.
+            </Text>
+
+            <Text style={styles.heading}>9. Governing Law & Disputes</Text>
+            <Text style={styles.paragraph}>
+              These terms shall be governed by and construed in accordance with the laws of the State of New York, without regard to its conflict of law provisions. Any dispute arising under these terms shall be resolved exclusively in the state and federal courts located in New York, NY.
+            </Text>
+
+            <Text style={styles.heading}>10. Contact Information</Text>
+            <Text style={styles.paragraph}>
+              If you have any questions or feedback regarding these Terms, please contact us at theremakeapp@gmail.com.
             </Text>
           </View>
         ) : (
@@ -121,15 +151,25 @@ export default function LegalScreen() {
 
             <Text style={styles.heading}>3. Data Protection & Sharing</Text>
             <Text style={styles.paragraph}>
-              We do not sell, rent, or lease your personal data or photos to third parties. We only share data with secure service providers (e.g., Supabase DB, OpenAI, Nvidia) strictly necessary to run the app's diagnostic and auth pipelines.
+              We do not sell, rent, or lease your personal data or photos to third parties. We only share data with secure service providers (e.g., Supabase DB, OpenAI, Nvidia) strictly necessary to run the app's diagnostic and auth pipelines. All third-party secure subprocessors used by ReMake are verified to maintain privacy and security standards providing equal or greater protection of user data.
             </Text>
 
             <Text style={styles.heading}>4. User Rights & Data Deletion</Text>
             <Text style={styles.paragraph}>
-              You have full control over your data. You can request complete deletion of your account and all associated profile preferences directly inside the Settings screen of the app, or by contacting our support team at theremakeapp@gmail.com.
+              You have full control over your data. You can request complete deletion of your account and all associated profile preferences directly inside the Settings screen of the app, which permanently purges your records from our databases. Alternatively, you can request account deletion by emailing our support team at theremakeapp@gmail.com.
             </Text>
 
-            <Text style={styles.heading}>5. Policy Changes</Text>
+            <Text style={styles.heading}>5. Permission Consent and Revocation</Text>
+            <Text style={styles.paragraph}>
+              You may grant or revoke consent for camera and photo library access at any time via your device's operating system settings (Settings -> ReMake -> Camera / Photos). If permissions are revoked, core facial analysis features will be disabled.
+            </Text>
+
+            <Text style={styles.heading}>6. Children's Privacy (COPPA Compliance)</Text>
+            <Text style={styles.paragraph}>
+              Our services are not directed to children under the age of 13. We do not knowingly collect personal information from children under 13. If we discover that a child under 13 has provided us with personal information, we will delete it immediately.
+            </Text>
+
+            <Text style={styles.heading}>7. Policy Changes</Text>
             <Text style={styles.paragraph}>
               We may update this Privacy Policy from time to time. We will notify you of any modifications by posting the new policy in the app and updating the "Last updated" date at the top.
             </Text>
