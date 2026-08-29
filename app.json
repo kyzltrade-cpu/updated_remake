@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.remake.ios",
-      "buildNumber": "25",
+      "buildNumber": "26",
       "entitlements": {
         "com.apple.developer.applesignin": [
           "Default"
@@ -22,8 +22,7 @@
         "NSCameraUsageDescription": "REMAKE analyses your face and beauty products through your camera. Photos are never stored or shared.",
         "NSPhotoLibraryUsageDescription": "REMAKE lets you scan beauty products from photos in your library.",
         "NSLocationWhenInUseUsageDescription": "REMAKE reads your local UV index to recommend the right SPF protection for your makeup.",
-        "NSUserNotificationsUsageDescription": "REMAKE sends one daily reminder so you never break your streak.",
-        "NSUserTrackingUsageDescription": "This helps us understand if our ads are working. No face photos or personal data are ever used for tracking."
+        "NSUserNotificationsUsageDescription": "REMAKE sends one daily reminder so you never break your streak."
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -91,7 +90,6 @@
       "expo-font",
       "expo-secure-store",
       "expo-location",
-      "expo-tracking-transparency",
       [
         "@react-native-google-signin/google-signin",
         {
