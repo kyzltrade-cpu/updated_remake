@@ -35,6 +35,41 @@ export interface ProductScanResult {
   ethics: EthicsRow[];
 }
 
+// ── UPCItemDB lookup ────────────────────────────────────────────────────────
+
+interface UPCItem {
+  brand?: string;
+  title?: string;
+  description?: string;
+  category?: string;
+}
+
+async function fetchUPCItemDB(barcode: string): Promise<UPCItem | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+  try {
+    const res = await fetch(
+      `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`,
+      {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'ReMakeApp/1.0' },
+      }
+    );
+    clearTimeout(timeoutId);
+    if (!res.ok) return null;
+    const json = await res.json() as { code: string; items?: UPCItem[] };
+    if (json.code === 'OK' && json.items && json.items.length > 0) {
+      return json.items[0];
+    }
+    return null;
+  } catch (e) {
+    clearTimeout(timeoutId);
+    console.warn('[ProductScan] UPCItemDB fetch failed or timed out:', e);
+    return null;
+  }
+}
+
 // ── Open Beauty Facts lookup ────────────────────────────────────────────────
 
 interface OBFProduct {
@@ -47,15 +82,24 @@ interface OBFProduct {
 }
 
 async function fetchOpenBeautyFacts(barcode: string): Promise<OBFProduct | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500);
+
   try {
     const res = await fetch(
       `https://world.openbeautyfacts.org/api/v0/product/${barcode}.json`,
-      { headers: { 'User-Agent': 'ReMakeApp/1.0' } },
+      {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'ReMakeApp/1.0' },
+      }
     );
+    clearTimeout(timeoutId);
     if (!res.ok) return null;
     const json = await res.json() as { status: number; product?: OBFProduct };
     return json.status === 1 ? (json.product ?? null) : null;
-  } catch {
+  } catch (e) {
+    clearTimeout(timeoutId);
+    console.warn('[ProductScan] Open Beauty Facts fetch failed or timed out:', e);
     return null;
   }
 }
@@ -297,18 +341,36 @@ async function analyzeProductReal(params: {
   let detectedBarcode = params.barcode ?? '';
 
   if (params.barcode) {
-    // Barcode path: look up Open Beauty Facts first
-    const obf = await fetchOpenBeautyFacts(params.barcode);
-    if (obf) {
+    // 1. Try UPCItemDB lookup first
+    console.log('[ProductScan] Querying UPCItemDB for barcode:', params.barcode);
+    const upcItem = await fetchUPCItemDB(params.barcode);
+    if (upcItem) {
+      console.log('[ProductScan] UPCItemDB lookup successful:', upcItem.title);
       productInfo = [
-        `Brand: ${obf.brands ?? 'Unknown'}`,
-        `Product: ${obf.product_name ?? 'Unknown'}`,
-        `Category: ${obf.categories ?? 'Unknown'}`,
-        `Ingredients: ${obf.ingredients_text ?? 'Not listed'}`,
-        `Labels: ${obf.labels ?? 'None'}`,
+        `Brand: ${upcItem.brand ?? 'Unknown'}`,
+        `Product: ${upcItem.title ?? 'Unknown'}`,
+        `Description: ${upcItem.description ?? 'Unknown'}`,
+        `Category: ${upcItem.category ?? 'Unknown'}`,
+        `Barcode: ${params.barcode}`,
       ].join('\n');
     } else {
-      productInfo = `Barcode: ${params.barcode}\nProduct data not found in database.`;
+      // 2. Fallback to Open Beauty Facts
+      console.log('[ProductScan] UPCItemDB lookup failed/timed out, trying Open Beauty Facts...');
+      const obf = await fetchOpenBeautyFacts(params.barcode);
+      if (obf) {
+        console.log('[ProductScan] Open Beauty Facts lookup successful:', obf.product_name);
+        productInfo = [
+          `Brand: ${obf.brands ?? 'Unknown'}`,
+          `Product: ${obf.product_name ?? 'Unknown'}`,
+          `Category: ${obf.categories ?? 'Unknown'}`,
+          `Ingredients: ${obf.ingredients_text ?? 'Not listed'}`,
+          `Labels: ${obf.labels ?? 'None'}`,
+          `Barcode: ${params.barcode}`,
+        ].join('\n');
+      } else {
+        console.log('[ProductScan] Both UPC databases returned nothing. Proceeding with barcode only.');
+        productInfo = `Barcode: ${params.barcode}\nProduct data not found in databases. Please use your general knowledge of this product if the barcode is known.`;
+      }
     }
   } else if (params.uri && hasOpenRouterKey()) {
     // Photo path: extract product info via OpenRouter Vision
@@ -349,7 +411,13 @@ async function analyzeProductReal(params: {
       parsed = await openRouterVisionDual<ProductScanResult>(productB64, skinB64, dualPrompt, MODEL_ID);
     } else {
       const prompt = buildAnalysisPrompt(productInfo, dna, userAllergies);
-      parsed = await openRouterTextJson<ProductScanResult>(prompt, 3000, 'qwen/qwen-2.5-72b-instruct');
+      try {
+        console.log('[ProductScan] Analyzing product using primary model: deepseek/deepseek-chat');
+        parsed = await openRouterTextJson<ProductScanResult>(prompt, 3000, 'deepseek/deepseek-chat');
+      } catch (err) {
+        console.warn('[ProductScan] DeepSeek-V3 failed, falling back to qwen/qwen-2.5-72b-instruct:', err);
+        parsed = await openRouterTextJson<ProductScanResult>(prompt, 3000, 'qwen/qwen-2.5-72b-instruct');
+      }
     }
 
     parsed.barcode = detectedBarcode;
