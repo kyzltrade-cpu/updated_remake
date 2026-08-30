@@ -31,7 +31,7 @@ export default function StyleArchetypeScreen() {
     Haptics.selectionAsync();
     saveGloField({ archetype: id });
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/validation'), 480);
+    timerRef.current = setTimeout(() => router.push('/validation'), 480);
   };
 
   return (

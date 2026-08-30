@@ -109,7 +109,7 @@ export default function OnboardingPaywallScreen() {
             onPress: async () => {
               // Save onboarding complete flag
               await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-              router.replace('/(main)/home');
+              router.replace('/home');
             }
           }
         ]);
@@ -133,7 +133,7 @@ export default function OnboardingPaywallScreen() {
             onPress: async () => {
               // Save onboarding complete flag
               await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-              router.replace('/(main)/home');
+              router.replace('/home');
             }
           }
         ]);
@@ -152,7 +152,7 @@ export default function OnboardingPaywallScreen() {
     // Or we let them enter the app as free users, and when they scan, the main-paywall triggers.
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    router.replace('/(main)/home');
+    router.replace('/home');
   };
 
   const currentPlan = PLANS.find(p => p.id === selectedPlan)!;
@@ -291,7 +291,7 @@ export default function OnboardingPaywallScreen() {
             <Text style={styles.auxDivider}>|</Text>
             <Pressable onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/(onboarding)/legal');
+              router.push('/legal');
             }}>
               <Text style={styles.auxText}>Terms & Privacy</Text>
             </Pressable>

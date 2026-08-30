@@ -30,7 +30,7 @@ export default function RatingScreen() {
   const insets = useSafeAreaInsets();
   const [rating, setRating] = useState(0);
 
-  const advance = () => router.push('/(onboarding)/create-account');
+  const advance = () => router.push('/create-account');
 
   return (
     <View style={[styles.root, { paddingBottom: insets.bottom + 32 }]}>

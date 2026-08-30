@@ -1,0 +1,14 @@
+
+> remake@1.0.0 start
+> expo start
+
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SUPABASE_KEY EXPO_PUBLIC_DEV_BYPASS EXPO_PUBLIC_DEV_EMAIL EXPO_PUBLIC_DEV_PASSWORD EXPO_PUBLIC_COHERE_API_KEY EXPO_PUBLIC_NIM_API_KEY EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY
+Starting project at /Users/kyzl/updated_remake
+React Compiler enabled
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  expo-build-properties@56.0.25 - expected version: ~1.0.10
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.

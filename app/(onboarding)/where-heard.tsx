@@ -33,7 +33,7 @@ export default function WhereHeardScreen() {
     Haptics.selectionAsync();
     AsyncStorage.setItem('@remake_source', id);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/tried-apps'), 480);
+    timerRef.current = setTimeout(() => router.push('/tried-apps'), 480);
   };
 
   return (

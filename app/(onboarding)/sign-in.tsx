@@ -12,6 +12,8 @@ import { isValidEmail, sanitizeEmail } from '@/lib/validation';
 import { loadGloDraft, clearGloDraft } from '@/lib/glo-profile';
 import { createClient } from '@/lib/supabase';
 import { tokens } from '@/components/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ONBOARDING_KEY } from '../_layout';
 import Svg, { Path } from 'react-native-svg';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
@@ -24,7 +26,10 @@ export default function SignInScreen() {
   const [emailErr, setEmailErr] = useState('');
   const [passErr, setPassErr] = useState('');
 
-  const advance = () => router.replace('/(main)/home');
+  const advance = async () => {
+    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+    router.replace('/home');
+  };
 
   const handleSignIn = async () => {
     if (DEV_BYPASS) {
@@ -183,7 +188,7 @@ export default function SignInScreen() {
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push('/(onboarding)/forgot-password');
+                    router.push('/forgot-password');
                   }}
                   hitSlop={12}
                   style={styles.forgotBtnInside}
@@ -251,7 +256,7 @@ export default function SignInScreen() {
 
         <Pressable onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push('/(onboarding)/value');
+          router.push('/value');
         }} hitSlop={8}>
           <Text style={styles.altLink}>
             No account?{' '}

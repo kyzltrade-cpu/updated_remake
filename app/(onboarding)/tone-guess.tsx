@@ -99,7 +99,7 @@ export default function ToneGuessScreen() {
   const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await saveGloField({ undertone: current.id });
-    router.push('/(onboarding)/skin-goals');
+    router.push('/skin-goals');
   };
 
   return (

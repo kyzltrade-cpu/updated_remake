@@ -36,7 +36,7 @@ export default function ScanPrepScreen() {
 
   const handleStart = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.replace('/(onboarding)/first-scan');
+    router.replace('/first-scan');
   };
 
   return (

@@ -17,7 +17,7 @@ export default function NotificationPermissionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const advance = () => router.push('/(onboarding)/rating');
+  const advance = () => router.push('/rating');
 
   const handleAllow = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

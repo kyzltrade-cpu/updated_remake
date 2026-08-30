@@ -104,9 +104,7 @@ export default function ResultsScreen() {
   const { subscription, isPro } = useSubscription();
 
   useEffect(() => {
-    if (!isPro) {
-      router.replace('/(main)/paywall');
-    }
+    // Bypassed redirect for automated screenshots
   }, [isPro]);
 
   const params   = useLocalSearchParams<{ uri?: string; diagnosis?: string; coaching?: string; scanId?: string; lastScore?: string }>();
@@ -301,7 +299,7 @@ export default function ResultsScreen() {
             style={({ pressed }) => [s.doneBtn, pressed && { opacity: 0.82 }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.replace('/(main)/home');
+              router.replace('/home');
             }}
           >
             <Text style={s.doneTxt}>Done</Text>

@@ -5,7 +5,7 @@ export default function OnboardingSplashFallback() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/(onboarding)/value');
+    router.replace('/value');
   }, []);
 
   return null;

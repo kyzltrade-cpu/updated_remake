@@ -15,7 +15,7 @@ export default function PreviewScreen() {
 
   const handleAnalyze = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.replace({ pathname: '/(main)/scan/loading', params: { uri } });
+    router.replace({ pathname: '/scan/loading', params: { uri } });
   };
 
   const handleDiscard = () => {

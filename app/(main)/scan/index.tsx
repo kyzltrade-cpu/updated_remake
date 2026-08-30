@@ -395,13 +395,13 @@ export default function ScanScreen() {
             setCompareFirst({ uri: photo.uri });
             if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           } else {
-            router.push({ pathname: '/(main)/product-scan/compare', params: { uri1: compareFirst.uri, uri2: photo.uri } });
+            router.push({ pathname: '/product-scan/compare', params: { uri1: compareFirst.uri, uri2: photo.uri } });
           }
         } else {
-          router.push({ pathname: '/(main)/product-scan/results', params: { uri: photo.uri } });
+          router.push({ pathname: '/product-scan/results', params: { uri: photo.uri } });
         }
       } else {
-        router.push({ pathname: '/(main)/scan/preview', params: { uri: photo.uri } });
+        router.push({ pathname: '/scan/preview', params: { uri: photo.uri } });
       }
     } catch {
       Alert.alert('Camera error', 'Could not capture photo');
@@ -427,13 +427,13 @@ export default function ScanScreen() {
             setCompareFirst({ uri: picked });
             if (settings.hapticsEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           } else {
-            router.push({ pathname: '/(main)/product-scan/compare', params: { uri1: compareFirst.uri, uri2: picked } });
+            router.push({ pathname: '/product-scan/compare', params: { uri1: compareFirst.uri, uri2: picked } });
           }
         } else {
-          router.push({ pathname: '/(main)/product-scan/results', params: { uri: picked } });
+          router.push({ pathname: '/product-scan/results', params: { uri: picked } });
         }
       } else {
-        router.push({ pathname: '/(main)/scan/preview', params: { uri: picked } });
+        router.push({ pathname: '/scan/preview', params: { uri: picked } });
       }
     }
   };
@@ -457,10 +457,10 @@ export default function ScanScreen() {
         setCompareFirst({ barcode: data });
         setTimeout(() => setScanned(false), 2500);
       } else {
-        router.push({ pathname: '/(main)/product-scan/compare', params: { barcode1: compareFirst.barcode, barcode2: data } });
+        router.push({ pathname: '/product-scan/compare', params: { barcode1: compareFirst.barcode, barcode2: data } });
       }
     } else {
-      router.push({ pathname: '/(main)/product-scan/results', params: { barcode: data, barcodeType: type } });
+      router.push({ pathname: '/product-scan/results', params: { barcode: data, barcodeType: type } });
     }
   };
 
@@ -525,7 +525,7 @@ export default function ScanScreen() {
         <Animated.View entering={FadeIn.delay(150)} style={styles.topBar}>
           {/* Profile */}
           <Pressable
-            onPress={() => router.push('/(main)/profile')}
+            onPress={() => router.push('/profile')}
             style={({ pressed }) => [styles.topBtn, pressed && { opacity: 0.65 }]}
           >
             {profilePhoto

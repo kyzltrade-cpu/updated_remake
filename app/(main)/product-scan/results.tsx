@@ -351,7 +351,7 @@ export default function ProductScanResultsScreen() {
 
   const handleSave = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace('/(main)/scan');
+    router.replace('/scan');
   };
 
   if (loading) {
@@ -590,7 +590,7 @@ export default function ProductScanResultsScreen() {
                 See your customized pore-clogging ingredient report and safe alternative recommendations!
               </Text>
 
-              <Pressable onPress={() => router.push('/(main)/paywall')} style={s.lockPrimaryBtn}>
+              <Pressable onPress={() => router.push('/paywall')} style={s.lockPrimaryBtn}>
                 <Text style={s.lockPrimaryBtnTxt}>Go Unlimited Premium ($29.99/yr) 👑</Text>
               </Pressable>
 

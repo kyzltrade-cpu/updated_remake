@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 export default function HomeScreen() {
   useEffect(() => {
-    router.replace('/(main)/scan');
+    router.replace('/scan');
   }, []);
   return null;
 }

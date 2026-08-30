@@ -54,7 +54,7 @@ export default function ThankYouTrustScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/camera-permission');
+            router.push('/camera-permission');
           }}
           style={styles.cta}
         >

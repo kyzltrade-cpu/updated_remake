@@ -17,7 +17,7 @@ export default function CameraPermissionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const advance = () => router.push('/(onboarding)/profile-building');
+  const advance = () => router.push('/profile-building');
   const [, requestPermission] = useCameraPermissions();
 
 

@@ -17,7 +17,7 @@ export default function NoMakeupScreen() {
 
   const handleRetry = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.replace('/(main)/scan');
+    router.replace('/scan');
   };
 
   return (
@@ -61,7 +61,7 @@ export default function NoMakeupScreen() {
           </Pressable>
           
           <Pressable 
-            onPress={() => router.replace('/(main)/scan')} 
+            onPress={() => router.replace('/scan')} 
             style={s.supportButton}
           >
             <Text style={s.supportButtonText}>RETURN TO HOME</Text>

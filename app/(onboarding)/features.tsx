@@ -65,7 +65,7 @@ export default function FeaturesScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/tone-guess');
+            router.push('/tone-guess');
           }}
           style={styles.cta}
         >

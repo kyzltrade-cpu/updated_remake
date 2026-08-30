@@ -81,7 +81,7 @@ export default function SocialProofScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/pain-point');
+            router.push('/pain-point');
           }}
           style={styles.cta}
         >

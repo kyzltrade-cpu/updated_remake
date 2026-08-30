@@ -88,11 +88,11 @@ export default function ProfileScreen() {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (isPro) {
       router.push({
-        pathname: '/(main)/dna-reveal',
+        pathname: '/dna-reveal',
         params: dna ? { dna: JSON.stringify(dna) } : {},
       } as any);
     } else {
-      router.push('/(main)/paywall');
+      router.push('/paywall');
     }
   };
 
@@ -214,7 +214,7 @@ export default function ProfileScreen() {
         <Pressable 
           onPress={() => {
             if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/(main)/settings');
+            router.push('/settings');
           }} 
           style={styles.iconCircle}
           hitSlop={8}
@@ -411,7 +411,7 @@ export default function ProfileScreen() {
               <Text style={styles.emptyTitle}>Vault is Empty</Text>
               <Text style={styles.emptyText}>Complete your first skin/makeup scan to unlock your chronological audit log.</Text>
               <Pressable 
-                onPress={() => router.push('/(main)/scan')}
+                onPress={() => router.push('/scan')}
                 style={styles.emptyActionBtn}
               >
                 <Text style={styles.emptyActionBtnText}>Run First Scan</Text>
@@ -474,7 +474,7 @@ export default function ProfileScreen() {
                         onPress={() => {
                           if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           router.push({
-                            pathname: '/(main)/scan/results',
+                            pathname: '/scan/results',
                             params: { scanId: scan.id }
                           });
                         }}
@@ -509,7 +509,7 @@ export default function ProfileScreen() {
                 onPress={() => {
                   if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   router.push({
-                    pathname: '/(main)/dna-reveal',
+                    pathname: '/dna-reveal',
                     params: { bypass: '1' }
                   } as any);
                 }}
@@ -521,7 +521,7 @@ export default function ProfileScreen() {
                 onPress={() => {
                   if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   router.push({
-                    pathname: '/(main)/wrapped',
+                    pathname: '/wrapped',
                     params: { bypass: '1' }
                   } as any);
                 }}

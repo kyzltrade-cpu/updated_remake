@@ -4186,7 +4186,7 @@ export default function DnaRevealScreen() {
 
   useEffect(() => {
     if (!isPro) {
-      router.replace('/(main)/paywall');
+      router.replace('/paywall');
     }
   }, [isPro]);
 
@@ -4368,10 +4368,10 @@ export default function DnaRevealScreen() {
     }
   };
 
-  const handleClose = () => router.replace('/(main)/home');
+  const handleClose = () => router.replace('/home');
   const handleUnlock = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(main)/paywall');
+    router.push('/paywall');
   };
 
   // Free users see their real DNA on all analysis slides (0-11).

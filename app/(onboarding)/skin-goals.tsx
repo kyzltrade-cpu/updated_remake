@@ -31,7 +31,7 @@ export default function SkinGoalsScreen() {
     Haptics.selectionAsync();
     saveGloField({ goals: [id] });
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/foundation-pain'), 480);
+    timerRef.current = setTimeout(() => router.push('/foundation-pain'), 480);
   };
 
   return (

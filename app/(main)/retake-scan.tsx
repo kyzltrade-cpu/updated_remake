@@ -33,7 +33,7 @@ export default function RetakeScanScreen() {
 
   useEffect(() => {
     if (!isPro) {
-      router.replace('/(main)/paywall');
+      router.replace('/paywall');
     }
   }, [isPro]);
 

@@ -35,10 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const checkSession = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession()
+        // getUser() forces refresh token flow to complete if access token is expired
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        const { data: { session: currentSession } } = await supabase.auth.getSession()
         if (mounted) {
-          setSession(initialSession)
-          setUser(initialSession?.user ?? null)
+          setSession(currentSession)
+          setUser(currentUser)
         }
       } catch (e) {
         console.warn('[AuthContext] Failed to get initial session:', e)

@@ -31,7 +31,7 @@ export default function SkinTypeScreen() {
     Haptics.selectionAsync();
     saveGloField({ skin_type: id });
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/frequency'), 480);
+    timerRef.current = setTimeout(() => router.push('/frequency'), 480);
   };
 
   return (

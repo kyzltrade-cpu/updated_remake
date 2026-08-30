@@ -84,7 +84,7 @@ export default function UvTrackerScreen() {
     return () => { active = false; };
   }, []);
 
-  const advance = () => router.push('/(onboarding)/motivation');
+  const advance = () => router.push('/motivation');
 
   const handleChoice = (choice: 'yes' | 'no') => {
     if (handledRef.current) return;

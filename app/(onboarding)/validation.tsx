@@ -54,7 +54,7 @@ export default function ValidationScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/skill');
+            router.push('/skill');
           }}
           style={styles.cta}
         >

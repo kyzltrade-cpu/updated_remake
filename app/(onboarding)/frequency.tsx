@@ -30,7 +30,7 @@ export default function FrequencyScreen() {
     Haptics.selectionAsync();
     AsyncStorage.setItem('@remake_frequency', id);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/where-heard'), 480);
+    timerRef.current = setTimeout(() => router.push('/where-heard'), 480);
   };
 
   return (

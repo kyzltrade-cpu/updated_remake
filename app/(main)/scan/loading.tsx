@@ -47,7 +47,7 @@ export default function LoadingPage() {
         console.log('[loading] background success detected: scan exists on server with ID:', last.id);
         isScanning.current = false;
         router.replace({
-          pathname: '/(main)/scan/results',
+          pathname: '/scan/results',
           params: {
             uri: params.uri,
             scanId: last.id,
@@ -64,7 +64,7 @@ export default function LoadingPage() {
   const run = async () => {
     const validUri = validateImageUri(params.uri);
     if (!validUri) {
-      router.replace('/(main)/scan');
+      router.replace('/scan');
       return;
     }
 
@@ -79,7 +79,7 @@ export default function LoadingPage() {
         Alert.alert(
           'No Face Detected',
           'Make sure your face is clearly visible inside the alignment guide and take another photo.',
-          [{ text: 'OK', onPress: () => router.replace('/(main)/scan') }]
+          [{ text: 'OK', onPress: () => router.replace('/scan') }]
         );
         isScanning.current = false;
         return;
@@ -128,7 +128,7 @@ export default function LoadingPage() {
       if (allBare) {
         console.log('[loading] No makeup detected in any category. Re-routing to no-makeup screen and skipping DB save.');
         isScanning.current = false;
-        router.replace('/(main)/scan/no-makeup');
+        router.replace('/scan/no-makeup');
         return;
       }
 
@@ -163,7 +163,7 @@ export default function LoadingPage() {
 
       isScanning.current = false;
       router.replace({
-        pathname: '/(main)/scan/results',
+        pathname: '/scan/results',
         params: {
           uri: validUri,
           diagnosis: JSON.stringify(diagnosis),
@@ -194,7 +194,7 @@ export default function LoadingPage() {
       }
 
       isScanning.current = false;
-      router.replace('/(main)/scan/error');
+      router.replace('/scan/error');
     }
   };
 

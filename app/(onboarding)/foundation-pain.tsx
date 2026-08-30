@@ -31,7 +31,7 @@ export default function FoundationPainScreen() {
     Haptics.selectionAsync();
     saveGloField({ foundation_struggle: id });
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/style-archetype'), 480);
+    timerRef.current = setTimeout(() => router.push('/style-archetype'), 480);
   };
 
   return (

@@ -36,7 +36,7 @@ export default function FirstScanScreen() {
     await AsyncStorage.setItem('@remake_pending_dna_uri', uri);
     await AsyncStorage.setItem('pending_dna_uri', uri);
     await updateSettings({ referencePhoto: uri, lastFaceScanTime: Date.now() });
-    router.push('/(onboarding)/dna-loading');
+    router.push('/dna-loading');
   };
 
   const takePhoto = async () => {

@@ -703,7 +703,7 @@ export default function WrappedScreen() {
                 See your customized Clean Girl Index and pore-clogging routine analysis. Unlock now!
               </Text>
 
-              <Pressable onPress={() => router.push('/(main)/paywall')} style={s.lockPrimaryBtn}>
+              <Pressable onPress={() => router.push('/paywall')} style={s.lockPrimaryBtn}>
                 <Text style={s.lockPrimaryBtnTxt}>Go Unlimited Premium ($29.99/yr) 👑</Text>
               </Pressable>
 

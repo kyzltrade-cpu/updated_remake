@@ -108,7 +108,7 @@ export default function SettingsPaywallScreen() {
               if (router.canGoBack()) {
                 router.back();
               } else {
-                router.replace('/(main)/home');
+                router.replace('/home');
               }
             }
           }
@@ -134,7 +134,7 @@ export default function SettingsPaywallScreen() {
               if (router.canGoBack()) {
                 router.back();
               } else {
-                router.replace('/(main)/home');
+                router.replace('/home');
               }
             }
           }
@@ -154,7 +154,7 @@ export default function SettingsPaywallScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(main)/home');
+      router.replace('/home');
     }
   };
 
@@ -294,7 +294,7 @@ export default function SettingsPaywallScreen() {
             <Text style={styles.auxDivider}>|</Text>
             <Pressable onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/(onboarding)/legal');
+              router.push('/legal');
             }}>
               <Text style={styles.auxText}>Terms & Privacy</Text>
             </Pressable>

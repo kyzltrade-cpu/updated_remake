@@ -82,7 +82,7 @@ export default function ProfileRevealScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/notification-permission');
+            router.push('/notification-permission');
           }}
           style={styles.cta}
         >

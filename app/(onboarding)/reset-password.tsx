@@ -68,7 +68,7 @@ export default function ResetPasswordScreen() {
           Alert.alert(
             'Link Expired', 
             'This password reset link is invalid or has expired. Please request a new link.',
-            [{ text: 'OK', onPress: () => router.replace('/(onboarding)/sign-in') }]
+            [{ text: 'OK', onPress: () => router.replace('/sign-in') }]
           );
         } else {
           console.log('[ResetPassword] Session established successfully.');
@@ -129,7 +129,7 @@ export default function ResetPasswordScreen() {
       accessible={false}
     >
       {/* Header back to sign in if link is invalid or directly opened */}
-      <Pressable onPress={() => router.replace('/(onboarding)/sign-in')} style={styles.backBtn} hitSlop={12}>
+      <Pressable onPress={() => router.replace('/sign-in')} style={styles.backBtn} hitSlop={12}>
         <Text style={styles.backIcon}>‹</Text>
       </Pressable>
 
@@ -151,7 +151,7 @@ export default function ResetPasswordScreen() {
                 This password reset link is invalid, incomplete, or opened outside of its secure email envelope. Please request a new link from the forgot password page.
               </Text>
               <Pressable
-                onPress={() => router.replace('/(onboarding)/forgot-password')}
+                onPress={() => router.replace('/forgot-password')}
                 style={[styles.cta, { width: '100%', marginTop: 24 }]}
               >
                 <Text style={styles.ctaText}>Request New Link</Text>
@@ -195,7 +195,7 @@ export default function ResetPasswordScreen() {
                   <Pressable
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      router.replace('/(main)/home');
+                      router.replace('/home');
                     }}
                     style={styles.cta}
                   >

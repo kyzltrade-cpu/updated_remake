@@ -38,7 +38,7 @@ export default function PainPointScreen() {
   const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await saveGloField({ pain_points: Array.from(selected) });
-    router.push('/(onboarding)/allergies');
+    router.push('/allergies');
   };
 
   return (

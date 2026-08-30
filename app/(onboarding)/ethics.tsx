@@ -41,7 +41,7 @@ export default function EthicsScreen() {
   const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await saveGloField({ ethics: Array.from(selected) });
-    router.push('/(onboarding)/uv-tracker');
+    router.push('/uv-tracker');
   };
 
   return (

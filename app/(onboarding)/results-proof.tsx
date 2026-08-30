@@ -183,7 +183,7 @@ export default function ResultsProofScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/features');
+            router.push('/features');
           }}
           style={styles.cta}
         >

@@ -28,7 +28,7 @@ export default function TriedAppsScreen() {
     Haptics.selectionAsync();
     AsyncStorage.setItem('@remake_tried_apps', id);
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => router.push('/(onboarding)/results-proof'), 480);
+    timerRef.current = setTimeout(() => router.push('/results-proof'), 480);
   };
 
   return (

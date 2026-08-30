@@ -132,7 +132,7 @@ export default function ValueScreen() {
     <View style={[styles.root, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }]}>
       <Animated.View entering={FadeIn.duration(500)} style={styles.topRow}>
         <Text style={styles.wordmark}>REMAKE</Text>
-        <Pressable onPress={() => router.push('/(onboarding)/sign-in')} hitSlop={10}>
+        <Pressable onPress={() => router.push('/sign-in')} hitSlop={10}>
           <Text style={styles.signInLink}>Sign In</Text>
         </Pressable>
       </Animated.View>
@@ -154,13 +154,13 @@ export default function ValueScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/skin-type');
+            router.push('/skin-type');
           }}
           style={styles.cta}
         >
           <Text style={styles.ctaText}>Get Started — it's free</Text>
         </Pressable>
-        <Pressable onPress={() => router.push('/(onboarding)/sign-in')} hitSlop={8}>
+        <Pressable onPress={() => router.push('/sign-in')} hitSlop={8}>
           <Text style={styles.altLink}>
             Already have an account?{' '}
             <Text style={styles.altLinkBold}>Sign In</Text>

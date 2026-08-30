@@ -94,7 +94,7 @@ export default function ConfidenceProofScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/social-proof');
+            router.push('/social-proof');
           }}
           style={styles.cta}
         >

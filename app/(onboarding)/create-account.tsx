@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase';
 import { setupUserPushNotifications } from '@/lib/api/notifications';
 
 const advance = (router: ReturnType<typeof useRouter>) => {
-  router.replace('/(onboarding)/scan-prep');
+  router.replace('/scan-prep');
 };
 
 export default function CreateAccountScreen() {
@@ -243,14 +243,14 @@ export default function CreateAccountScreen() {
       <View style={{ height: 24 }} />
 
       <Animated.View entering={FadeInUp.delay(320).duration(500)} style={styles.footer}>
-        <Pressable onPress={() => router.push('/(onboarding)/sign-in')} hitSlop={12}>
+        <Pressable onPress={() => router.push('/sign-in')} hitSlop={12}>
           <Text style={styles.signInLink}>
             Already have an account? <Text style={styles.signInLinkBold}>Sign In</Text>
           </Text>
         </Pressable>
         <Text style={styles.legal}>
           By continuing you agree to our{' '}
-          <Text style={styles.legalLink} onPress={() => router.push('/(onboarding)/legal')}>
+          <Text style={styles.legalLink} onPress={() => router.push('/legal')}>
             Terms & Privacy Policy
           </Text>
           .

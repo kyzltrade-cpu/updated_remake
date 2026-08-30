@@ -101,7 +101,7 @@ export default function SkillScreen() {
   const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await saveGloField({ skill: current.id });
-    router.push('/(onboarding)/confidence-proof');
+    router.push('/confidence-proof');
   };
 
   return (

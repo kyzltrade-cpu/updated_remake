@@ -218,10 +218,10 @@ export default function DnaLoadingScreen() {
         // Wait exactly 5.2 seconds to allow the beautiful progress bar and micro-phase animations to finish completely
         await new Promise<void>(resolve => setTimeout(resolve, 5200));
 
-        router.replace('/(onboarding)/scan-success');
+        router.replace('/scan-success');
       } catch (err) {
         console.warn('[DNA Loading] Failed during placebo onboarding scan:', err);
-        router.replace('/(onboarding)/scan-success');
+        router.replace('/scan-success');
       }
     };
     run();

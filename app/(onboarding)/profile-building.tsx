@@ -58,7 +58,7 @@ export default function ProfileBuildingScreen() {
 
     const done = setTimeout(() => {
       intervals.forEach(clearInterval);
-      router.replace('/(onboarding)/profile-reveal');
+      router.replace('/profile-reveal');
     }, 3400);
 
     return () => {

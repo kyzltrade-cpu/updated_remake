@@ -166,7 +166,7 @@ export default function ProductCompareScreen() {
 
   useEffect(() => {
     if (!isPro) {
-      router.replace('/(main)/paywall');
+      router.replace('/paywall');
     }
   }, [isPro]);
 

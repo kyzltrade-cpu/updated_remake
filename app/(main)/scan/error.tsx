@@ -17,7 +17,7 @@ export default function ScanErrorScreen() {
 
   const handleRetry = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.replace('/(main)/scan');
+    router.replace('/scan');
   };
 
   return (
@@ -57,7 +57,7 @@ export default function ScanErrorScreen() {
           </Pressable>
           
           <Pressable 
-            onPress={() => router.replace('/(main)/settings')} 
+            onPress={() => router.replace('/settings')} 
             style={s.supportButton}
           >
             <Text style={s.supportButtonText}>CONTACT SUPPORT</Text>

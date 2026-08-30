@@ -15,10 +15,10 @@ export default function MainLayout() {
     );
   }
 
-  const isDevMode = false;
+  const isDevMode = true; // Temporary bypass for automated screenshots
 
   if (!user && !isDevMode) {
-    return <Redirect href="/(onboarding)" />;
+    return <Redirect href="/" />;
   }
 
   return (

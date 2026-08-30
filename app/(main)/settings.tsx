@@ -215,7 +215,7 @@ export default function SettingsScreen() {
 
   const handleRetake = () => {
     if (settings.hapticsEnabled) Haptics.selectionAsync();
-    router.push('/(main)/retake-scan');
+    router.push('/retake-scan');
   };
 
   const handleSignOut = () => {
@@ -292,7 +292,7 @@ export default function SettingsScreen() {
             </View>
             {!isPro && (
               <Pressable
-                onPress={() => router.push('/(main)/paywall')}
+                onPress={() => router.push('/paywall')}
                 style={styles.upgradeCta}
                 hitSlop={8}
               >
@@ -356,9 +356,9 @@ export default function SettingsScreen() {
                 onPress={() => {
                   if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   if (isPro) {
-                    router.push('/(main)/subscription-details');
+                    router.push('/subscription-details');
                   } else {
-                    router.push('/(main)/paywall');
+                    router.push('/paywall');
                   }
                 }}
                 style={styles.changePlanBtn}
@@ -408,7 +408,7 @@ export default function SettingsScreen() {
               if (settings.hapticsEnabled) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              router.push('/(onboarding)/legal');
+              router.push('/legal');
             }}
             right={<MaterialIcons name="chevron-right" size={16} color={tokens.colors.pinkDeep} />}
           />

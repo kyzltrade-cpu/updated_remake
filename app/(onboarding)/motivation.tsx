@@ -49,7 +49,7 @@ export default function MotivationScreen() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/thank-you-trust');
+            router.push('/thank-you-trust');
           }}
           style={styles.cta}
         >

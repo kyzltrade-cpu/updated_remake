@@ -53,7 +53,7 @@ export default function TrialTimelineScreen() {
     } catch (e) {
       console.warn('[TrialTimeline] Notification request failed:', e);
     } finally {
-      router.replace('/(onboarding)/paywall');
+      router.replace('/paywall');
     }
   };
 
