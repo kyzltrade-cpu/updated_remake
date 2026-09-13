@@ -221,7 +221,7 @@ export default function SettingsPaywallScreen() {
                   isSelected && styles.planCardSelected,
                 ]}
               >
-                <View style={styles.planHeaderRow}>
+                <View style={[styles.planHeaderRow, !(plan.trial || plan.savings) && { marginBottom: 0 }]}>
                   <View style={styles.planLabelGroup}>
                     <Text style={[styles.planTitle, isSelected && styles.planTitleSelected]}>
                       {plan.label}
