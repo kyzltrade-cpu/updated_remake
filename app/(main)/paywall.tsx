@@ -22,7 +22,7 @@ interface PlanDetails {
   label: string;
   price: string;
   period: string;
-  trial: string;
+  trial?: string;
   savings?: string;
   subText: string;
 }
@@ -42,7 +42,6 @@ const PLANS: PlanDetails[] = [
     label: 'Monthly Plan',
     price: '$9.99',
     period: 'month',
-    trial: 'INSTANT ACCESS',
     subText: 'Billed immediately',
   },
 ];
@@ -241,17 +240,19 @@ export default function SettingsPaywallScreen() {
 
                 {/* Badge showing if trial or immediately billed */}
                 <View style={styles.badgeRow}>
-                  <View style={[
-                    styles.trialBadge,
-                    plan.id === 'yearly' ? styles.trialBadgeGold : styles.trialBadgeRed
-                  ]}>
-                    <Text style={[
-                      styles.trialBadgeText,
-                      plan.id === 'yearly' ? styles.trialBadgeTextGold : styles.trialBadgeTextRed
+                  {plan.trial && (
+                    <View style={[
+                      styles.trialBadge,
+                      plan.id === 'yearly' ? styles.trialBadgeGold : styles.trialBadgeRed
                     ]}>
-                      {plan.trial}
-                    </Text>
-                  </View>
+                      <Text style={[
+                        styles.trialBadgeText,
+                        plan.id === 'yearly' ? styles.trialBadgeTextGold : styles.trialBadgeTextRed
+                      ]}>
+                        {plan.trial}
+                      </Text>
+                    </View>
+                  )}
                   {plan.savings && (
                     <View style={styles.savingsBadge}>
                       <Text style={styles.savingsText}>{plan.savings}</Text>
