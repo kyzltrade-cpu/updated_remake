@@ -42,8 +42,8 @@ const PLANS: PlanDetails[] = [
     label: 'Monthly Plan',
     price: '$9.99',
     period: 'month',
-    trial: 'NO FREE TRIAL',
-    subText: 'Billed immediately on Day 0',
+    trial: 'INSTANT ACCESS',
+    subText: 'Billed immediately',
   },
 ];
 
@@ -286,8 +286,8 @@ export default function SettingsPaywallScreen() {
 
           <Text style={styles.priceDetails}>
             {selectedPlan === 'yearly' 
-              ? 'Cancel anytime before Day 3 to avoid the $49.99/year charge.' 
-              : 'Immediate full access. Auto-renews at $9.99/month.'
+              ? 'Includes 3-Day Free Trial. Auto-renews at $49.99/year. Cancel anytime.' 
+              : 'Auto-renews at $9.99/month. Cancel anytime.'
             }
           </Text>
 
