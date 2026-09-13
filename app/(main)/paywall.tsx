@@ -273,16 +273,21 @@ export default function SettingsPaywallScreen() {
             {loading ? (
               <ActivityIndicator color={tokens.colors.white} />
             ) : (
-              <Text style={styles.ctaText}>
-                {selectedPlan === 'yearly' ? 'Start 3-Day Free Trial' : 'Unlock Access Instantly'}
-              </Text>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={styles.ctaText}>
+                  {selectedPlan === 'yearly' ? 'Start 3-Day Free Trial' : 'Unlock Access Instantly'}
+                </Text>
+                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2, fontWeight: '500' }}>
+                  {selectedPlan === 'yearly' ? 'Then $49.99/year' : '$9.99/month'}
+                </Text>
+              </View>
             )}
           </Pressable>
 
           <Text style={styles.priceDetails}>
             {selectedPlan === 'yearly' 
-              ? 'Cancel anytime before Day 3. No commitment.' 
-              : 'Immediate full access. Non-refundable.'
+              ? 'Cancel anytime before Day 3 to avoid the $49.99/year charge.' 
+              : 'Immediate full access. Auto-renews at $9.99/month.'
             }
           </Text>
 
@@ -436,9 +441,9 @@ const styles = StyleSheet.create({
   planPriceGroup: { flexDirection: 'row', alignItems: 'baseline' },
   planPrice: {
     fontFamily: tokens.fonts.regular,
-    fontSize: 22,
-    fontWeight: '700',
-    color: 'rgba(255,249,247,0.75)',
+    fontSize: 28,
+    fontWeight: '800',
+    color: 'rgba(255,249,247,0.9)',
   },
   planPriceSelected: { color: tokens.colors.white },
   planPeriod: {
