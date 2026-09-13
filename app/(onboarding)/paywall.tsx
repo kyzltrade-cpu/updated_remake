@@ -283,7 +283,7 @@ export default function OnboardingPaywallScreen() {
 
           <Text style={styles.priceDetails}>
             {selectedPlan === 'yearly' 
-              ? 'Includes 3-Day Free Trial. Auto-renews at $49.99/year. Cancel anytime.' 
+              ? 'Auto-renews at $49.99/year. Cancel anytime.' 
               : 'Auto-renews at $9.99/month. Cancel anytime.'
             }
           </Text>
