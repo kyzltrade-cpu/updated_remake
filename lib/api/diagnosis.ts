@@ -344,8 +344,10 @@ export async function runUnifiedFaceScan(request: AnalyzeImageRequest, hasExisti
     ? UNIFIED_QUICK_PROMPT(priority, skill)
     : UNIFIED_FULL_PROMPT(priority, skill);
 
-  // We use Qwen 3 VL 8B as our unified speed & accuracy model for HK-compatible lightning-fast face scanning!
-  const MODEL_ID = 'qwen/qwen3-vl-8b-instruct';
+  // We use Qwen 2.5 VL 72B Instruct for maximum visual acuity and accuracy.
+  // Because we are now using native iOS CIDetector to crop the face and scale to 512px, 
+  // the token payload is starved, meaning this massive model runs lightning fast for cheap.
+  const MODEL_ID = 'qwen/qwen-2.5-vl-72b-instruct';
 
   console.log(`[Unified Scan] Triggering single-request face scan via ${MODEL_ID} (hasExistingDna: ${hasExistingDna})...`);
   
